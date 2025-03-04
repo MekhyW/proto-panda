@@ -1,0 +1,351 @@
+#include "drawing/animation.hpp"
+#include "drawing/dma_display.hpp"
+#include "tools/oledscreen.hpp"
+#include "tools/devices.hpp"
+
+#include "tools/storage.hpp"
+
+
+#include "FS.h"
+#include "SPIFFS.h"
+
+
+unsigned char Animation::buffer[FILE_SIZE];
+
+
+
+AnimationFrameAction AnimationSequence::SpeakFrame(){ 
+    if (Devices::GetSensorReading() == 0){
+        m_frame++;
+        int len = m_frames.size(); 
+        if (m_frame > len-1){
+            m_frame = 1;
+        }
+        return ANIMATION_FRAME_CHANGED;
+    }else{
+        if (m_frame != 0){
+            m_frame = 0;
+            return ANIMATION_FRAME_CHANGED;
+        }
+        return ANIMATION_NO_CHANGE;
+    }
+}
+
+AnimationFrameAction AnimationSequence::ChangeFrame(){
+    int len = m_frames.size(); 
+    if (m_frame >= (len-1) ){
+        m_frame = 0;
+        if (m_repeat == -1){
+            return ANIMATION_FRAME_CHANGED;
+        }
+        m_repeat--;
+        if (m_repeat <= 0){
+            return ANIMATION_FINISHED;
+        }
+        return ANIMATION_FRAME_CHANGED;
+    }else{
+        m_frame++;
+        return ANIMATION_FRAME_CHANGED;
+    }
+}
+
+AnimationFrameAction AnimationSequence::Update(){
+    if (m_counter <= millis()){
+        m_counter = millis()+m_duration;
+        switch (m_updateMode)
+        {
+        case 1:
+            return SpeakFrame();
+            break;
+        
+        default:
+            return ChangeFrame();
+        }
+    }
+    return ANIMATION_NO_CHANGE;
+ 
+}
+int AnimationSequence::GetFrameId(){
+    return m_frames[m_frame];
+}
+
+void hsv_to_rgb(uint8_t h, uint8_t s, uint8_t v, uint8_t& r, uint8_t& g, uint8_t& b) {
+  // Convert hue to degrees
+  float hue = h / 255.0f * 360.0f;
+
+  // Convert saturation and value to percentages
+  float saturation = s / 255.0f;
+  float value = v / 255.0f;
+
+  // Calculate chroma
+  float chroma = value * saturation;
+
+  // Find the hue sector
+  float hue_sector = hue / 60.0f;
+  int hue_sector_int = (int)hue_sector;
+
+  // Calculate the intermediate value x
+  float x = chroma * (1.0f - fabs(fmod(hue_sector, 2.0f) - 1.0f));
+
+  // Calculate the values of r, g, and b
+  float r_temp = 0.0f, g_temp = 0.0f, b_temp = 0.0f;
+  switch(hue_sector_int) {
+    case 0:
+      r_temp = chroma;
+      g_temp = x;
+      b_temp = 0;
+      break;
+    case 1:
+      r_temp = x;
+      g_temp = chroma;
+      b_temp = 0;
+      break;
+    case 2:
+      r_temp = 0;
+      g_temp = chroma;
+      b_temp = x;
+      break;
+    case 3:
+      r_temp = 0;
+      g_temp = x;
+      b_temp = chroma;
+      break;
+    case 4:
+      r_temp = x;
+      g_temp = 0;
+      b_temp = chroma;
+      break;
+    case 5:
+      r_temp = chroma;
+      g_temp = 0;
+      b_temp = x;
+      break;
+  }
+
+  // Calculate the final values of r, g, and b
+  float m = value - chroma;
+  r = (uint8_t)((r_temp + m) * 255);
+  g = (uint8_t)((g_temp + m) * 255);
+  b = (uint8_t)((b_temp + m) * 255);
+}
+
+void reorder_rgb(uint8_t mode, uint8_t *r, uint8_t *g, uint8_t *b){
+    uint8_t auxr = *r;
+    uint8_t auxb = *b;
+    uint8_t auxg = *g;
+    switch (mode)
+    {
+    case 0:
+        break;
+    case 1:
+        *b = auxg;
+        *g = auxb;
+        break;
+    case 2:
+        *r = auxg;
+        *g = auxr;
+        break;
+    case 3:
+        *g = auxr;
+        *b = auxg;
+        *r = auxb;
+        break;
+    case 4:
+        *b = auxr;
+        *r = auxg;
+        *g = auxb;
+        break;
+    case 5:
+        *b = auxr;
+        *r = auxb;
+        break;
+    default:
+        break;
+    }
+}
+
+
+void Animation::DrawFrame(File *file, int i){
+    if (i == 0){
+        return;
+    }
+    uint64_t ld = micros();
+    uint64_t begin = ld;
+    
+
+    static int16_t frameId = 0;
+    frameId++;    
+
+    i--;
+    
+    uint32_t startPosition = i * FILE_SIZE;
+
+
+
+    file->seek(startPosition);
+
+    size_t rd = file->readBytes((char*)buffer, FILE_SIZE);
+
+    if (rd != FILE_SIZE){
+        Serial.printf("Failed to read %d at pos %d on file with size %d. Read just %d bytes\n", i , startPosition, file->size(), rd);
+        return;
+    }
+
+
+    m_frameLoadDuration = micros()-ld;
+    ld = micros();
+
+    
+    uint8_t r, g, b;
+    uint8_t reverse = buffer[0];
+    uint8_t color_mode = buffer[1];
+    int byteId = 1;
+    uint16_t *readBuffer = (uint16_t *)(buffer);
+    
+    DMADisplay::Display->startWrite();
+    for (int16_t y=0;y<PANEL_HEIGHT;y++){
+      for (int16_t x=0;x<PANEL_WIDTH;x++){
+        uint16_t color = readBuffer[byteId++];
+        //1100011100011000    = 0xC718
+        //We know each color has 5 6 and 5 bits. So to check if the color is strong enough, we're using this mask that discards
+        //each of 3 initial bits of each color
+        //If any of the remaining bits are 1, the whole condition will give != 0 and therefore color!
+        if ((color & 0x8610) != 0) { 
+            OledScreen::DisplayFace[byteId] = 1;
+        }else{
+            OledScreen::DisplayFace[byteId] = 0;
+        }
+        
+        DMADisplay::Display->color565to888(color, r, g, b);
+
+        if (m_shader == 1 || (r == 60 && b == 120 && g == 180)){
+            float gray = (r+g+b)/3.0f;
+            hsv_to_rgb(  (((frameId+x)%64) / 64.0f) * 255, 255, gray, r, g, b);
+        }
+
+        DMADisplay::Display->updateMatrixDMABuffer_2((PANEL_WIDTH-1)-x, y, r, b, g);
+        reorder_rgb(color_mode, &r, &g, &b);
+        if (reverse&1){
+           DMADisplay::Display->updateMatrixDMABuffer_2((PANEL_WIDTH)+x, y, r, b, g);
+        }else{
+           DMADisplay::Display->updateMatrixDMABuffer_2((PANEL_WIDTH+PANEL_WIDTH-1)-x, y, r, b, g);
+        }
+        
+      }
+    }
+    uint16_t rdd = Devices::ReadLidar();
+    if (rdd >= 900){
+        rdd = 0;
+    }else{
+        rdd = map(rdd, 0, 900, 0, 32);
+    }
+     
+    DMADisplay::Display->drawRect(0,0, rdd, 2, DMADisplay::Display->color565(255,255,255));
+    
+
+    DMADisplay::Display->endWrite();
+    m_needFlip = true;
+    m_frameDrawDuration = micros()-ld;
+    m_cycleDuration =  micros()-begin;
+}
+
+bool Animation::PopAnimation(){
+    xSemaphoreTake(m_mutex, portMAX_DELAY);
+    if (m_animations.size() > 0){
+        xSemaphoreGive(m_mutex);
+        m_animations.pop();
+        return true;
+    }else{
+        xSemaphoreGive(m_mutex);
+        return false;
+    }
+    
+}
+void Animation::MakeFlip(){
+    DMADisplay::Display->flipDMABuffer();
+    m_needFlip = false;
+}
+
+void Animation::SetShader(int id){
+    m_shader = id;
+}
+
+void Animation::Update(File *file){
+    xSemaphoreTake(m_mutex, portMAX_DELAY);
+    if (m_animations.size() > 0){
+        auto &elem = m_animations.top();
+        xSemaphoreGive(m_mutex);
+        bool canPop = internalUpdate(file, elem);
+        if (canPop){
+            xSemaphoreTake(m_mutex, portMAX_DELAY);
+            m_animations.pop();
+            xSemaphoreGive(m_mutex);
+        }
+    }else{
+        xSemaphoreGive(m_mutex);
+    }
+    if (isManaged() && needFlipScreen()){
+        MakeFlip();
+    }
+}
+
+bool Animation::internalUpdate(File *file, AnimationSequence &running){
+
+    
+    switch (running.Update()){
+    case ANIMATION_FINISHED:
+        return 1;
+        break;
+    case ANIMATION_FRAME_CHANGED:    
+        m_lastFace = running.GetFrameId();
+        if (isManaged()){
+            DrawFrame(file, m_lastFace);
+        }
+        break;
+    case ANIMATION_NO_CHANGE:
+        if (m_shader == 1){
+            m_lastFace = running.GetFrameId();
+            if (isManaged()){
+                DrawFrame(file, m_lastFace);
+            }
+        }
+        break;
+    }
+    return false;
+}
+
+void Animation::SetSpeakAnimation(int duration, std::vector<int> frames){
+    xSemaphoreTake(m_mutex, portMAX_DELAY);
+
+    AnimationSequence newSeq;
+    newSeq.m_duration = max(duration,1);
+    newSeq.m_frames = frames;
+    newSeq.m_counter = millis()+duration;
+    newSeq.m_frame = 0;
+    newSeq.m_repeat = -1;
+    newSeq.m_updateMode = 1;
+
+    m_animations.emplace(newSeq);
+    xSemaphoreGive(m_mutex);
+}
+
+void Animation::SetAnimation(int duration, std::vector<int> frames, int repeatTimes, bool dropAll){
+    xSemaphoreTake(m_mutex, portMAX_DELAY);
+    if (dropAll){
+        while (m_animations.size() > 0){
+            m_animations.pop();
+        }
+    }
+    m_isOnText = false;
+    AnimationSequence newSeq;
+    newSeq.m_duration = max(duration,1);
+    newSeq.m_frames = frames;
+    newSeq.m_counter = millis()+duration;
+    newSeq.m_frame = 0;
+    newSeq.m_repeat = repeatTimes;
+
+    m_animations.emplace(newSeq);
+    xSemaphoreGive(m_mutex);
+}
+
+

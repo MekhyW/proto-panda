@@ -1,0 +1,9 @@
+{
+  "frames": [
+    {"pattern": "/expressions/normal%d.png", "flip_left": true, "from": 1, "to": 4, "alias": "normal"},
+    {"pattern": "/expressions/noise (%d).png", "flip_left": false, "from": 1, "to": 3, "alias": "noise"},
+    {"pattern": "/expressions/amogus (%d).png", "flip_left": true, "from": 1, "to": 2, "alias": "amogus"},
+    {"pattern": "/expressions/rick/ezgif-frame-%03d.png", "flip_left": true, "from": 1, "to": 78, "alias": "rickroll"},
+    {"pattern": "/expressions/apple/ezgif-frame-%03d.png", "flip_left": true, "from": 1, "to": 150, "alias": "badapple"}
+  ]
+}
