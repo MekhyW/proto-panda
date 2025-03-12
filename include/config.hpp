@@ -81,7 +81,8 @@
     Led strip
 */
 
-#define LED_STRIP_PIN 42
+#define LED_STRIP_PIN_1 41
+#define LED_STRIP_PIN_2 42
 #define LED_STRIP_TYPE WS2812B
 #define MAX_LED_GROUPS 16
 

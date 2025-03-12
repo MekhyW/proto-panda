@@ -79,6 +79,16 @@ bool popPanelAnimation()
 }
 
 
+void DrawPixels(std::vector<Pixel> pixels)
+{
+  DMADisplay::Display->startWrite();
+  for (auto &it : pixels ){
+    DMADisplay::Display->updateMatrixDMABuffer_2(it.x, it.y, it.r, it.g, it.b);
+  }
+  DMADisplay::Display->endWrite();
+}
+
+
 void DrawPixel(int16_t x, int16_t y, uint16_t color)
 {
   DMADisplay::Display->drawPixel(x, y, color);
@@ -422,6 +432,8 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("oledDrawRect", DrawRectScreen);
   m_lua->FuncRegister("oledDrawLine", DrawLineScreen);
   m_lua->FuncRegister("oledDrawCircle", DrawCircleScreen);
+  //m_lua->FuncRegisterFromObject("oledDrawCircle", &OledScreen::display, &Adafruit_SSD1306::drawCircle); 
+  m_lua->FuncRegister("oledDrawCircle", DrawCircleScreen);
   m_lua->FuncRegister("oledDrawFilledCircle", DrawFilledCircleScreen);
 
   m_lua->FuncRegister("startBLE", startBLE);
@@ -476,6 +488,8 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("flipPanelBuffer", FlipScreen);
   m_lua->FuncRegister("drawPanelRect", DrawRect);
   m_lua->FuncRegister("drawPanelFillRect", DrawFillRect);
+  m_lua->FuncRegister("drawPanelPixel", DrawPixel);
+  m_lua->FuncRegister("drawPanelPixels", DrawPixels);
   m_lua->FuncRegister("drawPanelLine", DrawLine);
   m_lua->FuncRegister("drawPanelCircle", DrawCircle);
   m_lua->FuncRegister("drawPanelFillCircle", DrawFillCircle);
@@ -512,6 +526,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("getFrameAliasByName", GetAliasByName);
 
   m_lua->FuncRegisterFromObjectOpt("ledsBegin", &g_leds, &LedStrip::Begin, (uint8_t)128);
+  m_lua->FuncRegisterFromObjectOpt("ledsBeginDual", &g_leds, &LedStrip::BeginDual, (uint8_t)128);
   m_lua->FuncRegisterFromObjectOpt("ledsSegmentRange", &g_leds, &LedStrip::setSegmentRange, 0);
   m_lua->FuncRegisterFromObjectOpt("ledsSegmentBehavior", &g_leds, &LedStrip::setSegmentBehavior, 0, 0, 0, 0);
   m_lua->FuncRegisterFromObjectOpt("ledsSegmentTweenBehavior", &g_leds, &LedStrip::setSegmentTweenBehavior, 0, 0, 0, 0);

@@ -13,6 +13,13 @@ typedef std::function<int(lua_State*)> LuaCFunctionLambda;
 
 #define isthis(type,arg,FNC) if (type == arg) {vaav = std::string(#arg); if (FNC(L,i)){ std::stringstream S; S << FNC(L,i) << ";"; vaav = vaav +" "+ S.str(); }}
 
+typedef struct PixelStruct{
+    uint8_t x;
+    uint8_t y;
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+} Pixel;
 
 struct QuickDebug{
 
@@ -86,24 +93,6 @@ template<typename T> inline T GenericLuaBool(bool &hasArgError, lua_State *L,int
     return n;
 }
 
-template<typename T> inline std::vector<T> GenericLuaVector(bool &hasArgError, lua_State *L,int stackPos = -1,bool pop=true){
-    std::vector<T> n;
-    if (!lua_istable(L,stackPos)) {
-        hasArgError = true;
-        const char* function_name = lua_tostring(L, lua_upvalueindex(1));
-        luaL_error(L, "Expected an uniform table value on parameter %d of function %s", lua_gettop(L), function_name);
-        return n;
-    }
-    lua_pushnil(L);
-    while (lua_next(L, 1)) {
-        n.push_back(GenericLuaTonumber<T>(hasArgError, L, -1, true));
-    }
-    if (pop)
-        lua_pop(L,1);
-    return n;
-}
-
-
 
 template<typename T1> struct GenericLuaGetter{
      static inline  T1 Call(bool &hasArgError, lua_State *L,int stackPos = -1,bool pop=true){
@@ -167,6 +156,45 @@ template<> struct GenericLuaGetter<float> {
     }
 };
 
+template<> struct GenericLuaGetter<PixelStruct> {
+    static inline PixelStruct Call(bool &hasArgError, lua_State *L, int stackPos = -1, bool pop = true) {
+        PixelStruct pixel = {0, 0, 0, 0, 0};
+
+        if (!lua_istable(L, stackPos)) {
+            hasArgError = true;
+            const char* function_name = lua_tostring(L, lua_upvalueindex(1));
+            luaL_error(L, "Expected a table value on parameter %d of function %s", lua_gettop(L), function_name);
+            return pixel;
+        }
+
+        lua_getfield(L, stackPos, "x");
+        pixel.x = static_cast<uint8_t>(luaL_optinteger(L, -1, 0));
+        lua_pop(L, 1);
+
+        lua_getfield(L, stackPos, "y");
+        pixel.y = static_cast<uint8_t>(luaL_optinteger(L, -1, 0));
+        lua_pop(L, 1);
+
+        lua_getfield(L, stackPos, "r");
+        pixel.r = static_cast<uint8_t>(luaL_optinteger(L, -1, 0));
+        lua_pop(L, 1);
+
+        lua_getfield(L, stackPos, "g");
+        pixel.g = static_cast<uint8_t>(luaL_optinteger(L, -1, 0));
+        lua_pop(L, 1);
+
+        lua_getfield(L, stackPos, "b");
+        pixel.b = static_cast<uint8_t>(luaL_optinteger(L, -1, 0));
+        lua_pop(L, 1);
+
+        if (pop) {
+            lua_pop(L, 1); // Remove a tabela da pilha se necessário
+        }
+
+        return pixel;
+    }
+};
+
 template<>
     struct GenericLuaGetter<std::string> {
      static inline std::string Call(bool &hasArgError, lua_State *L,int stackPos = -1,bool pop=true){
@@ -181,12 +209,33 @@ template<>
     };
 };
 
+
+
 template<>
     struct GenericLuaGetter<const char*> {
      static inline const char* Call(bool &hasArgError, lua_State *L,int stackPos = -1,bool pop=true){
         return GenericLuaString<const char*>(hasArgError, L, stackPos, pop);
     };
 };
+
+
+template<typename T> inline std::vector<T> GenericLuaVector(bool &hasArgError, lua_State *L,int stackPos = -1,bool pop=true){
+    std::vector<T> n;
+    if (!lua_istable(L,stackPos)) {
+        hasArgError = true;
+        const char* function_name = lua_tostring(L, lua_upvalueindex(1));
+        luaL_error(L, "Expected an uniform table value on parameter %d of function %s", lua_gettop(L), function_name);
+        return n;
+    }
+    lua_pushnil(L);
+    while (lua_next(L, 1)) {
+        n.push_back(GenericLuaGetter<T>::Call(hasArgError, L, -1, true));
+    }
+    if (pop)
+        lua_pop(L,1);
+    return n;
+}
+
 
 template<>
     struct GenericLuaGetter<std::vector<int>> {
@@ -201,6 +250,16 @@ template<>
         return GenericLuaVector<uint8_t>(hasArgError, L, stackPos, pop);
     };
 };
+
+template<>
+    struct GenericLuaGetter<std::vector<PixelStruct>> {
+     static inline std::vector<PixelStruct> Call(bool &hasArgError, lua_State *L,int stackPos = -1,bool pop=true){
+        return GenericLuaVector<PixelStruct>(hasArgError, L, stackPos, pop);
+    };
+};
+
+
+
 
 
 template<typename T1> struct GenericLuaReturner{

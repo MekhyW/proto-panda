@@ -79,7 +79,10 @@ class LedGroup : public BaseLedGroup{
 class LedStrip { 
     public:
         LedStrip():m_ledAmount(0),m_maxBrighteness(0),m_leds(nullptr),m_enabled(false){};
-        bool Begin(uint8_t ledCount, uint8_t maxbrighteness);
+        bool Begin(uint16_t ledCount, uint16_t maxbrighteness){
+            return BeginDual(ledCount, 0, maxbrighteness);
+        }
+        bool BeginDual(uint16_t ledCount, uint16_t secondLedCount, uint8_t maxbrighteness);
         void Meme(int a, int b, int c){
             Serial.printf("Memes: %d %d %d\n", a,b,c);
         }

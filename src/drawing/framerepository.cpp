@@ -353,15 +353,3 @@ File *FrameRepository::takeFile(){
 void FrameRepository::freeFile(){
     xSemaphoreGive(m_mutex);
 };
-
-//std::vector<std::string>* FrameRepository::getFilesListed(){
-
-
-/*
-
-
-*/
-
-
-
-//}

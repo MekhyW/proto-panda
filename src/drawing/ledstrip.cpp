@@ -4,24 +4,27 @@
 #include "config.hpp"
 #include <Arduino.h>
 
-bool LedStrip::Begin(uint8_t ledCount, uint8_t maxbrighteness){
+bool LedStrip::BeginDual(uint16_t ledCount, uint16_t secondLedCount, uint8_t maxbrighteness){
     if (ledCount > 0){
-        Logger::Info("Starting total of %d leds", ledCount);
+        Logger::Info("Starting total of %d leds", ledCount+secondLedCount);
         m_ledAmount = ledCount;
         m_maxBrighteness = maxbrighteness;
-        m_leds = new CRGB[m_ledAmount+1];
+        m_leds = new CRGB[m_ledAmount+secondLedCount+1];
         if (m_leds == nullptr){
             return false;
         }
 
-        FastLED.addLeds<LED_STRIP_TYPE,LED_STRIP_PIN,GRB>(m_leds, ledCount).setCorrection(TypicalLEDStrip).setDither(m_maxBrighteness < 255);
-        //FastLED.addLeds<WS2812B,LED_STRIP_PIN2,GRB>(m_leds+ ledCount, ledCount2).setCorrection(TypicalLEDStrip).setDither(m_maxBrighteness < 255);
+        FastLED.addLeds<LED_STRIP_TYPE,LED_STRIP_PIN_1,GRB>(m_leds, ledCount).setCorrection(TypicalLEDStrip).setDither(m_maxBrighteness < 255);
+        if (secondLedCount > 0){
+            FastLED.addLeds<LED_STRIP_TYPE,LED_STRIP_PIN_2,GRB>(m_leds + ledCount, secondLedCount).setCorrection(TypicalLEDStrip).setDither(m_maxBrighteness < 255);
+        }
 
         FastLED.setBrightness(m_maxBrighteness);
 
         for (int i=0;i<MAX_LED_GROUPS;i++){
             m_groups[i] = LedGroup();
         }
+
         m_enabled = true;
         setAllColor(CRGB(0,0,0));
         
@@ -83,6 +86,14 @@ void LedStrip::setLedColor(int id, int r, int g, int b){
 void LedStrip::setSegmentRange(int id, int from, int to){
     if (id < 0 || id > 15){
         return;
+    }
+    if (to >= m_ledAmount){
+        Logger::Info("[WARNING] Setting segment %d with the last led beeing %d which is greater than the maximum leds allowed %d", id, to, m_ledAmount );
+        to = m_ledAmount-1;
+    }
+    if (from < 0){
+        Logger::Info("[WARNING] Setting segment %d with the first led beeing %d, lower than 1.", id, from );
+        from = 0;
     }
     m_groups[id].from = from;
     m_groups[id].to = to;
