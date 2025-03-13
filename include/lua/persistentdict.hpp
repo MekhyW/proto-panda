@@ -2,7 +2,7 @@
 #include <string>
 #include <memory>
 #include "esp32-hal.h"
-
+#include "tools/logger.hpp"
 
 template <typename T>
 class PSRAMAllocator {
@@ -15,19 +15,42 @@ public:
     PSRAMAllocator(const PSRAMAllocator<U>&) noexcept {}
 
     T* allocate(std::size_t n) {
-        return static_cast<T*>(ps_malloc(n * sizeof(T)));
+        if (n == 0) {
+            return nullptr;
+        }
+        void* ptr = ps_malloc(n * sizeof(T));
+        if (!ptr) {
+            throw std::bad_alloc();
+        }
+        auto Y = static_cast<T*>(ptr);;
+        return Y;
     }
 
     void deallocate(T* p, std::size_t) noexcept {
-        heap_caps_free(p);
+        if (p) {
+            heap_caps_free(p);
+        }
     }
 
     bool operator!=(const PSRAMAllocator& other) const {
         return this != &other;
     }
+
+    bool operator==(const PSRAMAllocator& other) const {
+        return this == &other;
+    }
 };
 
 using PSRAMString = std::basic_string<char, std::char_traits<char>, PSRAMAllocator<char>>;
+
+struct PSRAMStringComparator {
+    bool operator()(const PSRAMString& lhs, const PSRAMString& rhs) const {
+        return lhs < rhs;
+    }
+};
+
+
+using PSRAMMap = std::map<PSRAMString, PSRAMString, PSRAMStringComparator, PSRAMAllocator<std::pair<const PSRAMString, PSRAMString>>>;
 
 
 class PersistentDictionary {
@@ -45,5 +68,5 @@ public:
     void del(std::string key);
 
 private:
-    std::map<PSRAMString,PSRAMString, std::less<PSRAMString>, PSRAMAllocator<char>>  store;    
+    PSRAMMap store;    
 };

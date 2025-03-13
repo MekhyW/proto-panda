@@ -314,6 +314,19 @@ bool Animation::internalUpdate(File *file, AnimationSequence &running){
     return false;
 }
 
+int Animation::getCurrentAnimationStorage(){
+    xSemaphoreTake(m_mutex, portMAX_DELAY);
+    if (m_animations.size() > 0){
+        auto &elem = m_animations.top();
+        int aux = elem.m_storageId;
+        xSemaphoreGive(m_mutex);
+        return aux;
+    }else{
+        xSemaphoreGive(m_mutex);
+        return -1;
+    }   
+}
+
 void Animation::SetSpeakAnimation(int duration, std::vector<int> frames){
     xSemaphoreTake(m_mutex, portMAX_DELAY);
 
@@ -329,7 +342,7 @@ void Animation::SetSpeakAnimation(int duration, std::vector<int> frames){
     xSemaphoreGive(m_mutex);
 }
 
-void Animation::SetAnimation(int duration, std::vector<int> frames, int repeatTimes, bool dropAll){
+void Animation::SetAnimation(int duration, std::vector<int> frames, int repeatTimes, bool dropAll, int externalStorageId){
     xSemaphoreTake(m_mutex, portMAX_DELAY);
     if (dropAll){
         while (m_animations.size() > 0){
@@ -343,6 +356,7 @@ void Animation::SetAnimation(int duration, std::vector<int> frames, int repeatTi
     newSeq.m_counter = millis()+duration;
     newSeq.m_frame = 0;
     newSeq.m_repeat = repeatTimes;
+    newSeq.m_storageId = externalStorageId;
 
     m_animations.emplace(newSeq);
     xSemaphoreGive(m_mutex);

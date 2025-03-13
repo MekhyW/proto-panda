@@ -14,7 +14,7 @@ enum AnimationFrameAction{
 
 class AnimationSequence{
     public:
-        AnimationSequence():m_duration(2500),m_frame(0),m_counter(0),m_repeat(-1),m_updateMode(0){}
+        AnimationSequence():m_duration(2500),m_frame(0),m_counter(0),m_repeat(-1),m_updateMode(0),m_storageId(-1){}
         std::vector<int> m_frames;
         AnimationFrameAction Update();
         inline int GetFrameId();
@@ -23,6 +23,7 @@ class AnimationSequence{
         int m_counter;
         int m_repeat;
         int m_updateMode;
+        int m_storageId;
     private:
         AnimationFrameAction ChangeFrame();
         AnimationFrameAction SpeakFrame();
@@ -35,7 +36,7 @@ class Animation{
 
         void Update(File *file);
 
-        void SetAnimation(int duration, std::vector<int> frames, int repeatTimes, bool dropAll);
+        void SetAnimation(int duration, std::vector<int> frames, int repeatTimes, bool dropAll, int externalStorageId=-1);
         void SetSpeakAnimation(int duration, std::vector<int> frames);
         void DrawFrame(File *file, int i);
         void DrawCurrentFrame(File *file){
@@ -61,6 +62,8 @@ class Animation{
         int getCurrentFace(){
             return m_lastFace;
         }
+
+        int getCurrentAnimationStorage();
 
         float getFps(){
             return 1000000.0f/(float)m_cycleDuration;

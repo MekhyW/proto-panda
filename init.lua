@@ -1,11 +1,12 @@
 local expressions = dofile("/lualib/expressions.lua")
+local scripts = dofile("/lualib/scripts.lua")
 local generic = dofile("/lualib/generic.lua")
 
 _G.expressions = expressions
+_G.scripts = scripts
 
 local boop = dofile("/boop.lua")
 local menu = dofile("/menu.lua")
-
 
 local brightness
 
@@ -16,10 +17,11 @@ function onSetup()
     acceptBLETypes("d4d31337-c4c6-c2c3-b4b3-b2b1a4a3a2a1", "d4d3afaf-c4c6-c2c3-b4b3-b2b1a4a3a2a1")
     beginBleScanning()
     brightness = tonumber(dictGet("panel_brightness")) or 64
-    print("Panel is: "..dictGet("panel_brightness"))
+    print("Panel is: "..dictGet("panel_brightness").." led is "..dictGet("led_brightness"))
     setPanelMaxBrighteness( brightness )
 
     expressions.Load("/expressions.json") 
+    scripts.Load("/scripts.json") 
 
 
     ledsBeginDual(25, 25, tonumber(dictGet("led_brightness") ) or 64) 
@@ -32,8 +34,6 @@ function onSetup()
 end
 
 function onPreflight()
-    
-
     gentlySetPanelBrighteness(brightness)
     setPanelManaged(true)
     expressions.Next()
@@ -41,5 +41,9 @@ end
 
 function onLoop(dt)
     boop.manageBoop()
+    if not scripts.Handle(dt) then
+        return
+    end
     menu.handleMenu(boop, dt)
 end
+

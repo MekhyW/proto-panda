@@ -9,6 +9,16 @@ class MatrixPanel_I2S_DMA_2 : public MatrixPanel_I2S_DMA{
         inline void updateMatrixDMABuffer_2(uint16_t x, uint16_t y, uint8_t red, uint8_t green, uint8_t blue){
             updateMatrixDMABuffer(x, y, red, green, blue);
         }
+
+        void setBrightnessExt(const uint8_t b){
+            external_brightness = b;
+        }
+
+        uint8_t getBrightnessExt(){
+            return external_brightness;
+        }
+    private:
+        uint8_t external_brightness;
 };
 
 class DMADisplay{

@@ -109,6 +109,7 @@ class LedStrip {
         uint8_t getBrighteness(){
             return m_maxBrighteness;
         }
+        void setBrightness(uint8_t amount);
 
         void Display();
 

@@ -61,8 +61,15 @@ int getInternalButtonStatus()
 void setPanelBrighteness(uint8_t bright)
 {
   DMADisplay::Display->setBrightness(bright);
+  DMADisplay::Display->setBrightnessExt(bright);
   return;
 }
+
+uint8_t getPanelBrighteness()
+{
+  return DMADisplay::Display->getBrightnessExt();
+}
+
 
 
 
@@ -151,7 +158,7 @@ uint32_t readButtonStatus(uint32_t button)
   return BleManager::remoteData[id].real_inputButtonsStatus[button];
 }
 
-float readAccelerometerX(int device, int a)
+float readAccelerometerX(int device)
 {
   if (device >= MAX_BLE_CLIENTS){
     return 0.0f;
@@ -311,9 +318,9 @@ int acceptTypes(std::string service, std::string charactestistic)
   return g_remoteControls.acceptTypes(service, charactestistic);
 }
 
-void setAnimation(std::vector<int> frames, int duration, int repeatTimes, bool dropAll)
+void setAnimation(std::vector<int> frames, int duration, int repeatTimes, bool dropAll, int externalStorageId)
 {
-  g_animation.SetAnimation(duration, frames, repeatTimes, dropAll);
+  g_animation.SetAnimation(duration, frames, repeatTimes, dropAll, externalStorageId);
 }
 
 void setSpeakingFrames(std::vector<int> frames, int duration )
@@ -329,6 +336,11 @@ void setManaged(bool bn)
 bool isManaged()
 {
   return g_animation.isManaged();
+}
+
+int getCurrentAnimationStorage()
+{
+  return g_animation.getCurrentAnimationStorage();
 }
 int getCurrentFace()
 {
@@ -481,7 +493,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("readLidar", readLidar);
 
 
-  m_lua->FuncRegister("getInternalButtonStatus", getInternalButtonStatus); //int getInternalButtonStatus()
+  m_lua->FuncRegister("getInternalButtonStatus", getInternalButtonStatus); 
   
 
   m_lua->FuncRegister("startPanels", StartPanels); 
@@ -495,15 +507,18 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("drawPanelFillCircle", DrawFillCircle);
   m_lua->FuncRegister("clearPanelBuffer", ClearScreen);
   m_lua->FuncRegister("drawPanelFace", DrawFace);
-  m_lua->FuncRegisterOptional("setPanelAnimation", setAnimation, false, -1, 250);
+  
+  m_lua->FuncRegisterOptional("setPanelAnimation", setAnimation, -1, false, -1, 250);
   m_lua->FuncRegister("popPanelAnimation", popPanelAnimation); 
   m_lua->FuncRegister("setPanelMaxBrighteness", Devices::SetMaxBrighteness);
   m_lua->FuncRegisterOptional("gentlySetPanelBrighteness", gentlySetPanelBrighteness, 4);
   m_lua->FuncRegister("setPanelManaged", setManaged);
   m_lua->FuncRegister("isPanelManaged", isManaged);
+  m_lua->FuncRegister("getCurrentAnimationStorage", getCurrentAnimationStorage);
   m_lua->FuncRegister("getPanelCurrentFace", getCurrentFace);
   m_lua->FuncRegister("drawPanelCurrentFrame", DrawCurrentFrame);
   m_lua->FuncRegister("setPanelBrighteness", setPanelBrighteness);
+  m_lua->FuncRegister("getPanelBrighteness", getPanelBrighteness);
   m_lua->FuncRegister("setSpeakingFrames", setSpeakingFrames);  
   m_lua->FuncRegisterFromObjectOpt("setRainbowShader", &g_animation, &Animation::setRainbowShader, true); 
   m_lua->FuncRegisterFromObjectOpt("getAnimationStackSize", &g_animation, &Animation::getAnimationStackSize); 
@@ -525,6 +540,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("composeBulkFile", composeBulkFile);
   m_lua->FuncRegister("getFrameAliasByName", GetAliasByName);
 
+  m_lua->FuncRegisterFromObjectOpt("ledsSetBrightness", &g_leds, &LedStrip::setBrightness, (uint8_t)128);
   m_lua->FuncRegisterFromObjectOpt("ledsBegin", &g_leds, &LedStrip::Begin, (uint8_t)128);
   m_lua->FuncRegisterFromObjectOpt("ledsBeginDual", &g_leds, &LedStrip::BeginDual, (uint8_t)128);
   m_lua->FuncRegisterFromObjectOpt("ledsSegmentRange", &g_leds, &LedStrip::setSegmentRange, 0);

@@ -7,7 +7,7 @@
 bool LedStrip::BeginDual(uint16_t ledCount, uint16_t secondLedCount, uint8_t maxbrighteness){
     if (ledCount > 0){
         Logger::Info("Starting total of %d leds", ledCount+secondLedCount);
-        m_ledAmount = ledCount;
+        m_ledAmount = ledCount+secondLedCount;
         m_maxBrighteness = maxbrighteness;
         m_leds = new CRGB[m_ledAmount+secondLedCount+1];
         if (m_leds == nullptr){
@@ -15,7 +15,9 @@ bool LedStrip::BeginDual(uint16_t ledCount, uint16_t secondLedCount, uint8_t max
         }
 
         FastLED.addLeds<LED_STRIP_TYPE,LED_STRIP_PIN_1,GRB>(m_leds, ledCount).setCorrection(TypicalLEDStrip).setDither(m_maxBrighteness < 255);
+        Logger::Info("Led started at addr %d to %d", (int)m_leds, ledCount);
         if (secondLedCount > 0){
+            Logger::Info("Second started at addr %d to %d", ((int)m_leds)+ ledCount, secondLedCount);
             FastLED.addLeds<LED_STRIP_TYPE,LED_STRIP_PIN_2,GRB>(m_leds + ledCount, secondLedCount).setCorrection(TypicalLEDStrip).setDither(m_maxBrighteness < 255);
         }
 
@@ -71,6 +73,11 @@ void LedStrip::setSegmentColor(int id, int r, int g, int b){
     for (int x=m_groups[id].from;x<=m_groups[id].to;x++){
         m_leds[x].setRGB(r,g,b);
     }
+}
+
+void LedStrip::setBrightness(uint8_t val){
+    m_maxBrighteness = val;
+    FastLED.setBrightness(m_maxBrighteness);
 }
 
 void LedStrip::setLedColor(int id, int r, int g, int b){

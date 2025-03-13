@@ -59,12 +59,17 @@ function _M.GetExpressionName(name)
 end
 
 function _M.GetCurrentExpressionId()
-	local frameId = getPanelCurrentFace()
-	local animId = _M.by_frame[frameId]
-	if not animId then 
-		return -1, frameId
+	local storage = getCurrentAnimationStorage()
+	if storage == -1 then
+		local frameId = getPanelCurrentFace()
+		local animId = _M.by_frame[frameId]
+		if not animId then 
+			return -1, frameId
+		end
+		return animId, frameId
+	else 
+		return storage, getPanelCurrentFace()	
 	end
-	return animId, frameId
 end
 
 function _M.GetCurrentFrame()
@@ -133,7 +138,11 @@ function _M.SetExpression(id)
 			repeats = 1
 			allDrop = false
 		end
-		setPanelAnimation(aux.frames, aux.duration, repeats, allDrop)
+		if tonumber(id) then
+			setPanelAnimation(aux.frames, aux.duration, repeats, allDrop, tonumber(id))
+		else 
+			setPanelAnimation(aux.frames, aux.duration, repeats, false)
+		end
 	end
 end
 
@@ -156,7 +165,11 @@ function _M.StackExpression(id)
 		if aux.transition then 
 			repeats = 1
 		end
-		setPanelAnimation(aux.frames, aux.duration, repeats, false)
+		if tonumber(id) then
+			setPanelAnimation(aux.frames, aux.duration, repeats, false, tonumber(id))
+		else 
+			setPanelAnimation(aux.frames, aux.duration, repeats, false)
+		end
 	end
 end
 
