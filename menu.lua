@@ -258,7 +258,7 @@ end
 function _M.handleSciptsMenu()
     if readButtonStatus(BUTTON_CONFIRM) == BUTTON_JUST_PRESSED then
         _M.enterMainMenu() 
-        scripts.StartScript(1) 
+        scripts.StartScript(2) 
     end
 end
 

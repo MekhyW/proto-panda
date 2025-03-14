@@ -352,6 +352,17 @@ template<> struct GenericLuaReturner<const char *>{
     };
 };
 
+template<> struct GenericLuaReturner<std::vector<uint16_t>>{
+    static inline void Ret(std::vector<uint16_t> vr,lua_State *L,bool forceTable = false){
+       lua_newtable(L);
+       auto index = 1;
+       for (const auto& value : vr) {
+           lua_pushinteger(L, value);  
+           lua_rawseti(L, -2, index++);
+       }
+   };
+};
+
 template<> struct GenericLuaReturner<std::vector<int>>{
      static inline void Ret(std::vector<int> vr,lua_State *L,bool forceTable = false){
         lua_newtable(L);

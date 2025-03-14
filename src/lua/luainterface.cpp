@@ -353,6 +353,32 @@ void DrawPanelFaceToScreen(int x, int y)
   return;
 }
 
+std::vector<uint16_t> decodePng(std::string filename)
+{
+  int lastRcError = 0;
+  size_t x;
+  size_t y;
+  uint16_t* decodedData = Storage::DecodePNG(filename.c_str(), lastRcError,x, y);
+  if (lastRcError != 0){
+    OledScreen::CriticalFail("File not found");
+    for (;;){}
+    return std::vector<uint16_t>();
+  }
+  if (!decodedData){
+    OledScreen::CriticalFail("Failed to allocate");
+    for (;;){}
+  }
+  size_t dataSize = x * y;
+  std::vector<uint16_t> res(dataSize);
+  for (int i=0;i<dataSize;i++){
+    res[i] = decodedData[i];
+  }
+  //Storage::FreeBuffer(decodedData);
+  return res;
+}
+
+
+
 void DrawDisplayScreen()
 {
   OledScreen::display.display();
@@ -550,6 +576,8 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegisterFromObjectOpt("ledsSegmentTweenBehavior", &g_leds, &LedStrip::setSegmentTweenBehavior, 0, 0, 0, 0);
   m_lua->FuncRegisterFromObjectOpt("ledsSegmentTweenSpeed", &g_leds, &LedStrip::setSegmentTweenSpeed);
   m_lua->FuncRegisterFromObjectOpt("setLedColor", &g_leds, &LedStrip::setLedColor);
+
+  m_lua->FuncRegister("decodePng", decodePng); 
 
 }
 

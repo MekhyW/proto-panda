@@ -327,7 +327,7 @@ std::string PngErrorToString(int error) {
 
 bool FrameRepository::decodeFile(const char *pathName, bool flip, int color_mode){
     int lastRcError = 0;
-    uint16_t* res = Storage::DecodePNG(pathName, lastRcError);
+    uint16_t* res = Storage::DecodePNGForBuffer(pathName, lastRcError);
     if (res) {
         uint8_t meme = flip ? 1 : 0;
         bulkFile.write(&meme, sizeof(uint8_t));

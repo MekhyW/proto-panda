@@ -1,3 +1,4 @@
 [
-  {"name": "snake", "file": "/scripts/snake.lua"}
+  {"name": "snake", "file": "/scripts/snake.lua"},
+  {"name": "wah", "file": "/scripts/wah.lua"}
 ]

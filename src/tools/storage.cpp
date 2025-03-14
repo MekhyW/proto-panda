@@ -146,7 +146,7 @@ void PNGDraw(PNGDRAW *pDraw) {
 }
 
 
-uint16_t *Storage::DecodePNG(const char *name, int& rcError){
+uint16_t *Storage::DecodePNGForBuffer(const char *name, int& rcError){
   auto fp = Storage::getFile(name);
   if (!fp){
     rcError = 998;
@@ -165,6 +165,28 @@ uint16_t *Storage::DecodePNG(const char *name, int& rcError){
     return nullptr;
   }
   Storage::tmpBuffer = (uint16_t*)ps_malloc(FILE_SIZE_BULK_SIZE );
+  pixelDraw = 0;
+  png.decode(NULL, 0);
+  png.close();
+  return Storage::tmpBuffer;
+}
+
+uint16_t *Storage::DecodePNG(const char *name, int &rcError, size_t &x, size_t &y){
+  auto fp = Storage::getFile(name);
+  if (!fp){
+    rcError = 998;
+    return nullptr;
+  }
+  fp.close();
+
+  rcError = png.open(name, myOpen, myClose, myRead, mySeek, PNGDraw);
+  if (rcError != PNG_SUCCESS) {
+    return nullptr;
+  }
+  x = png.getWidth();
+  y = png.getHeight();
+
+  Storage::tmpBuffer = (uint16_t*)ps_malloc(x * y * sizeof(uint16_t) );
   pixelDraw = 0;
   png.decode(NULL, 0);
   png.close();
