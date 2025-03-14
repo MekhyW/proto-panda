@@ -53,9 +53,7 @@ class Animation{
         bool needFlipScreen(){
             return m_needFlip;
         };
-        void setManaged(bool v){
-            m_isManaged = v;
-        }
+        void setManaged(bool v);
         bool isManaged(){
             return m_isManaged;
         }

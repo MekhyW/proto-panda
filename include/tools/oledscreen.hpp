@@ -30,7 +30,7 @@ class OledScreen{
         static void PrintError(const char *str);
         static void DrawPanelFaceToScreen(int x, int y);
         static void DrawIcon(int x, int y, int iconId);
-        static void DrawAccelerometer(int posX, int posY);
+        static void DrawAccelerometer(int id, int posX, int posY);
         static int CreateIcon(std::vector<uint8_t> iconData, int width, int height);
 
         static Adafruit_SSD1306 display;
@@ -39,4 +39,7 @@ class OledScreen{
         static uint8_t DisplayFace[PANEL_WIDTH * PANEL_HEIGHT];
 
         static std::vector<OledIcon> icons;
+    private:
+        static bool showFps;
+        static uint32_t swapTimer;
 };

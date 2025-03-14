@@ -289,6 +289,12 @@ void Animation::Update(File *file){
     }
 }
 
+void Animation::setManaged(bool v){
+    xSemaphoreTake(m_mutex, portMAX_DELAY);
+    m_isManaged = v;
+    xSemaphoreGive(m_mutex);
+}
+
 bool Animation::internalUpdate(File *file, AnimationSequence &running){
 
     

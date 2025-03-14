@@ -168,6 +168,7 @@ void second_loop(void*){
     g_lua.CallFunctionT("onLoop", Devices::getDeltaTime());
     
     Devices::EndFrame();
+    vTaskDelay(1);
   }
 }
 

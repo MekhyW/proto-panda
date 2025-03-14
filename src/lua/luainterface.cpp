@@ -476,6 +476,8 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("i2cScan", Devices::I2CScan);
 
   m_lua->FuncRegister("getFps", Devices::getFps); 
+  m_lua->FuncRegister("getFreePsram", Devices::getFreePsram); 
+  m_lua->FuncRegister("getFreeHeap", Devices::getFreeHeap); 
   m_lua->FuncRegister("servoPause", Devices::ServoPause);
   m_lua->FuncRegister("servoResume", Devices::ServoResume); 
   m_lua->FuncRegister("servoMove", Devices::ServoMove);

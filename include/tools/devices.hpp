@@ -96,6 +96,11 @@ class Devices{
         static bool BuzzerTone(int tone);
         static bool BuzzerNoTone();
 
+        static float getFreePsram();
+        static float getFreeHeap(){
+            return percentageHeapFree;
+        }
+
         static float getInternalAccelerometerX(){
             return internalAX;
         };
@@ -124,14 +129,17 @@ class Devices{
         static uint8_t maxBrighteness;
         static uint32_t freeHeapBytes;
         static uint32_t totalHeapBytes;
+        static uint32_t freePsramBytes;
+        static uint32_t totalPsramBytes;    
         static float percentageHeapFree;
+        static float percentagePsramFree;
 
         static std::map<byte,bool> foundDevices;
 
         static uint64_t s_frameStart;
         static uint64_t s_frameAutoStart;
         static uint64_t s_frameDuration;
-        static uint64_t s_frameAutoDuration;
+        static uint64_t s_frameAutoDuration;    
         static bool s_hasLidar;
         static bool s_autoCheckPower;
         static bool s_hasServo;

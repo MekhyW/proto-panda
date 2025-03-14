@@ -28,6 +28,9 @@ bool OledScreen::consoleMode = false;
 std::list<std::string> OledScreen::lines;
 uint8_t OledScreen::DisplayFace[PANEL_WIDTH * PANEL_HEIGHT];
 
+bool OledScreen::showFps = true;
+uint32_t OledScreen::swapTimer = 0;
+
 std::vector<OledIcon> OledScreen::icons;
 
 bool OledScreen::Start(){
@@ -121,33 +124,48 @@ void OledScreen::DrawBottomBar(){
     display.drawRect(0,posY, OLED_SCREEN_WIDTH, 17, 0);
     display.drawFastHLine(0,posY,OLED_SCREEN_WIDTH,1);
     display.drawFastHLine(0,posY+17,OLED_SCREEN_WIDTH,1);
-    display.drawBitmap(0, posY, logo_battery, 12,12, SSD1306_WHITE);
-    display.setCursor(13, posY+4);
-    display.printf("%1.2fV", Sensors::GetAvgBatteryVoltage());
-    int startX = 48;
+
+    int startX = 0;
     display.drawFastVLine(startX,posY,posY+17,1);
-    DrawAccelerometer(startX, posY);
+    DrawAccelerometer(0, startX, posY);
     display.drawFastVLine(startX+16,posY,posY+17,1);
+    DrawAccelerometer(1, startX+17, posY);
+    display.drawFastVLine(startX+33,posY,posY+17,1);
 
-    display.setCursor(startX+18, posY+4);
-    display.printf("%d/%d", (int)Devices::getAutoFps(), (int)Devices::getFps());
+    display.setCursor(startX+35, posY+4);
+    if (showFps){
+        display.printf("FPS: %d", (int)Devices::getFps());
+    }else{
+        display.printf("Ram: %2.2f%%", Devices::getFreePsram());
+    }
+    if (swapTimer < millis()){
+        swapTimer = millis() + 5 * 1000;
+        showFps = !showFps;
+    }
 
-    if (g_remoteControls.getConnectedClients() > 0){
+    if (g_remoteControls.isElementIdConnected(0)){
         display.drawBitmap(OLED_SCREEN_WIDTH-12, posY+2, logo_handy, 12,12, SSD1306_WHITE);
     }else{
         display.drawBitmap(OLED_SCREEN_WIDTH-12, posY+2, logo_no_handy, 12,12, SSD1306_WHITE);
     }
+    if (g_remoteControls.isElementIdConnected(1)){
+        display.drawBitmap(OLED_SCREEN_WIDTH-24, posY+2, logo_handy, 12,12, SSD1306_WHITE);
+    }else{
+        display.drawBitmap(OLED_SCREEN_WIDTH-24, posY+2, logo_no_handy, 12,12, SSD1306_WHITE);
+    }
+
+
     display.setCursor(0,0);
 }
 
-void OledScreen::DrawAccelerometer(int posX, int posY){
-  int zpos = map(BleManager::remoteData[0].z, -8192, 8192, -8,8);
+void OledScreen::DrawAccelerometer(int id, int posX, int posY){
+  int zpos = map(BleManager::remoteData[id].z, -8192, 8192, -8,8);
   zpos = zpos > 8 ? 8 : zpos;
   zpos = zpos < -8 ? -8 : zpos;
-  int xpos = map(BleManager::remoteData[0].x,-8192, 8192, -8,8);
+  int xpos = map(BleManager::remoteData[id].x,-8192, 8192, -8,8);
   xpos = xpos > 8 ? 8 : xpos;
   xpos = xpos < -8 ? -8 : xpos;
-  int ypos = map(BleManager::remoteData[0].y,-8192, 8192, -8,8);
+  int ypos = map(BleManager::remoteData[id].y,-8192, 8192, -8,8);
   ypos = ypos > 8 ? 8 : ypos;
   ypos = ypos < -8 ? -8 : ypos;
   display.drawLine(posX+8, posY+8, posX+8+xpos, posY+8, SSD1306_WHITE);

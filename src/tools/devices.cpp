@@ -33,6 +33,9 @@ uint64_t Devices::s_frameAutoStart = 0;
 uint64_t Devices::s_frameAutoDuration = 0;
 uint32_t Devices::freeHeapBytes = 0;
 uint32_t Devices::totalHeapBytes = 1;
+uint32_t Devices::freePsramBytes = 0;
+uint32_t Devices::totalPsramBytes = 1;
+float Devices::percentagePsramFree = 1;
 float Devices::percentageHeapFree = 1;
 uint8_t Devices::maxBrighteness = 128;
 uint8_t Devices::sensorRead = 1;
@@ -263,12 +266,21 @@ float Devices::getAutoFps(){
 }
 
 
+float Devices::getFreePsram(){
+  return Devices::percentagePsramFree;
+}
+  
+
 void Devices::CalculateMemmoryUsage(){
 
-    Devices::freeHeapBytes = ESP.getFreeHeap();  //heap_caps_get_free_size(MALLOC_CAP_DEFAULT);
-    Devices::totalHeapBytes = ESP.getHeapSize(); //heap_caps_get_total_size(MALLOC_CAP_DEFAULT);
-    Devices::percentageHeapFree = Devices::freeHeapBytes * 100.0f / (float)Devices::totalHeapBytes;
-    Logger::Info("[Memory] %.1f%% free - %d of %d bytes free (psram: %d / %d  -> %.1f%%)", Devices::percentageHeapFree, Devices::freeHeapBytes, Devices::totalHeapBytes, ESP.getPsramSize(), ESP.getFreePsram(),  ESP.getFreePsram()* 100.0f / ESP.getPsramSize()) ;
+  Devices::freeHeapBytes = ESP.getFreeHeap();  
+  Devices::totalHeapBytes = ESP.getHeapSize(); 
+  Devices::freePsramBytes = ESP.getFreePsram(); 
+  Devices::totalPsramBytes = ESP.getPsramSize(); 
+
+  Devices::percentageHeapFree = Devices::freeHeapBytes * 100.0f / (float)Devices::totalHeapBytes;
+  Devices::percentagePsramFree = freePsramBytes* 100.0f / (float)totalPsramBytes;
+  Logger::Info("[Memory] %.1f%% free - %d of %d bytes free (psram: %d / %d  -> %.1f%%)", Devices::percentageHeapFree, Devices::freeHeapBytes, Devices::totalHeapBytes, totalPsramBytes, freePsramBytes,  getFreePsram()) ;
 }
 
 void Devices::DisplayResetInfo()
