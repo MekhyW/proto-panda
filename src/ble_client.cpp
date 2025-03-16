@@ -9,6 +9,8 @@ void scanEndedCB(NimBLEScanResults results){
 static bool isScanning = false;
 
 
+
+
 static ConnectTuple *toConnect = nullptr;
 
 
@@ -263,6 +265,13 @@ void BleManager::update(){
   if (!m_started){
     return;
   }
+  
+  if (millis() - lastScanClearTime >= (120*1000) ) {
+    NimBLEDevice::getScan()->clearResults(); // Clear the scan results
+    lastScanClearTime = millis(); // Reset the timer
+    Logger::Info("[BLE] Scan results cleared");
+  }
+  
   if (toConnect != nullptr) {
     connectToServer(toConnect);
     toConnect = nullptr;

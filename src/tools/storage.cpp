@@ -139,10 +139,11 @@ int32_t mySeek(PNGFILE *handle, int32_t position) {
   return Storage::pngDecFile.seek(position);
 }
 
-int pixelDraw = 0;
 // Function to draw pixels to the display
 void PNGDraw(PNGDRAW *pDraw) {
-  png.getLineAsRGB565(pDraw, &(Storage::tmpBuffer[pDraw->y *pDraw->iWidth]), PNG_RGB565_LITTLE_ENDIAN, 0xffffffff);
+  static uint16_t raw[128];
+  png.getLineAsRGB565(pDraw, raw, PNG_RGB565_LITTLE_ENDIAN, 0xffffffff);
+  memcpy(Storage::tmpBuffer + (pDraw->y *pDraw->iWidth), raw, pDraw->iWidth * sizeof(uint16_t));
 }
 
 
@@ -165,7 +166,6 @@ uint16_t *Storage::DecodePNGForBuffer(const char *name, int& rcError){
     return nullptr;
   }
   Storage::tmpBuffer = (uint16_t*)ps_malloc(FILE_SIZE_BULK_SIZE );
-  pixelDraw = 0;
   png.decode(NULL, 0);
   png.close();
   return Storage::tmpBuffer;
@@ -186,8 +186,7 @@ uint16_t *Storage::DecodePNG(const char *name, int &rcError, size_t &x, size_t &
   x = png.getWidth();
   y = png.getHeight();
 
-  Storage::tmpBuffer = (uint16_t*)ps_malloc(x * y * sizeof(uint16_t) );
-  pixelDraw = 0;
+  Storage::tmpBuffer = (uint16_t*)ps_malloc((x) * y * sizeof(uint16_t));
   png.decode(NULL, 0);
   png.close();
   return Storage::tmpBuffer;

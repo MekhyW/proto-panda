@@ -353,7 +353,7 @@ void DrawPanelFaceToScreen(int x, int y)
   return;
 }
 
-std::vector<uint16_t> decodePng(std::string filename)
+SizedArray *decodePng(std::string filename)
 {
   int lastRcError = 0;
   size_t x;
@@ -362,19 +362,19 @@ std::vector<uint16_t> decodePng(std::string filename)
   if (lastRcError != 0){
     OledScreen::CriticalFail("File not found");
     for (;;){}
-    return std::vector<uint16_t>();
+    return nullptr;
   }
   if (!decodedData){
     OledScreen::CriticalFail("Failed to allocate");
     for (;;){}
   }
-  size_t dataSize = x * y;
-  std::vector<uint16_t> res(dataSize);
-  for (int i=0;i<dataSize;i++){
-    res[i] = decodedData[i];
-  }
-  //Storage::FreeBuffer(decodedData);
-  return res;
+
+
+  SizedArray *aux = new SizedArray();
+  aux->data = decodedData;
+  aux->size =  x * y;
+  aux->deleteAfterInsertion = heap_caps_free;
+  return aux;
 }
 
 
@@ -402,6 +402,14 @@ void DrawRectScreen(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
   return;
   
 }
+
+void DrawPixelScreen(int16_t x, int16_t y,uint16_t color)
+{
+  OledScreen::display.drawPixel(x,y, color);
+  return;
+  
+}
+
 void DrawLineScreen(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
 {
   OledScreen::display.drawLine(x, y, w, h, color);
@@ -468,6 +476,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("oledSetFontSize", DrawSetFontSize);
   m_lua->FuncRegister("oledDrawText", DrawTextScreen);
   m_lua->FuncRegister("oledDrawRect", DrawRectScreen);
+  m_lua->FuncRegister("oledDrawPixel", DrawPixelScreen);
   m_lua->FuncRegister("oledDrawLine", DrawLineScreen);
   m_lua->FuncRegister("oledDrawCircle", DrawCircleScreen);
   //m_lua->FuncRegisterFromObject("oledDrawCircle", &OledScreen::display, &Adafruit_SSD1306::drawCircle); 

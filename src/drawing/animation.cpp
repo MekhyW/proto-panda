@@ -223,12 +223,12 @@ void Animation::DrawFrame(File *file, int i){
             hsv_to_rgb(  (((frameId+x)%64) / 64.0f) * 255, 255, gray, r, g, b);
         }
 
-        DMADisplay::Display->updateMatrixDMABuffer_2((PANEL_WIDTH-1)-x, y, r, b, g);
+        DMADisplay::Display->updateMatrixDMABuffer_2((PANEL_WIDTH-1)-x, y, r, g, b);
         reorder_rgb(color_mode, &r, &g, &b);
         if (reverse&1){
-           DMADisplay::Display->updateMatrixDMABuffer_2((PANEL_WIDTH)+x, y, r, b, g);
+           DMADisplay::Display->updateMatrixDMABuffer_2((PANEL_WIDTH)+x, y, r, g, b);
         }else{
-           DMADisplay::Display->updateMatrixDMABuffer_2((PANEL_WIDTH+PANEL_WIDTH-1)-x, y, r, b, g);
+           DMADisplay::Display->updateMatrixDMABuffer_2((PANEL_WIDTH+PANEL_WIDTH-1)-x, y, r, g, b);
         }
         
       }
@@ -240,7 +240,9 @@ void Animation::DrawFrame(File *file, int i){
         rdd = map(rdd, 0, 900, 0, 32);
     }
      
-    DMADisplay::Display->drawRect(0,0, rdd, 2, DMADisplay::Display->color565(255,255,255));
+    DMADisplay::Display->drawRect(0,0, rdd, 2, DMADisplay::Display->color565(255,0,0));
+    DMADisplay::Display->drawRect(0,3, rdd, 2, DMADisplay::Display->color565(0,255,0));
+    DMADisplay::Display->drawRect(0,9, rdd, 2, DMADisplay::Display->color565(0,0,255));
     
 
     DMADisplay::Display->endWrite();

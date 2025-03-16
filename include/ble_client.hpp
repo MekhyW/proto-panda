@@ -94,7 +94,7 @@ class ConnectTuple{
 
 class BleManager{
   public:
-    BleManager():clientCount(0),lastScan(0), scanInterval(1), maxClients(1),m_started(false),m_canScan(false){}
+    BleManager():clientCount(0), maxClients(1),lastScanClearTime(0),m_started(false),m_canScan(false){}
     bool begin();
     void update();
     void updateButtons();
@@ -129,7 +129,7 @@ class BleManager{
     //bool connectToDevice(ConnectTuple tpl);
     //void showWaitDisplay();
     //void showScanningDisplay();
-    uint32_t lastScan, scanInterval, maxClients;
+    uint32_t  maxClients, lastScanClearTime;
     bool m_started, m_canScan;
 
     //std::stack<ConnectTuple> toConnectDevices;

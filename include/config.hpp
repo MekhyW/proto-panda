@@ -122,11 +122,15 @@ Servos
 #define FILE_SIZE (( FILE_SIZE_BULK_SIZE  + sizeof(uint16_t) ))
 
 #define DMA_GPIO_R1 12
-#define DMA_GPIO_G1 11
-#define DMA_GPIO_B1 10
+
+#define DMA_GPIO_G1 10
+#define DMA_GPIO_B1 11
+
 #define DMA_GPIO_R2 20
-#define DMA_GPIO_G2 19
-#define DMA_GPIO_B2 18
+
+#define DMA_GPIO_G2 18
+#define DMA_GPIO_B2 19
+
 #define DMA_GPIO_A 17
 #define DMA_GPIO_B 16
 #define DMA_GPIO_C 15

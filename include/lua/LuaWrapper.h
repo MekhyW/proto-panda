@@ -352,6 +352,30 @@ template<> struct GenericLuaReturner<const char *>{
     };
 };
 
+typedef struct SizedArrayS{
+    uint16_t *data;
+    size_t size;
+    void (*deleteAfterInsertion)(void *ptr) ;
+} SizedArray;
+
+template<> struct GenericLuaReturner<SizedArray*>{
+    static inline void Ret(SizedArray *vr,lua_State *L,bool forceTable = false){
+        if (vr == nullptr){
+            lua_pushnil(L);
+            return;
+        }
+        lua_newtable(L);
+        for (int index=0; index <vr->size; index++) {
+           lua_pushinteger(L, vr->data[index]);  
+           lua_rawseti(L, -2, index+1 );
+        }
+        if (vr->deleteAfterInsertion != nullptr){
+            vr->deleteAfterInsertion(vr->data);
+        }
+        delete []vr;
+   };
+};
+
 template<> struct GenericLuaReturner<std::vector<uint16_t>>{
     static inline void Ret(std::vector<uint16_t> vr,lua_State *L,bool forceTable = false){
        lua_newtable(L);
