@@ -101,6 +101,12 @@ void DrawPixel(int16_t x, int16_t y, uint16_t color)
   DMADisplay::Display->drawPixel(x, y, color);
 }
 
+void DrawChar(int16_t x, int16_t y, uint8_t c, uint16_t color, uint16_t bg, uint8_t size)
+{
+  DMADisplay::Display->drawChar(x, y, c, color, bg, size);
+}
+
+
 void DrawFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
 {
   DMADisplay::Display->fillRect(x, y, w, h, color);
@@ -431,6 +437,11 @@ void DrawSetFontSize(int16_t x)
   OledScreen::display.setTextSize(x);
   return;
 }
+void DrawSetTextColor(int16_t fg, int16_t bg)
+{
+  OledScreen::display.setTextColor(fg, bg);
+  return;
+}
 
 const char *dictget(std::string str){
   return dict.get(str);
@@ -474,12 +485,12 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("oledDisplay", DrawDisplayScreen);
   m_lua->FuncRegister("oledSetCursor", DrawSetCursor);
   m_lua->FuncRegister("oledSetFontSize", DrawSetFontSize);
+  m_lua->FuncRegisterOptional("oledSetTextColor", DrawSetTextColor, BLACK);
   m_lua->FuncRegister("oledDrawText", DrawTextScreen);
   m_lua->FuncRegister("oledDrawRect", DrawRectScreen);
   m_lua->FuncRegister("oledDrawPixel", DrawPixelScreen);
   m_lua->FuncRegister("oledDrawLine", DrawLineScreen);
   m_lua->FuncRegister("oledDrawCircle", DrawCircleScreen);
-  //m_lua->FuncRegisterFromObject("oledDrawCircle", &OledScreen::display, &Adafruit_SSD1306::drawCircle); 
   m_lua->FuncRegister("oledDrawCircle", DrawCircleScreen);
   m_lua->FuncRegister("oledDrawFilledCircle", DrawFilledCircleScreen);
 
@@ -538,6 +549,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("drawPanelRect", DrawRect);
   m_lua->FuncRegister("drawPanelFillRect", DrawFillRect);
   m_lua->FuncRegister("drawPanelPixel", DrawPixel);
+  m_lua->FuncRegisterOptional("drawPanelChar", DrawChar, 1, 0, color565(255,255,255));
   m_lua->FuncRegister("drawPanelPixels", DrawPixels);
   m_lua->FuncRegister("drawPanelLine", DrawLine);
   m_lua->FuncRegister("drawPanelCircle", DrawCircle);
@@ -654,6 +666,9 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("POWER_MODE_USB_5V", (int)POWER_MODE_USB_5V);
   m_lua->setConstant("POWER_MODE_USB_9V", (int)POWER_MODE_USB_9V);
   m_lua->setConstant("POWER_MODE_BATTERY", (int)POWER_MODE_BATTERY);
+
+  m_lua->setConstant("BLACK", (int)BLACK);
+  m_lua->setConstant("WHITE", (int)WHITE);
 
   
 }

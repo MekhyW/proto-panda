@@ -26,6 +26,10 @@ function _M.StoreState()
 	}
 end
 
+function _M.GetScripts() 
+	return _M.scripts
+end
+
 function _M.PopState() 
 	local res = _M.previous_state[#_M.previous_state]
 	if not res then 

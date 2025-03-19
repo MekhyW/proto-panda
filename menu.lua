@@ -16,7 +16,9 @@ local _M = {
     mode = MODE_MAIN_MENU,
     displayTime = 2000,
     settings={},
-
+    maxTextShowSize = 20,
+    textScrollingPos = 0,
+    textScrollingTimer = 0,
     shader = false
 }
 
@@ -43,7 +45,9 @@ end
 
 function _M.enterScriptsMenu()
     _M.mode = MODE_SCRIPTS
-    _M.selected = 0
+    _M.textScrollingPos = 1
+    _M.textScrollingTimer = 1500
+    _M.selected = 1
 end
 
 function _M.enterPanelBrightnessMenu()
@@ -196,8 +200,33 @@ function _M.draw()
         oledDrawText("< +  [OK] - >")
         oledDisplay()
     elseif _M.mode == MODE_SCRIPTS then 
-        oledSetCursor(48, 64-8)
-        oledDrawText("PNEIS")
+        local scriptList = scripts.GetScripts() 
+        oledSetCursor(0, 0)
+        oledDrawText("Press < To back")
+        oledDrawLine(0,10, 128, 10, 1)
+
+        local maxPerScreen = 4
+        local drawPos = 0
+        for i=1,#scriptList do
+            if _M.selected >= maxPerScreen then  
+                drawPos = _M.selected-maxPerScreen
+            end
+            if (i-drawPos) <= maxPerScreen and (i-drawPos) >= 0 then
+                oledSetCursor(0, 11 + 11*((i-1)-drawPos))
+                if _M.selected == i then 
+                    oledSetTextColor(BLACK, WHITE)
+                    oledDrawText(">")
+                else
+                    oledSetTextColor(WHITE, BLACK)
+                end
+                local name = scriptList[i].name
+                if #name > _M.maxTextShowSize then
+                    oledDrawText(name:sub(_M.textScrollingPos, math.min(_M.textScrollingPos+_M.maxTextShowSize, #name) ))
+                else
+                    oledDrawText(name)
+                end
+            end
+        end
         oledDisplay()
     end
 end
@@ -255,10 +284,46 @@ function _M.handleMainMenu()
 end
 
 
-function _M.handleSciptsMenu()
+function _M.handleSciptsMenu(_, dt)
+    local scriptList = scripts.GetScripts() 
+
+    if readButtonStatus(BUTTON_DOWN) == BUTTON_JUST_PRESSED then 
+        _M.selected = _M.selected+1
+        if (_M.selected > #scriptList) then 
+            _M.selected = 1
+        end
+        _M.textScrollingPos = 1
+        _M.textScrollingTimer = 1500
+    end
+    if readButtonStatus(BUTTON_UP) == BUTTON_JUST_PRESSED then 
+        _M.selected = _M.selected-1
+        if (_M.selected < 1) then 
+            _M.selected = #scriptList
+        end
+        _M.textScrollingPos = 1
+        _M.textScrollingTimer = 1500
+    end
+    
+    if readButtonStatus(BUTTON_LEFT) == BUTTON_JUST_PRESSED then 
+        _M.enterMainMenu()
+    end 
+
     if readButtonStatus(BUTTON_CONFIRM) == BUTTON_JUST_PRESSED then
+        scripts.StartScript(_M.selected) 
         _M.enterMainMenu() 
-        scripts.StartScript(2) 
+    end
+
+    _M.textScrollingTimer = _M.textScrollingTimer - dt
+    if _M.textScrollingTimer <= 0 then
+        _M.textScrollingTimer = 200
+        _M.textScrollingPos = _M.textScrollingPos+1
+        if _M.textScrollingPos > (#scriptList[_M.selected].name-(_M.maxTextShowSize-1)) then  
+            _M.textScrollingTimer = 2500
+        end
+        if _M.textScrollingPos > (#scriptList[_M.selected].name-_M.maxTextShowSize) then  
+            _M.textScrollingTimer = 1500
+            _M.textScrollingPos = 1
+        end
     end
 end
 

@@ -270,6 +270,17 @@ Sets the powering mode of the system. The mode can be `POWER_MODE_USB_5V`, `POWE
   - `mode` (int): The powering mode to set.
 - **Returns**: `nil`
 
+## Memory Management
+
+### `getFreePsram()`
+Returns the amount of free PSRAM (Pseudo Static RAM) available in bytes.
+- **Returns**: `int` (The amount of free PSRAM in bytes).
+
+### `getFreeHeap()`
+Returns the amount of free heap memory available in bytes.
+- **Returns**: `int` (The amount of free heap memory in bytes).
+
+
 ## Sensors
 #### `readButtonStatus(int)`
 Reads the status of the remote control button. There are a total of 5 buttons. Possible button states:
@@ -355,6 +366,17 @@ Draws a circle outline at the specified coordinates with the given radius and co
   - `color` (int): The color to draw.
 - **Returns**: `nil`
 
+### `drawPanelChar(x, y, c, color, bg, size)`
+Draws a character on the panel at the specified coordinates with the given color and background.
+- **Parameters**:
+  - `x` (int): The X coordinate.
+  - `y` (int): The Y coordinate.
+  - `c` (char): The character to draw.
+  - `color` (int): The color of the character (use `color565` or `color444` to generate the color).
+  - `bg` (int): The background color (use `color565` or `color444` to generate the color).
+  - `size` (int): The size of the character (1 for normal size, larger values for scaling).
+- **Returns**: `nil`
+
 #### `drawPanelFillCircle(x, y, radius, color)`
 Draws a filled circle at the specified coordinates with the given radius and color.
 - **Parameters**:
@@ -420,14 +442,20 @@ Draws a specific face. This face must already be loaded beforehand.
   - `faceId` (int): The ID of the face to draw.
 - **Returns**: `nil`
 
-#### `setPanelAnimation(frames int_array, duration, [repeat, [drop]])`
+
+#### `setPanelAnimation(frames int_array, duration, [repeat, [drop, [storage]]])`
 If the panel is in managed mode, this will set an animation to run on it.
 - **Parameters**:
   - `frames` (int array): The IDs of each frame in the animation.
   - `duration` (int): The duration of each frame in milliseconds.
   - `repeat` (int, optional): The number of times the animation should repeat. Default is `-1` (infinite).
   - `drop` (bool, optional): If `true`, all stacked animations will be erased, and this will be the only animation.
+  - `storage` (int, optional): When defined, you can query this sotrage trough `getCurrentAnimationStorage()`. Can be useful when animations share the same frames
 - **Returns**: `nil`
+
+### `getCurrentAnimationStorage()`
+Returns the ID of the current animation storage being used.
+- **Returns**: `int` (The current animation storage ID).
 
 #### `setPanelManaged(bomanagedol)`
 Enables or disables managed mode. In managed mode, rendering is handled asynchronously, and you only need to define animations.
@@ -479,6 +507,14 @@ Enables or disables the rainbow shader, which converts pixels to a rainbow patte
 - **Parameters**:
   - `enabled` (bool): `true` to enable the shader, `false` to disable.
 - **Returns**: `nil`
+
+## Image Decoding
+
+### `decodePng(filename)`
+Decodes a PNG image file from the SD card and returns the raw pixel data.
+- **Parameters**:
+  - `filename` (string): The path to the PNG file on the SD card.
+- **Returns**: `uint16` table 
 
 
 ## System
@@ -576,6 +612,22 @@ Checks if the system has a servo connected.
 - **Returns**: `bool` (`true` if a servo is present, otherwise `false`).
 
 ## Internal screen
+
+
+### `oledDrawPixel(x, y, color)`
+Draws a single pixel on the OLED screen at the specified coordinates with the given color.
+- **Parameters**:
+  - `x` (int): The X coordinate.
+  - `y` (int): The Y coordinate.
+  - `color` (int): The color to draw (1 for white, 0 for black).
+- **Returns**: `nil`
+
+### `oledSetTextColor(fg[, bg])`
+Sets the text color for drawing on the OLED screen.
+- **Parameters**:
+  - `fg` (int): The foreground color (1 for white, 0 for black).
+  - `bg` (int, optional): The background color (1 for white, 0 for black).
+- **Returns**: `nil`
 
 #### `oledSetCursor(x, y)`
 Sets the cursor position on the OLED screen.

@@ -1,4 +1,13 @@
 [
   {"name": "snake", "file": "/scripts/snake.lua"},
-  {"name": "wah", "file": "/scripts/wah.lua"}
+  {"name": "wah big text to test big things", "file": "/scripts/wah.lua"},
+  {"name": "tetris", "file": "/scripts/tetris.lua"},
+  {"name": "2", "file": "/scripts/wah.lua"},
+  {"name": "3", "file": "/scripts/snake.lua"},
+  {"name": "4", "file": "/scripts/wah.lua"},
+  {"name": "5", "file": "/scripts/snake.lua"},
+  {"name": "6", "file": "/scripts/wah.lua"},
+  {"name": "7", "file": "/scripts/snake.lua"},
+  {"name": "8", "file": "/scripts/wah.lua"},
+  {"name": "9", "file": "/scripts/wah.lua"}
 ]
