@@ -1,12 +1,8 @@
-local expressions = dofile("/lualib/expressions.lua")
-local scripts = dofile("/lualib/scripts.lua")
-local generic = dofile("/lualib/generic.lua")
-
-_G.expressions = expressions
-_G.scripts = scripts
-
-local boop = dofile("/boop.lua")
-local menu = dofile("/menu.lua")
+local expressions = require("expressions")
+local scripts = require("scripts")
+local generic = require("generic")
+local boop = require("boop")
+local menu = require("menu")
 
 local brightness
 

@@ -16,7 +16,7 @@ class AnimationSequence{
     public:
         AnimationSequence():m_duration(2500),m_frame(0),m_counter(0),m_repeat(-1),m_updateMode(0),m_storageId(-1){}
         std::vector<int> m_frames;
-        AnimationFrameAction Update();
+        AnimationFrameAction Update(int m_interruptPin);
         inline int GetFrameId();
         int m_duration;
         int m_frame;
@@ -26,18 +26,21 @@ class AnimationSequence{
         int m_storageId;
     private:
         AnimationFrameAction ChangeFrame();
-        AnimationFrameAction SpeakFrame();
+        AnimationFrameAction InterruptFrame(int pinRead);
     
 };
 
 class Animation{
     public:
-        Animation():m_animations(),m_shader(0),m_lastFace(0),m_runningFFT(false),m_runningTetris(false),m_runningPong(false),m_runningShooter(false),m_runningHexagon(false),m_isOnText(false),m_needFlip(false),m_isManaged(true),m_frameDrawDuration(0),m_frameLoadDuration(0),m_cycleDuration(0),m_mutex(xSemaphoreCreateMutex()){};
+        Animation():m_animations(),m_shader(0),m_lastFace(0),m_interruptPin(-1),m_runningFFT(false),m_runningTetris(false),m_runningPong(false),m_runningShooter(false),m_runningHexagon(false),m_isOnText(false),m_needFlip(false),m_isManaged(true),m_frameDrawDuration(0),m_frameLoadDuration(0),m_cycleDuration(0),m_mutex(xSemaphoreCreateMutex()){};
 
         void Update(File *file);
 
         void SetAnimation(int duration, std::vector<int> frames, int repeatTimes, bool dropAll, int externalStorageId=-1);
-        void SetSpeakAnimation(int duration, std::vector<int> frames);
+        void SetInterruptAnimation(int duration, std::vector<int> frames);
+        void SetInterruptPin(int pin){
+            m_interruptPin = pin;
+        }
         void DrawFrame(File *file, int i);
         void DrawCurrentFrame(File *file){
             DrawFrame(file, m_lastFace);
@@ -89,6 +92,7 @@ class Animation{
         bool internalUpdate(File *file, AnimationSequence &seq);
         int m_shader;
         int m_lastFace;
+        int m_interruptPin;
         bool m_runningFFT;
         bool m_runningTetris;
         bool m_runningPong;

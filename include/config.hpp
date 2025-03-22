@@ -1,6 +1,7 @@
 #pragma once
 
 
+#define PANDA_VERSION "1.0.0"
 /*
     Pin to enable the buck converter.
     With this pin on HIGH the buck converter will start regulating the USB/Battery input
@@ -35,11 +36,6 @@
 */
 #define VCC_THRESHOLD_HALT 6.0f
 
-/*
-    Pin audio togle
-*/
-
-#define AUDIO_POKE_PIN 1
 /*
     I2C
 */
@@ -139,5 +135,3 @@ Servos
 #define DMA_GPIO_OE 4
 #define DMA_GPIO_CLK 6
 
-
-#define PANDA_VERSION "1.0.0"

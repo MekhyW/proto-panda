@@ -3,7 +3,51 @@ local _M = {
     running_script = false
 }
 
-local json = dofile("/lualib/json.lua")
+
+local json = require("json")
+local generic = require("generic")
+
+function _M.parseVersion(version)
+	local release, major, minor = version:match("(%d+)%.(%d+)%.(%d+)")
+	if not release then 
+		release, major = version:match("(%d+)%.(%d+)")
+		minor = 0
+	end
+	release = tonumber(release) or 0
+	major = tonumber(major) or 0
+	minor = tonumber(minor) or 0
+	return release, major, minor
+end
+
+function _M.canRun(version)
+	local pandaRelease, pandaMajor, pandaMinor = _M.parseVersion(PANDA_VERSION)
+	if not pandaRelease then
+		error("Invalid panda version")
+	end
+
+	if not version then 
+		return true, "No version defined"
+	end
+
+	local scriptRelease, scriptMajor, scriptMinor = _M.parseVersion(version)
+	if not scriptRelease then 
+		return false, "Failed to parse script version"
+	end
+
+	if scriptRelease > pandaRelease then 
+		return false, "Require firmware release to be "..scriptRelease..", but got "..pandaRelease..". Required version "..version
+	end
+
+	if scriptMajor > pandaMajor then 
+		return false, "Require firmware major to be "..scriptMajor..", but got "..pandaMajor..". Required version "..version
+	end
+
+	if scriptMinor > pandaMinor then 
+		return false, "Require firmware minor to be "..scriptMinor..", but got "..pandaMinor..". Required version "..version
+	end
+
+	return true
+end
 
 function _M.Load(filepath)
     local fp, err = io.open(filepath, "r")
@@ -14,9 +58,24 @@ function _M.Load(filepath)
     fp:close()
     json.filename = filename
     _M.scripts = json.decode(content)
+    local auxScripts = {}
     for a,c in pairs(_M.scripts) do  
-    	dofile(c.file)
+    	local success, data = pcall(dofile, c.file)
+    	if not success then 
+    		generic.displayWarning("On script: "..c.file, data)
+    	else
+    		local run, message = _M.canRun(data.VERSION_REQUIRED)
+    		if message ~= nil then 
+    			generic.displayWarning("On script: "..c.file, message)
+    		end
+    		if run then 
+    			auxScripts[#auxScripts+1] = c
+    		end 
+    		data = nil
+    	end
     end
+    _M.scripts = auxScripts
+    collectgarbage()
 end
 
 function _M.StoreState() 
@@ -48,6 +107,7 @@ function _M.Handle(dt)
 	local success, res = pcall(_M.running_script.onLoop, dt)
 	if not success or _M.running_script.shouldStop then 
 		if not success then
+			generic.displayWarning("On script: "..c.file, data)
 			print("Error running script: "..tostring(res))
 		end
 		_M.running_script.onClose()

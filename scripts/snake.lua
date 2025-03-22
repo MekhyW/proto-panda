@@ -1,4 +1,5 @@
 local _M = {
+	VERSION_REQUIRED="1.0.0",
 	shouldStop = false,
 	snake = {}
 }
@@ -13,7 +14,7 @@ local RIGHT = 1
 local DOWN = 2  
 local LEFT = 3
 
-local speed = 22
+local speed = 18
 
 function _M.onSetup()
 	setPanelManaged(false)
@@ -91,6 +92,10 @@ end
 function _M.onLoop(dt)
 	clearPanelBuffer()
 
+	drawPanelRect(0,0, 64, 32, color565(100, 100, 100))
+	drawPanelRect(64,0, 64, 32, color565(100, 100, 100))
+
+
 	dt = dt/1000;
 
 	local snake = _M.snake
@@ -124,16 +129,16 @@ function _M.onLoop(dt)
 	snake.x = snake.x + (x * dt)
 	snake.y = snake.y + (y * dt)
 
-	if (snake.x < 0) then
-		snake.x = 63
-	elseif (snake.x > 64) then
-		snake.x = 0
+	if (snake.x < 1) then
+		snake.x = 62
+	elseif (snake.x >= 63) then
+		snake.x = 1
 	end
 
-	if (snake.y < 0) then
-		snake.y = 31
-	elseif (snake.y > 32) then
-		snake.y = 0
+	if (snake.y < 1) then
+		snake.y = 30
+	elseif (snake.y >= 31) then
+		snake.y = 1
 	end
 
 	local floorX = math.floor(snake.x)
@@ -145,8 +150,8 @@ function _M.onLoop(dt)
 	drawPanelPixel(64+snake.foodx, snake.foody, WHITE)
 
 	if snake.foodx == floorX and snake.foody == floorY then 
-		snake.foodx = math.random(0, 63)
-		snake.foody = math.random(0, 32)
+		snake.foodx = math.random(2, 60)
+		snake.foody = math.random(2, 30)
 		snake.size = snake.size + 4
 		toneDuration(440, 200)
 	end

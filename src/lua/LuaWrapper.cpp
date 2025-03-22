@@ -166,6 +166,45 @@ LuaWrapper::LuaWrapper() {
   luaopen_math(_state);
   luaopen_table(_state);
 
+  const char* lua_require_code = R"(
+_G.require = nil
+function require(packageName)
+    if not _G.package then 
+        _G.package = {}
+    end
+    if not _G.package[packageName] then 
+        local name = packageName:gsub("%.", "/")
+        local notFound = {}
+        for path in string.gmatch(package.path..';', "(.-);") do 
+            local dir = path:gsub("%?", name)
+            local success, data = pcall(dofile, dir)
+            if not success then 
+                if data:match("^cannot open") then
+                    notFound[#notFound+1] = dir
+                else 
+                    error(data)
+                end
+            else 
+                _G.package[packageName] = data 
+                _G[packageName] = data
+                return data
+            end
+        end
+        local str = "module '"..packageName.."' not found:\nno field package.preload['"..packageName.."']\n"
+        for i,b in pairs(notFound) do  
+            str = str ..'\tno file \''..b..'\'\n'
+        end
+        error(str)
+    else 
+        return _G.package[packageName]
+    end
+end
+    )";
+
+  if (luaL_dostring(_state, lua_require_code) != 0) {
+    lua_pop(_state, 1); 
+  }
+
   
 }
 

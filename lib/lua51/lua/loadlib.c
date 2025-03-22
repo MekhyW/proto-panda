@@ -569,61 +569,61 @@ static int searcher_preload (lua_State *L) {
 
 
 
-static void findloader (lua_State *L, const char *name) {
-  int i;
+//static void findloader (lua_State *L, const char *name) {
+//  int i;
+//
+//  luaL_Buffer msg;  /* to build error message */
+//  luaL_buffinit(L, &msg);
+//  /* push 'package.searchers' to index 3 in the stack */
+//  if (lua_getfield(L, lua_upvalueindex(1), "searchers") != LUA_TTABLE)
+//    luaL_error(L, "'package.searchers' must be a table");
+//  /*  iterate over available searchers to find a loader */
+//  for (i = 1; ; i++) {
+//    if (lua_rawgeti(L, 3, i) == LUA_TNIL) {  /* no more searchers? */
+//      lua_pop(L, 1);  /* remove nil */
+//      luaL_pushresult(&msg);  /* create error message */
+//      luaL_error(L, "module '%s' not found:%s", name, lua_tostring(L, -1));
+//    }
+//    lua_pushstring(L, name);
+//    lua_call(L, 1, 2);  /* call it */
+//    if (lua_isfunction(L, -2))  /* did it find a loader? */
+//      return;  /* module loader found */
+//    else if (lua_isstring(L, -2)) {  /* searcher returned error message? */
+//      lua_pop(L, 1);  /* remove extra return */
+//      luaL_addvalue(&msg);  /* concatenate error message */
+//    }
+//    else
+//      lua_pop(L, 2);  /* remove both returns */
+//  }
+//}
 
-  luaL_Buffer msg;  /* to build error message */
-  luaL_buffinit(L, &msg);
-  /* push 'package.searchers' to index 3 in the stack */
-  if (lua_getfield(L, lua_upvalueindex(1), "searchers") != LUA_TTABLE)
-    luaL_error(L, "'package.searchers' must be a table");
-  /*  iterate over available searchers to find a loader */
-  for (i = 1; ; i++) {
-    if (lua_rawgeti(L, 3, i) == LUA_TNIL) {  /* no more searchers? */
-      lua_pop(L, 1);  /* remove nil */
-      luaL_pushresult(&msg);  /* create error message */
-      luaL_error(L, "module '%s' not found:%s", name, lua_tostring(L, -1));
-    }
-    lua_pushstring(L, name);
-    lua_call(L, 1, 2);  /* call it */
-    if (lua_isfunction(L, -2))  /* did it find a loader? */
-      return;  /* module loader found */
-    else if (lua_isstring(L, -2)) {  /* searcher returned error message? */
-      lua_pop(L, 1);  /* remove extra return */
-      luaL_addvalue(&msg);  /* concatenate error message */
-    }
-    else
-      lua_pop(L, 2);  /* remove both returns */
-  }
-}
 
 
-
-static int ll_require (lua_State *L) {
-  const char *name = luaL_checkstring(L, 1);
-  lua_settop(L, 1);  /* LOADED table will be at index 2 */
-  lua_getfield(L, LUA_REGISTRYINDEX, LUA_LOADED_TABLE);
-  lua_getfield(L, 2, name);  /* LOADED[name] */
-  if (lua_toboolean(L, -1))  /* is it there? */
-    return 1;  /* package is already loaded */
-  /* else must load package */
-  lua_pop(L, 1);  /* remove 'getfield' result */
- 
-  findloader(L, name);
-  lua_pushstring(L, name);  /* pass name as argument to module loader */
-  lua_insert(L, -2);  /* name is 1st argument (before search data) */
-  lua_call(L, 2, 1);  /* run loader to load module */
-
-  if (!lua_isnil(L, -1))  /* non-nil return? */
-    lua_setfield(L, 2, name);  /* LOADED[name] = returned value */
-
-  if (lua_getfield(L, 2, name) == LUA_TNIL) {   /* module set no value? */
-    lua_pushboolean(L, 1);  /* use true as result */
-    lua_pushvalue(L, -1);  /* extra copy to be returned */
-    lua_setfield(L, 2, name);  /* LOADED[name] = true */
-  }
-  return 1;
-}
+//static int ll_require (lua_State *L) {
+//  const char *name = luaL_checkstring(L, 1);
+//  lua_settop(L, 1);  /* LOADED table will be at index 2 */
+//  lua_getfield(L, LUA_REGISTRYINDEX, LUA_LOADED_TABLE);
+//  lua_getfield(L, 2, name);  /* LOADED[name] */
+//  if (lua_toboolean(L, -1))  /* is it there? */
+//    return 1;  /* package is already loaded */
+//  /* else must load package */
+//  lua_pop(L, 1);  /* remove 'getfield' result */
+// 
+//  findloader(L, name);
+//  lua_pushstring(L, name);  /* pass name as argument to module loader */
+//  lua_insert(L, -2);  /* name is 1st argument (before search data) */
+//  lua_call(L, 2, 1);  /* run loader to load module */
+//
+//  if (!lua_isnil(L, -1))  /* non-nil return? */
+//    lua_setfield(L, 2, name);  /* LOADED[name] = returned value */
+//
+//  if (lua_getfield(L, 2, name) == LUA_TNIL) {   /* module set no value? */
+//    lua_pushboolean(L, 1);  /* use true as result */
+//    lua_pushvalue(L, -1);  /* extra copy to be returned */
+//    lua_setfield(L, 2, name);  /* LOADED[name] = true */
+//  }
+//  return 1;
+//}
 
 /* }====================================================== */
 
@@ -732,7 +732,7 @@ static const luaL_Reg ll_funcs[] = {
 #if defined(LUA_COMPAT_MODULE)
   {"module", ll_module},
 #endif
-  {"require", ll_require},
+  //{"require", ll_require},
   {NULL, NULL}
 };
 

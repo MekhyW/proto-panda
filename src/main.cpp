@@ -52,11 +52,6 @@ void setup() {
   digitalWrite(PIN_ENABLE_REGULATOR, LOW);
   pinMode(PIN_USB_BATTERY_IN, INPUT);
 
-  #ifdef AUDIO_POKE_PIN
-  pinMode(AUDIO_POKE_PIN, INPUT);
-  #endif
-
-
   Devices::Begin();
   Serial.begin(115200);
   Serial.println("Starting proto panda!");

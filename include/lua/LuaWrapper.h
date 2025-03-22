@@ -282,6 +282,12 @@ template<> struct GenericLuaReturner<uint8_t>{
     };
 };
 
+template<> struct GenericLuaReturner<unsigned long>{
+    static inline void Ret(unsigned long vr,lua_State *L,bool forceTable = false){
+        lua_pushnumber(L,vr);
+   };
+};
+
 template<> struct GenericLuaReturner<uint32_t>{
      static inline void Ret(uint32_t vr,lua_State *L,bool forceTable = false){
          lua_pushnumber(L,vr);

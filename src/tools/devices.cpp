@@ -38,7 +38,7 @@ uint32_t Devices::totalPsramBytes = 1;
 float Devices::percentagePsramFree = 1;
 float Devices::percentageHeapFree = 1;
 uint8_t Devices::maxBrighteness = 128;
-uint8_t Devices::sensorRead = 1;
+
 
 std::map<byte,bool> Devices::foundDevices;
 
@@ -400,22 +400,11 @@ void Devices::ReadSensors(){
   ReadInternalAcceleromter();
   ReadInternalGyroscope();
   ReadInternalTemperature();
-  ReadAudioSensor();
 }
 
 
-void Devices::ReadAudioSensor(){
-  #ifdef AUDIO_POKE_PIN
-  if (sensorRead == 1){
-    sensorRead = digitalRead(AUDIO_POKE_PIN);
-  }
-  #endif
-}
-  
-int Devices::GetSensorReading(){
-  int aux = sensorRead;
-  sensorRead = 1;
-  return aux;
+int Devices::GetSensorReading(){ //todo
+  return 0;
 }
 
 bool Devices::ServoPause(int servoId){

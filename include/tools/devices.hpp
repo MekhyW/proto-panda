@@ -68,7 +68,7 @@ class Devices{
             return maxBrighteness;
         }
 
-        static void ReadAudioSensor();
+       
         static int GetSensorReading();
 
         static void SetVoltageStartThreshold(float v){
@@ -125,7 +125,6 @@ class Devices{
         };
         
     private:
-        static uint8_t sensorRead;
         static uint8_t maxBrighteness;
         static uint32_t freeHeapBytes;
         static uint32_t totalHeapBytes;

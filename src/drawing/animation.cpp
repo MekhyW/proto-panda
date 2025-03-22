@@ -14,8 +14,8 @@ unsigned char Animation::buffer[FILE_SIZE];
 
 
 
-AnimationFrameAction AnimationSequence::SpeakFrame(){ 
-    if (Devices::GetSensorReading() == 0){
+AnimationFrameAction AnimationSequence::InterruptFrame(int pinRead){ 
+    if (pinRead == 0){
         m_frame++;
         int len = m_frames.size(); 
         if (m_frame > len-1){
@@ -49,13 +49,16 @@ AnimationFrameAction AnimationSequence::ChangeFrame(){
     }
 }
 
-AnimationFrameAction AnimationSequence::Update(){
+AnimationFrameAction AnimationSequence::Update(int m_interruptPin){
     if (m_counter <= millis()){
         m_counter = millis()+m_duration;
+        if (m_interruptPin < 0){
+            return ChangeFrame();
+        }
         switch (m_updateMode)
         {
         case 1:
-            return SpeakFrame();
+            return InterruptFrame(digitalRead(m_interruptPin));
             break;
         
         default:
@@ -300,7 +303,7 @@ void Animation::setManaged(bool v){
 bool Animation::internalUpdate(File *file, AnimationSequence &running){
 
     
-    switch (running.Update()){
+    switch (running.Update(m_interruptPin)){
     case ANIMATION_FINISHED:
         return 1;
         break;
@@ -335,7 +338,7 @@ int Animation::getCurrentAnimationStorage(){
     }   
 }
 
-void Animation::SetSpeakAnimation(int duration, std::vector<int> frames){
+void Animation::SetInterruptAnimation(int duration, std::vector<int> frames){
     xSemaphoreTake(m_mutex, portMAX_DELAY);
 
     AnimationSequence newSeq;

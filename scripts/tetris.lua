@@ -1,4 +1,5 @@
 local _M = {
+    VERSION_REQUIRED="1.0.0",
     shouldStop = false,
     TETRIS_Y = 20,
     TETRIS_X = 10,

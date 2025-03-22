@@ -519,6 +519,115 @@ Decodes a PNG image file from the SD card and returns the raw pixel data.
 
 ## System
 
+### Serial Communication
+SerialIo means using the pins io1 and io2 as tx and rx
+#### `serialWriteString(data: string)`
+Writes a string to the primary serial port.
+
+- **Parameters**:
+  - `data` (string): The string to write to the serial port.
+- **Returns**: `nil`
+
+#### `serialIoWriteString(data: string)`
+Writes a string to the secondary serial port.
+
+- **Parameters**:
+  - `data` (string): The string to write to the secondary serial port.
+- **Returns**: `nil`
+
+#### `serialIoAvailableForWrite()`
+Returns the number of bytes available for writing in the secondary serial port.
+
+- **Returns**: `int` (The number of bytes available for writing).
+
+#### `serialAvailableForWrite()`
+Returns the number of bytes available for writing in the primary serial port.
+
+- **Returns**: `int` (The number of bytes available for writing).
+
+
+### I2C Communication
+
+#### `wireAvailable()`
+Returns the number of bytes available for reading from the I2C bus.
+
+- **Returns**: `int` (The number of bytes available for reading).
+
+#### `wireBegin(addr: uint8_t)`
+Initializes the I2C bus with the specified address.
+
+- **Parameters**:
+  - `addr` (uint8_t): The I2C address of the device.
+- **Returns**: `bool` (`true` if successful, otherwise `false`).
+
+#### `wireFlush()`
+Flushes the I2C buffer.
+
+- **Returns**: `nil`
+
+#### `wireBeginTransmission(addr: uint8_t)`
+Begins a transmission to the specified I2C address.
+
+- **Parameters**:
+  - `addr` (uint8_t): The I2C address of the device.
+- **Returns**: `nil`
+
+#### `wireEndTransmission(sendStop: bool)`
+Ends the I2C transmission.
+
+- **Parameters**:
+  - `sendStop` (bool): If `true`, a stop condition is sent after the transmission.
+- **Returns**: `uint8_t` (The status of the transmission).
+
+#### `wireRead()`
+Reads a byte from the I2C bus.
+
+- **Returns**: `int` (The byte read from the I2C bus).
+
+#### `wireReadBytes(length: int)`
+Reads a specified number of bytes from the I2C bus.
+
+- **Parameters**:
+  - `length` (int): The number of bytes to read.
+- **Returns**: `std::vector<uint8_t>` (A vector containing the bytes read).
+
+#### `wireRequestFrom(address: uint16_t, size: size_t, sendStop: bool)`
+Requests data from a specified I2C address.
+
+- **Parameters**:
+  - `address` (uint16_t): The I2C address of the device.
+  - `size` (size_t): The number of bytes to request.
+  - `sendStop` (bool): If `true`, a stop condition is sent after the request.
+- **Returns**: `uint8_t` (The number of bytes received).
+
+#### `wirePeek()`
+Peeks at the next byte in the I2C buffer without removing it.
+
+- **Returns**: `int` (The next byte in the buffer).
+
+#### `wireParseFloat()`
+Parses a float from the I2C buffer.
+
+- **Returns**: `float` (The parsed float value).
+
+#### `wireParseInt()`
+Parses an integer from the I2C buffer.
+
+- **Returns**: `int` (The parsed integer value).
+
+#### `wireSetTimeout(timeout: uint32_t)`
+Sets the timeout for I2C operations.
+
+- **Parameters**:
+  - `timeout` (uint32_t): The timeout in milliseconds.
+- **Returns**: `nil`
+
+#### `wireGetTimeout()`
+Returns the current timeout for I2C operations.
+
+- **Returns**: `uint32_t` (The timeout in milliseconds).
+
+
 ### System
 #### `millis()`
 Returns the number of milliseconds the system has been running.
@@ -530,8 +639,14 @@ Delays execution for the specified number of microseconds.
   - `us` (int): The number of microseconds to delay.
 - **Returns**: `nil`
 
-#### `delay(ns)`
+#### `delay(ms)`
 Delays execution for the specified number of milliseconds.
+- **Parameters**:
+  - `ms` (int): The number of milliseconds to delay.
+- **Returns**: `nil`
+
+#### `vTaskDelay(ms)`
+Delays execution for the specified number of milliseconds. This might be necessary if you're running a task that can halt the CPU 
 - **Parameters**:
   - `ms` (int): The number of milliseconds to delay.
 - **Returns**: `nil`
@@ -790,6 +905,7 @@ Init the panels and allocate the memmory for the DMA
 
 ## Engine related
 
+- `PANDA_VERSION`: A string constant representing the current version of the Protopanda firmware.
 - `VCC_THRESHOLD_START`: The minimum voltage threshold required for the system to start.
 - `VCC_THRESHOLD_HALT`: The minimum voltage threshold below which the system will halt to prevent damage.
 - `OLED_SCREEN_WIDTH`: The width of the internal OLED screen in pixels.
@@ -836,6 +952,16 @@ Init the panels and allocate the memmory for the DMA
 - `BEHAVIOR_ROTATE_SINE_H`: Rotates colors with a sine wave effect on the H (hue) component of HSV.
 - `BEHAVIOR_FADE_IN`: Gradually fades in the LEDs from off to a specified color.
 - `MAX_LED_GROUPS`: Number os avaliable led groups
+
+## Pins
+- `D1`, `D2`: The external io, io1 and io2
+- `HIGH`, `LOW`: Constants representing high and low states for digital pins.
+- `INPUT`, `OUTPUT`: Constants representing pin modes.
+- `INPUT_PULLUP`, `INPUT_PULLDOWN`: Constants representing pull-up and pull-down modes for input pins.
+- `ANALOG`: Constant representing analog pin mode.
+- `OUTPUT_OPEN_DRAIN`, `OPEN_DRAIN`: Constants representing open-drain output mode.
+- `PULLDOWN`: Constant representing pull-down mode.
+
 
 # Led behaviors
 

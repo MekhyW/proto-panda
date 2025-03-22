@@ -58,6 +58,141 @@ int getInternalButtonStatus()
   return digitalRead(EDIT_MODE_PIN);
 }
 
+void beginSerialIo(int baud)
+{
+  Serial2.begin(baud, SERIAL_8N1, 1, 2);
+}
+
+int serialIoAvaliable()
+{
+  return Serial2.available();
+}
+
+int serialAvaliable()
+{
+  return Serial.available();
+}
+
+
+std::string serialReadStringUntil(char terminator)
+{
+  String str = Serial.readStringUntil(terminator);
+  return std::string(str.c_str());
+}
+std::string serialIoReadStringUntil(char terminator)
+{
+  String str = Serial2.readStringUntil(terminator);
+  return std::string(str.c_str());
+}
+int serialIoRead()
+{
+  return Serial2.read();
+}
+
+int serialRead()
+{
+  return Serial.read();
+}
+
+int serialIoWrite(uint8_t data)
+{
+  return Serial2.write(data);
+}
+
+int serialWrite(uint8_t data)
+{
+  return Serial.write(data);
+}
+
+int serialIoAvailableForWrite()
+{
+  return Serial2.availableForWrite();
+}
+
+int serialAvailableForWrite()
+{
+  return Serial.availableForWrite();
+}
+
+int serialIoWriteString(std::string data)
+{
+  return Serial2.write(data.c_str());
+}
+
+int serialWriteString(std::string data)
+{
+  return Serial.write(data.c_str());
+}
+
+int wireAvailable() {
+  return Wire.available();
+}
+
+bool wireBegin(uint8_t addr) {
+  return Wire.begin(addr);
+}
+
+void wireFlush() {
+  Wire.flush();
+}
+
+void wireBeginTransmission(uint8_t addr) {
+  Wire.beginTransmission(addr);
+}
+
+uint8_t wireEndTransmission(bool sendStop = true) {
+  return Wire.endTransmission(sendStop);
+}
+
+int wireRead() {
+  return Wire.read();
+}
+
+std::vector<uint8_t> wireReadBytes(int length) {
+  std::vector<uint8_t> buffer(length);
+  int bytesRead = Wire.readBytes(buffer.data(), length);
+  if (bytesRead != length) {
+      buffer.resize(bytesRead);
+  }
+  return buffer;
+}
+
+uint8_t wireRequestFrom(uint16_t address, size_t size, bool sendStop) {
+  return Wire.requestFrom(address, size, sendStop);
+}
+
+int wirePeek() {
+  return Wire.peek();
+}
+
+float wireParseFloat() {
+  return Wire.parseFloat();
+}
+
+int wireParseInt() {
+  return Wire.parseInt();
+}
+
+
+void wireSetTimeout(uint32_t timeout) {
+  Wire.setTimeout(timeout);
+}
+
+uint32_t wireGetTimeout() {
+  return Wire.getTimeout();
+}
+
+void restart() {
+  esp_restart();
+}
+
+void setBrownoutDetection(bool enable) {
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, enable ? 1 : 0);
+}
+
+int getResetReason() {
+  return (int)esp_reset_reason();
+}
 void setPanelBrighteness(uint8_t bright)
 {
   DMADisplay::Display->setBrightness(bright);
@@ -329,9 +464,16 @@ void setAnimation(std::vector<int> frames, int duration, int repeatTimes, bool d
   g_animation.SetAnimation(duration, frames, repeatTimes, dropAll, externalStorageId);
 }
 
-void setSpeakingFrames(std::vector<int> frames, int duration )
+void setInterruptFrames(std::vector<int> frames, int duration )
 {
-  g_animation.SetSpeakAnimation(duration, frames);
+  g_animation.SetInterruptAnimation(duration, frames);
+}
+void setInterruptAnimationPin(int pin)
+{
+  if (pin > 0){
+    pinMode(pin, INPUT);
+  }
+  g_animation.SetInterruptPin(pin);
 }
 
 
@@ -568,7 +710,8 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("drawPanelCurrentFrame", DrawCurrentFrame);
   m_lua->FuncRegister("setPanelBrighteness", setPanelBrighteness);
   m_lua->FuncRegister("getPanelBrighteness", getPanelBrighteness);
-  m_lua->FuncRegister("setSpeakingFrames", setSpeakingFrames);  
+  m_lua->FuncRegister("setInterruptFrames", setInterruptFrames);  
+  m_lua->FuncRegister("setInterruptAnimationPin", setInterruptAnimationPin); 
   m_lua->FuncRegisterFromObjectOpt("setRainbowShader", &g_animation, &Animation::setRainbowShader, true); 
   m_lua->FuncRegisterFromObjectOpt("getAnimationStackSize", &g_animation, &Animation::getAnimationStackSize); 
 
@@ -580,8 +723,44 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("digitalWrite", digitalWrite);
   m_lua->FuncRegister("digitalRead", digitalRead);
 
+
+  m_lua->FuncRegisterOptional("beginSerialIo", beginSerialIo, 115200);
+  m_lua->FuncRegister("serialIoAvaliable", serialIoAvaliable);
+  m_lua->FuncRegister("serialAvaliable", serialAvaliable);
+  m_lua->FuncRegisterOptional("serialReadStringUntil", serialReadStringUntil, '\n');
+  m_lua->FuncRegisterOptional("serialIoReadStringUntil", serialIoReadStringUntil, '\n');
+  m_lua->FuncRegister("serialIoRead", serialIoRead);
+  m_lua->FuncRegister("serialRead", serialRead);
+  m_lua->FuncRegister("serialIoWrite", serialIoWrite);
+  m_lua->FuncRegister("serialWrite", serialWrite);
+  m_lua->FuncRegister("serialIoAvailableForWrite", serialIoAvailableForWrite);
+  m_lua->FuncRegister("serialAvailableForWrite", serialAvailableForWrite);
+  m_lua->FuncRegister("serialIoWriteString", serialIoWriteString);
+  m_lua->FuncRegister("serialWriteString", serialWriteString);
+
+  m_lua->FuncRegister("wireAvailable", wireAvailable);
+  m_lua->FuncRegister("wireBegin", wireBegin);
+  m_lua->FuncRegister("wireFlush", wireFlush);
+  m_lua->FuncRegister("wireBeginTransmission", wireBeginTransmission);
+  m_lua->FuncRegisterOptional("wireEndTransmission", wireEndTransmission, true);
+  m_lua->FuncRegister("wireRead", wireRead);
+  m_lua->FuncRegister("wireReadBytes", wireReadBytes);
+  m_lua->FuncRegisterOptional("wireRequestFrom", wireRequestFrom, true);
+  m_lua->FuncRegister("wirePeek", wirePeek);
+  m_lua->FuncRegister("wireParseFloat", wireParseFloat);
+  m_lua->FuncRegister("wireParseInt", wireParseInt);
+  m_lua->FuncRegister("wireSetTimeout", wireSetTimeout);
+  m_lua->FuncRegister("wireGetTimeout", wireGetTimeout);
+
+  m_lua->FuncRegister("setBrownoutDetection", setBrownoutDetection);
+  m_lua->FuncRegister("getResetReason", getResetReason);
+  m_lua->FuncRegister("restart", restart);
+
+
+  m_lua->FuncRegister("vTaskDelay", vTaskDelay);
   m_lua->FuncRegister("analogRead", analogRead);
   m_lua->FuncRegister("pinMode", pinMode);
+  m_lua->FuncRegister("restart", restart);
 
   m_lua->FuncRegister("delayMicroseconds", delayMicroseconds);
   m_lua->FuncRegisterRaw("dumpStackToSerial", dumpStackToSerial);
@@ -670,7 +849,36 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("BLACK", (int)BLACK);
   m_lua->setConstant("WHITE", (int)WHITE);
 
-  
+  m_lua->setConstant("D1", 1);
+  m_lua->setConstant("D2", 2);
+
+  m_lua->setConstant("HIGH", 1);
+  m_lua->setConstant("LOW", 0);
+  m_lua->setConstant("INPUT", INPUT); 
+  m_lua->setConstant("OUTPUT", OUTPUT);
+  m_lua->setConstant("INPUT_PULLUP", INPUT_PULLUP);
+  m_lua->setConstant("INPUT_PULLDOWN", INPUT_PULLDOWN);
+
+  m_lua->setConstant("ANALOG", ANALOG);
+  m_lua->setConstant("OUTPUT_OPEN_DRAIN", OUTPUT_OPEN_DRAIN);
+  m_lua->setConstant("OPEN_DRAIN", OPEN_DRAIN);
+  m_lua->setConstant("PULLDOWN", PULLDOWN);
+
+  m_lua->setConstant("ESP_RST_UNKNOWN", (int)ESP_RST_UNKNOWN);
+  m_lua->setConstant("ESP_RST_POWERON", (int)ESP_RST_POWERON);
+  m_lua->setConstant("ESP_RST_EXT", (int)ESP_RST_EXT);
+  m_lua->setConstant("ESP_RST_SW", (int)ESP_RST_SW);
+  m_lua->setConstant("ESP_RST_PANIC", (int)ESP_RST_PANIC);
+  m_lua->setConstant("ESP_RST_INT_WDT", (int)ESP_RST_INT_WDT);
+  m_lua->setConstant("ESP_RST_TASK_WDT", (int)ESP_RST_TASK_WDT);
+  m_lua->setConstant("ESP_RST_WDT", (int)ESP_RST_WDT);
+  m_lua->setConstant("ESP_RST_DEEPSLEEP", (int)ESP_RST_DEEPSLEEP);
+  m_lua->setConstant("ESP_RST_BROWNOUT", (int)ESP_RST_BROWNOUT);
+  m_lua->setConstant("ESP_RST_SDIO", (int)ESP_RST_SDIO);
+
+    
+  #define STRINGIFY(X) #X  
+  m_lua->setConstant("PANDA_VERSION", STRINGIFY(PANDA_VERSION));
 }
 
 bool LuaInterface::Start()

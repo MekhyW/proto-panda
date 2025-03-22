@@ -5,7 +5,7 @@ local _M = {
 	count = 0,
 }
 print("Loading json!")
-local json = dofile("/lualib/json.lua")
+local json = require("json")
 
 
 function _M.Load(filename)
