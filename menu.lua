@@ -205,7 +205,7 @@ function _M.draw()
         oledDrawText("Press < To back")
         oledDrawLine(0,10, 128, 10, 1)
 
-        local maxPerScreen = 4
+        local maxPerScreen = 5
         local drawPos = 0
         for i=1,#scriptList do
             if _M.selected >= maxPerScreen then  
@@ -226,6 +226,10 @@ function _M.draw()
                     oledDrawText(name)
                 end
             end
+        end
+        if maxPerScreen < #scriptList then
+            oledSetCursor(OLED_SCREEN_WIDTH/2 - 2, OLED_SCREEN_HEIGHT - 8)
+            oledDrawText("\\/")
         end
         oledDisplay()
     end

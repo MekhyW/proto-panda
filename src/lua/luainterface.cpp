@@ -876,9 +876,7 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("ESP_RST_BROWNOUT", (int)ESP_RST_BROWNOUT);
   m_lua->setConstant("ESP_RST_SDIO", (int)ESP_RST_SDIO);
 
-    
-  #define STRINGIFY(X) #X  
-  m_lua->setConstant("PANDA_VERSION", STRINGIFY(PANDA_VERSION));
+  m_lua->setConstant("PANDA_VERSION", PANDA_VERSION);
 }
 
 bool LuaInterface::Start()

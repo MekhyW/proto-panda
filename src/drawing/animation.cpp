@@ -236,17 +236,6 @@ void Animation::DrawFrame(File *file, int i){
         
       }
     }
-    uint16_t rdd = Devices::ReadLidar();
-    if (rdd >= 900){
-        rdd = 0;
-    }else{
-        rdd = map(rdd, 0, 900, 0, 32);
-    }
-     
-    DMADisplay::Display->drawRect(0,0, rdd, 2, DMADisplay::Display->color565(255,0,0));
-    DMADisplay::Display->drawRect(0,3, rdd, 2, DMADisplay::Display->color565(0,255,0));
-    DMADisplay::Display->drawRect(0,9, rdd, 2, DMADisplay::Display->color565(0,0,255));
-    
 
     DMADisplay::Display->endWrite();
     m_needFlip = true;

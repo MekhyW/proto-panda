@@ -16,15 +16,19 @@ function _M.parseVersion(version)
 	release = tonumber(release) or 0
 	major = tonumber(major) or 0
 	minor = tonumber(minor) or 0
+	if release == 0 then 
+		error("Invalid panda version: "..tostring(version))
+	end
 	return release, major, minor
 end
+
 
 function _M.canRun(version)
 	local pandaRelease, pandaMajor, pandaMinor = _M.parseVersion(PANDA_VERSION)
 	if not pandaRelease then
 		error("Invalid panda version")
 	end
-
+	
 	if not version then 
 		return true, "No version defined"
 	end
@@ -107,7 +111,7 @@ function _M.Handle(dt)
 	local success, res = pcall(_M.running_script.onLoop, dt)
 	if not success or _M.running_script.shouldStop then 
 		if not success then
-			generic.displayWarning("On script: "..c.file, data)
+			generic.displayWarning("Runtime error", res)
 			print("Error running script: "..tostring(res))
 		end
 		_M.running_script.onClose()
