@@ -139,7 +139,8 @@ void setup() {
 
 
   g_frameRepo.displayFFATInfo();
-
+  Serial.printf("Running upon %d\n", xPortGetCoreID());
+  
   xTaskCreatePinnedToCore(second_loop, "second loop", 10000, NULL, 100, &g_secondCore, 0);
 
   Devices::CalculateMemmoryUsage();  

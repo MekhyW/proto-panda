@@ -299,6 +299,24 @@ uint32_t readButtonStatus(uint32_t button)
   return BleManager::remoteData[id].real_inputButtonsStatus[button];
 }
 
+uint32_t getBleDeviceUpdateDt(uint32_t device)
+{
+  if (device >= MAX_BLE_BUTTONS*MAX_BLE_CLIENTS)
+  {
+    return 0;
+  }
+  return BleManager::remoteData[device].currentUpdate;
+}
+
+uint32_t getBleDeviceLastUpdate(uint32_t device)
+{
+  if (device >= MAX_BLE_BUTTONS*MAX_BLE_CLIENTS)
+  {
+    return 0;
+  }
+  return BleManager::remoteData[device].previousUpdate;
+}
+
 float readAccelerometerX(int device)
 {
   if (device >= MAX_BLE_CLIENTS){
@@ -503,6 +521,7 @@ void DrawPanelFaceToScreen(int x, int y)
 
 SizedArray *decodePng(std::string filename)
 {
+  uint32_t started = millis();
   int lastRcError = 0;
   size_t x;
   size_t y;
@@ -517,11 +536,14 @@ SizedArray *decodePng(std::string filename)
     for (;;){}
   }
 
-
   SizedArray *aux = new SizedArray();
   aux->data = decodedData;
   aux->size =  x * y;
   aux->deleteAfterInsertion = heap_caps_free;
+  //This is required, as LUA and BLE share the same core, if this operation takes too we need to yield here a bit.
+  if ((millis()-started) > 50){
+    vTaskDelay(1);
+  }
   return aux;
 }
 
@@ -611,14 +633,14 @@ void dictFormat(){
 
 void LuaInterface::RegisterMethods()
 {
-
+  //Dict
   m_lua->FuncRegister("dictGet", dictget);
   m_lua->FuncRegister("dictSet", dictset);
   m_lua->FuncRegister("dictDet", dictdel);
   m_lua->FuncRegister("dictSave", dictSave);
   m_lua->FuncRegister("dictLoad", dictLoad);
   m_lua->FuncRegister("dictFormat", dictFormat);
-
+  //Oleed display internal
   m_lua->FuncRegister("oledFaceToScreen", DrawPanelFaceToScreen);
   m_lua->FuncRegister("oledCreateIcon", OledScreen::CreateIcon);
   m_lua->FuncRegister("oledDrawIcon", OledScreen::DrawIcon);
@@ -635,34 +657,24 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("oledDrawCircle", DrawCircleScreen);
   m_lua->FuncRegister("oledDrawCircle", DrawCircleScreen);
   m_lua->FuncRegister("oledDrawFilledCircle", DrawFilledCircleScreen);
-
+  //BLE
   m_lua->FuncRegister("startBLE", startBLE);
   m_lua->FuncRegister("getConnectedRemoteControls", getConnectedRemoteControls);
   m_lua->FuncRegister("isElementIdConnected", isElementIdConnected);
   m_lua->FuncRegister("beginBleScanning", beginScanning);
   m_lua->FuncRegister("setMaximumControls", setMaximumControls);
   m_lua->FuncRegister("acceptBLETypes", acceptTypes);
-
+  //System
   m_lua->FuncRegister("panelPowerOn", powerOn);
   m_lua->FuncRegister("panelPowerOff", powerOff);
   m_lua->FuncRegister("setPoweringMode", setPoweringMode);
   m_lua->FuncRegister("waitForPower", Devices::WaitForPower);
   m_lua->FuncRegister("setAutoCheckPowerLevel", Devices::SetAutoCheckPowerLevel);
-
   m_lua->FuncRegister("setVoltageStopThreshold", Devices::SetVoltageStopThreshold);
   m_lua->FuncRegister("setVoltageStartThreshold", Devices::SetVoltageStartThreshold);
-
-
-  m_lua->FuncRegister("tone", Devices::BuzzerTone);
-  m_lua->FuncRegister("toneDuration", Devices::BuzzerToneDuration);
-  m_lua->FuncRegister("noTone", Devices::BuzzerNoTone);
-  
-
   m_lua->FuncRegister("getBatteryVoltage", Sensors::GetBatteryVoltage);
   m_lua->FuncRegister("getAvgBatteryVoltage", Sensors::GetAvgBatteryVoltage);
   m_lua->FuncRegister("setHaltOnError", setHaltOnError);
-  m_lua->FuncRegister("i2cScan", Devices::I2CScan);
-
   m_lua->FuncRegister("getFps", Devices::getFps); 
   m_lua->FuncRegister("getFreePsram", Devices::getFreePsram); 
   m_lua->FuncRegister("getFreeHeap", Devices::getFreeHeap); 
@@ -670,7 +682,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("servoResume", Devices::ServoResume); 
   m_lua->FuncRegister("servoMove", Devices::ServoMove);
   m_lua->FuncRegister("hasServo", Devices::HasServo);
-
+  //BLE
   m_lua->FuncRegister("readButtonStatus", readButtonStatus);
   m_lua->FuncRegisterOptional("readAccelerometerX", readAccelerometerX, 0);
   m_lua->FuncRegisterOptional("readAccelerometerY", readAccelerometerY, 0);
@@ -678,14 +690,14 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegisterOptional("readGyroX", readGyroX, 0);
   m_lua->FuncRegisterOptional("readGyroY", readGyroY, 0);
   m_lua->FuncRegisterOptional("readGyroZ", readGyroZ, 0);
-
+  m_lua->FuncRegisterOptional("getBleDeviceLastUpdate", getBleDeviceLastUpdate, 0);
+  m_lua->FuncRegisterOptional("getBleDeviceUpdateDt", getBleDeviceUpdateDt, 0);
+  //LIDAR
   m_lua->FuncRegister("hasLidar", hasLidar);
   m_lua->FuncRegister("readLidar", readLidar);
-
-
+  //Internal sensor
   m_lua->FuncRegister("getInternalButtonStatus", getInternalButtonStatus); 
-  
-
+  //Panels
   m_lua->FuncRegister("startPanels", StartPanels); 
   m_lua->FuncRegister("flipPanelBuffer", FlipScreen);
   m_lua->FuncRegister("drawPanelRect", DrawRect);
@@ -698,7 +710,6 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("drawPanelFillCircle", DrawFillCircle);
   m_lua->FuncRegister("clearPanelBuffer", ClearScreen);
   m_lua->FuncRegister("drawPanelFace", DrawFace);
-  
   m_lua->FuncRegisterOptional("setPanelAnimation", setAnimation, -1, false, -1, 250);
   m_lua->FuncRegister("popPanelAnimation", popPanelAnimation); 
   m_lua->FuncRegister("setPanelMaxBrighteness", Devices::SetMaxBrighteness);
@@ -714,16 +725,29 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("setInterruptAnimationPin", setInterruptAnimationPin); 
   m_lua->FuncRegisterFromObjectOpt("setRainbowShader", &g_animation, &Animation::setRainbowShader, true); 
   m_lua->FuncRegisterFromObjectOpt("getAnimationStackSize", &g_animation, &Animation::getAnimationStackSize); 
-
-
   m_lua->FuncRegister("color565", color565);
   m_lua->FuncRegister("color444", color444);
+  m_lua->FuncRegister("composeBulkFile", composeBulkFile);
+  m_lua->FuncRegister("getFrameAliasByName", GetAliasByName);
+  m_lua->FuncRegister("decodePng", decodePng); 
+  //Aarduino
+  m_lua->FuncRegister("tone", Devices::BuzzerTone);
+  m_lua->FuncRegister("toneDuration", Devices::BuzzerToneDuration);
+  m_lua->FuncRegister("noTone", Devices::BuzzerNoTone);
+  m_lua->FuncRegister("i2cScan", Devices::I2CScan);
   m_lua->FuncRegister("millis", millis);
   m_lua->FuncRegister("delay", delay);
   m_lua->FuncRegister("digitalWrite", digitalWrite);
   m_lua->FuncRegister("digitalRead", digitalRead);
-
-
+  m_lua->FuncRegister("vTaskDelay", vTaskDelay);
+  m_lua->FuncRegister("analogRead", analogRead);
+  m_lua->FuncRegister("pinMode", pinMode);
+  m_lua->FuncRegister("restart", restart);
+  m_lua->FuncRegister("delayMicroseconds", delayMicroseconds);
+  m_lua->FuncRegister("setBrownoutDetection", setBrownoutDetection);
+  m_lua->FuncRegister("getResetReason", getResetReason);
+  m_lua->FuncRegister("restart", restart);
+  //Serial
   m_lua->FuncRegisterOptional("beginSerialIo", beginSerialIo, 115200);
   m_lua->FuncRegister("serialIoAvaliable", serialIoAvaliable);
   m_lua->FuncRegister("serialAvaliable", serialAvaliable);
@@ -737,7 +761,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("serialAvailableForWrite", serialAvailableForWrite);
   m_lua->FuncRegister("serialIoWriteString", serialIoWriteString);
   m_lua->FuncRegister("serialWriteString", serialWriteString);
-
+  //I2C
   m_lua->FuncRegister("wireAvailable", wireAvailable);
   m_lua->FuncRegister("wireBegin", wireBegin);
   m_lua->FuncRegister("wireFlush", wireFlush);
@@ -751,23 +775,9 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("wireParseInt", wireParseInt);
   m_lua->FuncRegister("wireSetTimeout", wireSetTimeout);
   m_lua->FuncRegister("wireGetTimeout", wireGetTimeout);
-
-  m_lua->FuncRegister("setBrownoutDetection", setBrownoutDetection);
-  m_lua->FuncRegister("getResetReason", getResetReason);
-  m_lua->FuncRegister("restart", restart);
-
-
-  m_lua->FuncRegister("vTaskDelay", vTaskDelay);
-  m_lua->FuncRegister("analogRead", analogRead);
-  m_lua->FuncRegister("pinMode", pinMode);
-  m_lua->FuncRegister("restart", restart);
-
-  m_lua->FuncRegister("delayMicroseconds", delayMicroseconds);
+  //debug
   m_lua->FuncRegisterRaw("dumpStackToSerial", dumpStackToSerial);
-
-  m_lua->FuncRegister("composeBulkFile", composeBulkFile);
-  m_lua->FuncRegister("getFrameAliasByName", GetAliasByName);
-
+  //Leds
   m_lua->FuncRegisterFromObjectOpt("ledsSetBrightness", &g_leds, &LedStrip::setBrightness, (uint8_t)128);
   m_lua->FuncRegisterFromObjectOpt("ledsBegin", &g_leds, &LedStrip::Begin, (uint8_t)128);
   m_lua->FuncRegisterFromObjectOpt("ledsBeginDual", &g_leds, &LedStrip::BeginDual, (uint8_t)128);
@@ -776,9 +786,6 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegisterFromObjectOpt("ledsSegmentTweenBehavior", &g_leds, &LedStrip::setSegmentTweenBehavior, 0, 0, 0, 0);
   m_lua->FuncRegisterFromObjectOpt("ledsSegmentTweenSpeed", &g_leds, &LedStrip::setSegmentTweenSpeed);
   m_lua->FuncRegisterFromObjectOpt("setLedColor", &g_leds, &LedStrip::setLedColor);
-
-  m_lua->FuncRegister("decodePng", decodePng); 
-
 }
 
 void LuaInterface::RegisterConstants()

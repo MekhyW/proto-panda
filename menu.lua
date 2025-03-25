@@ -252,7 +252,9 @@ function _M.handleMenu(boop, dt)
     elseif _M.mode == MODE_CHANGE_LED_BRIGHTNESS then 
         _M.handleLedBrightnessMenu(boop, dt)
     elseif _M.mode == MODE_SCRIPTS then 
-        _M.handleSciptsMenu(boop, dt)
+        if not _M.handleSciptsMenu(boop, dt) then  
+            return
+        end
     end
 
     _M.draw()
@@ -262,12 +264,13 @@ end
 function _M.handleMainMenu()
     if readButtonStatus(BUTTON_DOWN) == BUTTON_JUST_PRESSED then 
         _M.selected = _M.selected +1
+        toneDuration(540, 100)
          if _M.selected > 2 then  
             _M.selected = 0
         end
     end
     if readButtonStatus(BUTTON_CONFIRM) == BUTTON_JUST_PRESSED then 
-        
+        toneDuration(440, 100)
         if _M.selected == 0 then
             _M.enterFaceMenu()
         elseif _M.selected == 1 then 
@@ -281,6 +284,7 @@ function _M.handleMainMenu()
 
     if readButtonStatus(BUTTON_UP) == BUTTON_JUST_PRESSED then 
         _M.selected = _M.selected -1
+        toneDuration(340, 100)
         if _M.selected < 0 then  
             _M.selected = 2
         end
@@ -293,6 +297,7 @@ function _M.handleSciptsMenu(_, dt)
 
     if readButtonStatus(BUTTON_DOWN) == BUTTON_JUST_PRESSED then 
         _M.selected = _M.selected+1
+        toneDuration(540, 100)
         if (_M.selected > #scriptList) then 
             _M.selected = 1
         end
@@ -301,6 +306,7 @@ function _M.handleSciptsMenu(_, dt)
     end
     if readButtonStatus(BUTTON_UP) == BUTTON_JUST_PRESSED then 
         _M.selected = _M.selected-1
+        toneDuration(340, 100)
         if (_M.selected < 1) then 
             _M.selected = #scriptList
         end
@@ -310,11 +316,13 @@ function _M.handleSciptsMenu(_, dt)
     
     if readButtonStatus(BUTTON_LEFT) == BUTTON_JUST_PRESSED then 
         _M.enterMainMenu()
+        toneDuration(440, 100)
     end 
 
     if readButtonStatus(BUTTON_CONFIRM) == BUTTON_JUST_PRESSED then
+        toneDuration(440, 100) 
         scripts.StartScript(_M.selected) 
-        _M.enterMainMenu() 
+        return false
     end
 
     _M.textScrollingTimer = _M.textScrollingTimer - dt
@@ -329,27 +337,32 @@ function _M.handleSciptsMenu(_, dt)
             _M.textScrollingPos = 1
         end
     end
+    return true
 end
 
 
 function _M.handleSettingsMenu()
     if readButtonStatus(BUTTON_DOWN) == BUTTON_JUST_PRESSED then 
         _M.selected = _M.selected+1
+        toneDuration(540, 100)
         if (_M.selected > 5) then 
             _M.selected = 1
         end
     end
     if readButtonStatus(BUTTON_UP) == BUTTON_JUST_PRESSED then 
         _M.selected = _M.selected-1
+        toneDuration(340, 100)
         if (_M.selected < 1) then 
             _M.selected = 5
         end
     end
     if readButtonStatus(BUTTON_LEFT) == BUTTON_JUST_PRESSED then 
+        toneDuration(440, 100)
         _M.enterMainMenu()
     end 
     
     if readButtonStatus(BUTTON_CONFIRM) == BUTTON_JUST_PRESSED then 
+        toneDuration(440, 100)
         if _M.selected == 0 then 
             _M.selected = 1
         end
@@ -369,6 +382,7 @@ function _M.handleBrightnessMenu(boop, dt)
     if readButtonStatus(BUTTON_LEFT) == BUTTON_PRESSED then
         if (_M.timer < 0) then 
             _M.timer = 10
+            toneDuration(340, 10)
             _M.brigthness = _M.brigthness - 1
             if (_M.brigthness  < 0) then 
                 _M.brigthness  = 0
@@ -381,6 +395,7 @@ function _M.handleBrightnessMenu(boop, dt)
     if readButtonStatus(BUTTON_RIGHT) == BUTTON_PRESSED then
         if (_M.timer < 0) then 
             _M.timer = 10
+            toneDuration(540, 10)
             _M.brigthness = _M.brigthness + 1
             if (_M.brigthness  > 255) then 
                 _M.brigthness  = 255
@@ -403,6 +418,7 @@ function _M.handleLedBrightnessMenu(boop, dt)
     if readButtonStatus(BUTTON_LEFT) == BUTTON_PRESSED then
         if (_M.timer < 0) then 
             _M.timer = 10
+            toneDuration(340, 10)
             _M.led_brightness = _M.led_brightness - 1
             if (_M.led_brightness  < 0) then 
                 _M.led_brightness  = 0
@@ -414,6 +430,7 @@ function _M.handleLedBrightnessMenu(boop, dt)
     if readButtonStatus(BUTTON_RIGHT) == BUTTON_PRESSED then
         if (_M.timer < 0) then 
             _M.timer = 10
+            toneDuration(540, 10)
             _M.led_brightness = _M.led_brightness + 1
             if (_M.led_brightness  > 255) then 
                 _M.led_brightness  = 255
@@ -427,16 +444,19 @@ end
 function _M.handleFaceQuickMenu(boop, dt)
     if readButtonStatus(BUTTON_LEFT) == BUTTON_JUST_PRESSED then
         expressions.Previous()
+        toneDuration(340, 10)
     end
 
     if readButtonStatus(BUTTON_RIGHT) == BUTTON_JUST_PRESSED then
         expressions.Next()
+        toneDuration(540, 10)
     end
 
     if readButtonStatus(BUTTON_CONFIRM) == BUTTON_PRESSED then 
         _M.quit_timer = _M.quit_timer - dt 
         if (_M.quit_timer <= 0) then 
             _M.enterMainMenu()
+            toneDuration(440, 10)
             return
         end
     else 
@@ -449,6 +469,7 @@ function _M.handleFaceMenu(boop, dt)
     _M.timer = _M.timer - dt
     if readButtonStatus(BUTTON_LEFT) == BUTTON_JUST_PRESSED then 
         if _M.selected < MAX_INTERFACE_ICONS then
+            toneDuration(340, 10)
             local maxExpressions = expressions.GetExpressionCount()
             local offsetBy5 = _M.selected%MAX_INTERFACE_ICONS
             _M.selected = maxExpressions-(MAX_INTERFACE_ICONS-offsetBy5)
@@ -459,6 +480,7 @@ function _M.handleFaceMenu(boop, dt)
 
     if readButtonStatus(BUTTON_RIGHT) == BUTTON_JUST_PRESSED then 
         local maxExpressions = expressions.GetExpressionCount()
+        toneDuration(540, 10)
         _M.selected = _M.selected+MAX_INTERFACE_ICONS
         if _M.selected > maxExpressions then 
             _M.selected = _M.selected%MAX_INTERFACE_ICONS
@@ -466,6 +488,7 @@ function _M.handleFaceMenu(boop, dt)
     end
 
     if readButtonStatus(BUTTON_UP) == BUTTON_JUST_PRESSED then 
+        toneDuration(540, 10)
         if (_M.selected%MAX_INTERFACE_ICONS == 1) then 
             _M.selected = _M.selected +(MAX_INTERFACE_ICONS-1)
         else
@@ -473,6 +496,7 @@ function _M.handleFaceMenu(boop, dt)
         end
     end
     if readButtonStatus(BUTTON_DOWN) == BUTTON_JUST_PRESSED then 
+        toneDuration(340, 10)
         if (_M.selected%MAX_INTERFACE_ICONS == 0) then 
             _M.selected = _M.selected -(MAX_INTERFACE_ICONS-1)
         else 
@@ -495,6 +519,7 @@ function _M.handleFaceMenu(boop, dt)
         expressions.SetExpression(exps[_M.selected])
         _M.timer = _M.displayTime
         boop.isOnLidar = false
+        toneDuration(440, 10)
 
     end
 

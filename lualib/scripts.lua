@@ -130,6 +130,8 @@ function _M.StartScript(id)
 	_M.StoreState() 
 	local data = dofile(res.file)
 	_M.running_script = data
+	oledClearScreen()
+	oledDisplay()
 	_M.running_script.onSetup(res)
 end
 

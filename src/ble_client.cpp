@@ -1,5 +1,6 @@
 #include "ble_client.hpp"
 #include "tools/logger.hpp"
+#include "tools/devices.hpp"
 #include <Arduino.h>
 
 void scanEndedCB(NimBLEScanResults results){
@@ -25,6 +26,7 @@ void ClientCallbacks::onConnect(NimBLEClient* pClient) {
 void ClientCallbacks::onDisconnect(NimBLEClient* pClient) {
   Serial.print(pClient->getPeerAddress().toString().c_str());
   Logger::Info("[BLE] Device disconnected");
+  Devices::BuzzerToneDuration(400, 300);
   auto aux = g_remoteControls.clients[pClient->getPeerAddress()];
   if (aux != nullptr){
     g_remoteControls.clients[pClient->getPeerAddress()]->connected = false;
@@ -87,6 +89,7 @@ void notifyCB(NimBLERemoteCharacteristic* pRemoteCharacteristic, uint8_t* pData,
     
     if (id >= 0){
       BleManager::remoteData[id].copy(data);
+      BleManager::remoteData[id].setLastUpdate();
     }
   }
 }
@@ -176,6 +179,7 @@ bool BleManager::connectToServer(ConnectTuple *tlp){
   clients[pClient->getPeerAddress()] = tlp;
 
   Logger::Info("[BLE] Done with this device!");
+  Devices::BuzzerToneDuration(1500, 300);
   return true;
 }
 

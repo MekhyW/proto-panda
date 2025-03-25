@@ -44,10 +44,17 @@ class BleSensorHandlerData : public BleSensorData{
       }
     }
 
+    void setLastUpdate(){
+      currentUpdate = millis()-previousUpdate;
+      previousUpdate = millis();
+    }
+
     void updateButtons();
 
     uint32_t last_inputButtonsStatus[MAX_BLE_BUTTONS];  
     uint32_t real_inputButtonsStatus[MAX_BLE_BUTTONS];  
+    uint32_t previousUpdate; 
+    uint32_t currentUpdate; 
 };
 
 class AccelerometerData{
