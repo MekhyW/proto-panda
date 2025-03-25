@@ -1,5 +1,3 @@
-
-
 local GetCurrentFrame = expressions.GetCurrentFrame
 local StackExpression = expressions.StackExpression
 local IsFrameFromAnimation = expressions.IsFrameFromAnimation
