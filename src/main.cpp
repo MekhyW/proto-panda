@@ -54,7 +54,7 @@ void setup() {
 
   Devices::Begin();
   Serial.begin(115200);
-  Serial.println("Starting proto panda!");
+  Serial.printf("Starting proto panda v%s!\n", PANDA_VERSION);
 
   Devices::BuzzerTone(2220);
   delay(200);
@@ -66,7 +66,6 @@ void setup() {
   Sensors::Start();
   
   g_editMode.CheckBeginEditMode();
-
 
   if (g_editMode.IsOnEditMode()){
     Devices::BuzzerTone(220);
@@ -81,6 +80,9 @@ void setup() {
     OledScreen::display.clearDisplay();
     OledScreen::display.drawBitmap(0,0, icon_sd, 128, 64, 1);
     OledScreen::display.display();
+    Devices::BuzzerTone(300);
+    delay(1500);
+    Devices::BuzzerNoTone();
     for (;;){}
   }
 
@@ -121,12 +123,18 @@ void setup() {
   
   if (!DMADisplay::Start()){
     OledScreen::CriticalFail("Failed to initialize DMA display!");
+    Devices::BuzzerTone(300);
+    delay(1500);
+    Devices::BuzzerNoTone();
     for(;;){}
   }
   Logger::Info("DMA display initialized!");
   Devices::CalculateMemmoryUsage(); 
   if (!g_lua.LoadFile("/init.lua")){
     OledScreen::CriticalFail("Failed to load init.lua");
+    Devices::BuzzerTone(300);
+    delay(1500);
+    Devices::BuzzerNoTone();
     for(;;){}
   }
 
@@ -135,6 +143,9 @@ void setup() {
   Devices::CalculateMemmoryUsage();
   OledScreen::SetConsoleMode(false);
   g_lua.CallFunction("onSetup");
+  Devices::BuzzerTone(150);
+  delay(100);
+  Devices::BuzzerNoTone();
   Devices::CalculateMemmoryUsage();
 
 

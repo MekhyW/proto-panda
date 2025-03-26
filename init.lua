@@ -16,6 +16,12 @@ function onSetup()
     print("Panel is: "..dictGet("panel_brightness").." led is "..dictGet("led_brightness"))
     setPanelMaxBrighteness( brightness )
 
+    local seed = tonumber(dictGet("random_seed")) or millis()
+    seed = seed + millis()
+    math.randomseed(seed)
+    dictSet("random_seed", tostring(seed))
+    dictSave()
+
     expressions.Load("/expressions.json") 
     scripts.Load("/scripts.json") 
 
