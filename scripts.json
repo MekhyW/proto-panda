@@ -2,6 +2,7 @@
   {"name": "snake", "file": "/scripts/snake.lua"},
   {"name": "jumping wah", "file": "/scripts/wah.lua"},
   {"name": "tetris", "file": "/scripts/tetris.lua"},
+  {"name": "proximity game", "file": "/scripts/proximitygame.lua"},
   {"name": "breakout", "file": "/scripts/breakout.lua"},
   {"name": "color and lidar test", "file": "/scripts/colortest.lua"},
   {"name": "screen test", "file": "/scripts/screentest.lua"},
