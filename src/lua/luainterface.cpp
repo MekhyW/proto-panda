@@ -472,9 +472,9 @@ void setMaximumControls(int id)
   g_remoteControls.setMaximumControls(id);
 }
 
-int acceptTypes(std::string service, std::string charactestistic)
+int acceptTypes(std::string service, std::string charactestisticStream, std::string characteristicId)
 {
-  return g_remoteControls.acceptTypes(service, charactestistic);
+  return g_remoteControls.acceptTypes(service, charactestisticStream, characteristicId);
 }
 
 void setAnimation(std::vector<int> frames, int duration, int repeatTimes, bool dropAll, int externalStorageId)

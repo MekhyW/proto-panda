@@ -23,6 +23,7 @@ class BleSensorData{
     }
     int16_t x,y,z;
     int16_t ax,ay,az;
+    int16_t controllerId;
     int16_t temp;
     uint8_t buttons[MAX_BLE_BUTTONS+1];
 };
@@ -86,13 +87,14 @@ class AdvertisedDeviceCallbacks: public NimBLEAdvertisedDeviceCallbacks {
 
 class ConnectTuple{
   public:
-    ConnectTuple(NimBLEAdvertisedDevice* device, NimBLEUUID service, NimBLEUUID characteristic):m_device(device),m_service(service),m_characteristic(characteristic),callbacks(nullptr),m_client(nullptr),clientMode(0xff),connected(true){};
+    ConnectTuple(NimBLEAdvertisedDevice* device, NimBLEUUID service, NimBLEUUID streamCharacteristics, NimBLEUUID idCharacteristics):m_device(device),m_service(service),m_streamCharacteristic(streamCharacteristics),m_idCharacteristic(idCharacteristics),callbacks(nullptr),m_client(nullptr),m_controllerId(0xffff),connected(true){};
     NimBLEAdvertisedDevice* m_device;
     NimBLEUUID m_service;
-    NimBLEUUID m_characteristic;
+    NimBLEUUID m_streamCharacteristic;
+    NimBLEUUID m_idCharacteristic;
     ClientCallbacks * callbacks;
     NimBLEClient* m_client;
-    u_int16_t clientMode;
+    uint32_t m_controllerId;
     bool connected;
 
     
@@ -101,18 +103,14 @@ class ConnectTuple{
 
 class BleManager{
   public:
-    BleManager():clientCount(0), maxClients(1),lastScanClearTime(0),m_started(false),m_canScan(false){}
+    BleManager():clientCount(0), maxClients(1),lastScanClearTime(0),m_started(false),m_canScan(false),nextId(0){}
     bool begin();
     void update();
     void updateButtons();
     void beginScanning();
 
-    int acceptTypes(std::string service, std::string characteristic);
-    //void waitForControls(int waitSize);
+    int acceptTypes(std::string service, std::string characteristic, std::string characteristicId);
     void setMaximumControls(int n){maxClients = n;};
-
-    int getElementIdByUUID(NimBLEUUID id);
-    //bool hasServiceAlready(BLEUUID uuid);
 
     int getConnectedClients(){
       return clients.size();
@@ -126,29 +124,21 @@ class BleManager{
     static BleSensorHandlerData remoteData[MAX_BLE_CLIENTS];
 
 
-    std::vector<std::tuple<NimBLEUUID,NimBLEUUID>> GetAcceptedUUIDS(){
+    std::vector<std::tuple<NimBLEUUID,NimBLEUUID,NimBLEUUID>> GetAcceptedUUIDS(){
       return m_acceptedUUIDs;
     }
   private:
-    std::map<NimBLEAddress,ConnectTuple*> clients;
+    std::map<std::string,ConnectTuple*> clients;
     bool connectToServer(ConnectTuple *tpl);
     uint16_t clientCount;
-    //bool connectToDevice(ConnectTuple tpl);
-    //void showWaitDisplay();
-    //void showScanningDisplay();
+  
     uint32_t  maxClients, lastScanClearTime;
     bool m_started, m_canScan;
+    std::stack<uint8_t> availableIds;
+    uint8_t nextId;
 
-    //std::stack<ConnectTuple> toConnectDevices;
+    std::vector<std::tuple<NimBLEUUID,NimBLEUUID,NimBLEUUID>> m_acceptedUUIDs;
 
-    //std::map<uint16_t,BleConnectedClient> clients;
-    //bool changedClient;
-    //std::vector<DescriptorUUID> m_acceptedUUID;
-
-    std::vector<std::tuple<NimBLEUUID,NimBLEUUID>> m_acceptedUUIDs;
-
-
-    //friend class MyAdvertisedDeviceCallbacks;
     friend class ClientCallbacks;
 };
 

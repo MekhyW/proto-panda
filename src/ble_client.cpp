@@ -9,9 +9,6 @@ void scanEndedCB(NimBLEScanResults results){
 
 static bool isScanning = false;
 
-
-
-
 static ConnectTuple *toConnect = nullptr;
 
 
@@ -24,12 +21,16 @@ void ClientCallbacks::onConnect(NimBLEClient* pClient) {
 
 
 void ClientCallbacks::onDisconnect(NimBLEClient* pClient) {
-  Serial.print(pClient->getPeerAddress().toString().c_str());
-  Logger::Info("[BLE] Device disconnected");
+  Logger::Info("[BLE] Device disconnected %s", pClient->getPeerAddress().toString().c_str());
   Devices::BuzzerToneDuration(400, 300);
-  auto aux = g_remoteControls.clients[pClient->getPeerAddress()];
+  auto aux = g_remoteControls.clients[pClient->getPeerAddress().toString()];
   if (aux != nullptr){
-    g_remoteControls.clients[pClient->getPeerAddress()]->connected = false;
+    Logger::Info("[BLE] Device adr=%d", (int)aux);
+    Logger::Info("[BLE] Device disconnected=%d", aux->m_controllerId);
+    if (aux->m_controllerId < 0xff){
+      g_remoteControls.availableIds.push(aux->m_controllerId);
+    }
+    aux->connected = false;
   }
 };
 
@@ -72,8 +73,7 @@ void AdvertisedDeviceCallbacks::onResult(NimBLEAdvertisedDevice* advertisedDevic
       {
           NimBLEDevice::getScan()->stop();
           isScanning = false;
-          toConnect = new ConnectTuple(advertisedDevice, std::get<0>(it), std::get<1>(it));
-          toConnect->clientMode = 0;
+          toConnect = new ConnectTuple(advertisedDevice, std::get<0>(it), std::get<1>(it), std::get<2>(it));
           return;
       }
     }
@@ -85,8 +85,7 @@ void notifyCB(NimBLERemoteCharacteristic* pRemoteCharacteristic, uint8_t* pData,
   BleSensorData* data = (BleSensorData*)pData;
 
   if (pRemoteCharacteristic != nullptr){
-    int id = g_remoteControls.getElementIdByUUID(pRemoteCharacteristic->getUUID());
-    
+    int id = ((int16_t*)pData)[7];    
     if (id >= 0){
       BleManager::remoteData[id].copy(data);
       BleManager::remoteData[id].setLastUpdate();
@@ -143,25 +142,47 @@ bool BleManager::connectToServer(ConnectTuple *tlp){
 
   delay(300);
 
+  if (!availableIds.empty()) {
+    tlp->m_controllerId = availableIds.top();
+    availableIds.pop();
+  } else {
+      tlp->m_controllerId = nextId++;
+  }
+
   NimBLERemoteService* pSvc = nullptr;
   NimBLERemoteCharacteristic* pChr = nullptr;
+  NimBLERemoteCharacteristic* pConfigChr = nullptr;
 
   pSvc = pClient->getService(tlp->m_service);
-  if(pSvc) {
-     
-    pChr = pSvc->getCharacteristic( (tlp->m_characteristic) );
+  if(pSvc) {    
+    pConfigChr = pSvc->getCharacteristic(tlp->m_idCharacteristic);
+    if(pConfigChr && pConfigChr->canWrite()) {
+        pConfigChr->writeValue((uint8_t*)&tlp->m_controllerId, sizeof(uint32_t), true);
+        Logger::Info("[BLE] Sent controller id: %d", tlp->m_controllerId);
+    }else{
+      Logger::Error("[BLE] Missign write characteristics");
+      pClient->disconnect();
+      NimBLEDevice::deleteClient(pClient);
+      tlp->connected = false;
+      return false;
+    }
+    delay(100);
+
+    pChr = pSvc->getCharacteristic( (tlp->m_streamCharacteristic) );
     if(pChr) {
       if(pChr->canNotify()) {
           if(!pChr->subscribe(true, notifyCB)) {
             Logger::Error("[BLE] The notification is a sussy baka");
             tlp->connected = false;
             NimBLEDevice::deleteClient(pClient);
+            g_remoteControls.availableIds.push(tlp->m_controllerId);
             pClient->disconnect();
             return false;
           }
       }else{
         Logger::Error("[BLE] ye, there is not there wtf man");
         pClient->disconnect();
+        g_remoteControls.availableIds.push(tlp->m_controllerId);
         NimBLEDevice::deleteClient(pClient);
         tlp->connected = false;
         return false;
@@ -171,28 +192,20 @@ bool BleManager::connectToServer(ConnectTuple *tlp){
     Logger::Error("[BLE] The service is a sussy baka");
     pClient->disconnect();
     NimBLEDevice::deleteClient(pClient);
+    g_remoteControls.availableIds.push(tlp->m_controllerId);
     tlp->connected = false;
     return false;
   }
 
   tlp->m_client = pClient;
-  clients[pClient->getPeerAddress()] = tlp;
+  clients[pClient->getPeerAddress().toString()] = tlp;
 
-  Logger::Info("[BLE] Done with this device!");
+  Logger::Info("[BLE] Done with this device! ConnID=%d %s", pClient->getConnId(), pClient->getPeerAddress().toString().c_str());
   Devices::BuzzerToneDuration(1500, 300);
   return true;
 }
 
-int BleManager::getElementIdByUUID(NimBLEUUID id){
-  auto vecOfTuples = GetAcceptedUUIDS();
-  for (int i = 0; i < vecOfTuples.size(); ++i) {
-    const auto it = vecOfTuples[i];
-    if (id == std::get<1>(it)){
-      return i;
-    }
-  }
-  return -1;
-}
+
 
 bool BleManager::begin(){
   NimBLEDevice::init("");
@@ -288,30 +301,55 @@ void BleManager::update(){
         }
       }
      
-      bool hasErase = false;
-      NimBLEAddress toErase;
+      std::string toErase;
       for (auto &aux : clients){
         if (!aux.second->connected){
             toErase = aux.first;
-            hasErase = true;
         }
       }
       
-      if (hasErase){
+      if (toErase.size() > 0){
         NimBLEDevice::deleteClient(clients[toErase]->m_client);
         delete clients[toErase]->callbacks;
         delete clients[toErase];
         clients.erase(toErase);
       }
-
     }
   }
 }
 
 
 
-int BleManager::acceptTypes(std::string service, std::string characteristic){
-  m_acceptedUUIDs.emplace_back(std::make_tuple( NimBLEUUID(service), NimBLEUUID(characteristic)  ));
+int BleManager::acceptTypes(std::string service, std::string characteristicStream, std::string characteristicId){
+
+  // Validate input lengths
+  if (service.length() != 36 ) {
+    Logger::Info("[BLE] Malformed servie UUID");
+    return -1;
+  }
+  if (characteristicStream.length() != 4) {
+    Logger::Info("[BLE] Malformed characteristicStream UUID");
+    return -1;
+  }
+
+  if (characteristicId.length() != 4) {
+    Logger::Info("[BLE] Malformed characteristicId UUID");
+    return -1;
+  }
+
+  std::string modified1 = service;
+  modified1.replace(4, 4, characteristicStream); 
+
+  std::string modified2 = service;
+  modified2.replace(4, 4, characteristicId); 
+
+  NimBLEUUID servUUID(service);
+  NimBLEUUID streamUUID(modified1);
+  NimBLEUUID idUUID(modified2);
+
+  Logger::Info("[BLE] Following characteristics are beeing listen:\nService: %s\nStream: %s\nID: %s\n", servUUID.toString().c_str(), streamUUID.toString().c_str(), idUUID.toString().c_str());
+
+  m_acceptedUUIDs.emplace_back(std::make_tuple(servUUID, streamUUID, idUUID));
   return m_acceptedUUIDs.size() -1;
 }
 
@@ -324,7 +362,7 @@ bool BleManager::hasChangedClients(){
 }
 bool BleManager::isElementIdConnected(int id){
   for (auto &obj : clients){
-    if (obj.second->clientMode == id){
+    if (obj.second->m_controllerId == id){
       return true;
     }
   }
