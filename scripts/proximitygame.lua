@@ -37,27 +37,27 @@ function _M.onLoop(dt)
         pos = 120
     end
 
-    if pos > 220 then 
-        pos = 220
+    if pos > 320 then 
+        pos = 320
     end
 
     local speed = 0 
     local pixelAdd = 0
     if pos > _M.accumulatedPos then 
-        speed = 950
+        speed = 1950
         pixelAdd = 6
     elseif pos < _M.accumulatedPos then  
-        speed = -950
+        speed = -1950
         pixelAdd = -1
     end
 
     _M.accumulatedSpeed = _M.accumulatedSpeed + speed * dt;
 
-    if (_M.accumulatedSpeed > 95) then 
-        _M.accumulatedSpeed = 95
+    if (_M.accumulatedSpeed > 195) then 
+        _M.accumulatedSpeed = 195
     end
-    if (_M.accumulatedSpeed < -95) then 
-        _M.accumulatedSpeed = -95
+    if (_M.accumulatedSpeed < -195) then 
+        _M.accumulatedSpeed = -195
     end
     
 
@@ -67,11 +67,11 @@ function _M.onLoop(dt)
         _M.accumulatedPos = 120
     end
 
-    if _M.accumulatedPos > 220 then 
-        _M.accumulatedPos = 220
+    if _M.accumulatedPos > 320 then 
+        _M.accumulatedPos = 320
     end
 
-    local Ypos = generic.map(_M.accumulatedPos, 120, 220, 0, 26)
+    local Ypos = generic.map(_M.accumulatedPos, 120, 320, 26, 0)
 
     for i,appl in pairs(_M.apples) do  
         appl.x = appl.x + 25 * dt
