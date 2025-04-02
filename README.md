@@ -1,3 +1,21 @@
+# Protopanda
+
+Protopanda is a open source patform (firmware and hardware), for controling protogens. The idea is to be simple enough so all you need is just a bit of tech savy to make it work. But at the same time, flexible enough so an person with the minimum knowledge of lua can make amazing things.
+
+1. [Hardware](#hardware)
+2. [Diagram](#diagram)
+3. [Schematic](#schematic)
+4. [Two Cores](#two-cores)
+5. [Powering](#powering)
+6. [Panels](#panels)
+7. [Face and Expressions](#face-and-expressions)
+8. [LED Strips](#led-strips)
+9. [Bluetooth](#bluetooth)
+10. [Programming in Lua](#programming-in-lua)
+11. [Lua Functions](#lua-functions)
+12. [Lua Constants](#lua-constants)
+13. [LED Behaviors](#led-behaviors)
+
 # Hardware
 
 Protopanda is designed to run on Esp32s3-n16r8, which is a version with 16MB Flash, 384kB ROM, 512 Kb RAM, and 8MB octal PSRAM.
@@ -44,6 +62,12 @@ To prevent another type of tearing when a frame is being drawn while the frame i
 # Face and expressions
 
 Protopanda uses images from the SD card and a few JSON files to construct the animation sequences. All images must be `PNG`; later, they're decoded to a raw format and stored in the [frame bulk file](#bulk-file).
+
+- [Loading Frames](#loading-frames)
+- [Expressions](#expressions)
+- [Expression Stack](#expression-stack)
+- [Bulk File](#bulk-file)
+- [Managed Mode](#managed-mode)
 
 ## Loading frames
 
@@ -177,6 +201,9 @@ I know, I know... its static and have no flexibility to accept any kind of BLE d
 
 # Programming in Lua
 
+- [Minimum Lua Script](#minimum-lua-script)
+- [Cycle Expressions Each Second](#cycle-expressions-each-second)
+
 ## Minimum lua script
 ```lua
 --Minimum lua script on init.lua
@@ -224,6 +251,19 @@ end
 
 # Lua functions
 
+- [Power](#power)
+- [System](#system)
+- [Sensors](#sensors)
+- [Serial Communication](#serial-communication)
+- [I2C Communication](#i2c-communication)
+- [Drawing](#drawing)
+- [Image Decoding](#image-decoding)
+- [Servo Control](#servo-control)
+- [Internal Screen](#internal-screen)
+- [Remote Control](#remote-control)
+- [LED Strips](#led-strips-1)
+- [Dictionary Functions](#dictionary-functions)
+
 ## Power
 #### `waitForPower()`
 Forces the process to wait until the battery or USB voltage is above a threshold.
@@ -270,7 +310,7 @@ Sets the powering mode of the system. The mode can be `POWER_MODE_USB_5V`, `POWE
   - `mode` (int): The powering mode to set.
 - **Returns**: `nil`
 
-## Memory Management
+## System
 
 ### `getFreePsram()`
 Returns the amount of free PSRAM (Pseudo Static RAM) available in bytes.
@@ -280,6 +320,19 @@ Returns the amount of free PSRAM (Pseudo Static RAM) available in bytes.
 Returns the amount of free heap memory available in bytes.
 - **Returns**: `int` (The amount of free heap memory in bytes).
 
+#### `restart()`
+Restarts the ESP32 microcontroller.
+- **Returns**: `nil`
+
+#### `getResetReason()`
+Returns the reason for the last reset.
+- **Returns**: `int` (One of the ESP_RST_* constants)
+
+#### `setBrownoutDetection(bool enable)`
+Enables or disables brownout detection.
+- **Parameters**:
+  - `enable` (bool): `true` to enable, `false` to disable
+- **Returns**: `nil`
 
 ## Sensors
 #### `readButtonStatus(int)`
@@ -341,6 +394,24 @@ Returns the distance in mm from the lidar.
 #### `getInternalButtonStatus()`
 Returns the status of the internal button.
 - **Returns**: `int` (1 is pressed and 0 is released).
+
+
+### Serial Communication
+#### `beginSerialIo(baud)`
+Initializes the secondary serial port with the specified baud rate.
+- **Parameters**:
+  - `baud` (int): The baud rate
+- **Returns**: `nil`
+
+#### `serialIoRead()`
+Reads a byte from the secondary serial port.
+- **Returns**: `int` (The byte read)
+
+#### `serialIoReadStringUntil(terminator)`
+Reads a string from the secondary serial port until the specified terminator is found.
+- **Parameters**:
+  - `terminator` (char): The terminating character
+- **Returns**: `string` (The read string)
 
 ## Drawing
 
@@ -701,6 +772,71 @@ Scans the I2C bus for connected devices.
 Returns the current frames per second (FPS) of the system.
 - **Returns**: `float` (The current FPS).
 
+### Dictionary Functions
+#### `dictGet(key)`
+Gets a value from persistent dictionary storage.
+- **Parameters**:
+  - `key` (string): The key to lookup
+- **Returns**: `string` (The stored value)
+
+#### `dictSet(key, value)`
+Sets a value in persistent dictionary storage.
+- **Parameters**:
+  - `key` (string): The key to store
+  - `value` (string): The value to store
+- **Returns**: `nil`
+
+#### `dictDel(key)`
+Deletes a key from persistent dictionary storage.
+- **Parameters**:
+  - `key` (string): The key to delete
+- **Returns**: `nil`
+
+#### `dictSave()`
+Saves the dictionary to persistent storage.
+- **Returns**: `nil`
+
+#### `dictLoad()`
+Loads the dictionary from persistent storage.
+- **Returns**: `nil`
+
+#### `dictFormat()`
+Formats/clears the dictionary storage.
+- **Returns**: `nil`
+
+## Dictionary Functions
+
+#### `dictGet(key)`
+Gets a value from persistent dictionary storage.
+- **Parameters**:
+  - `key` (string): The key to lookup
+- **Returns**: `string` (The stored value)
+
+#### `dictSet(key, value)`
+Sets a value in persistent dictionary storage.
+- **Parameters**:
+  - `key` (string): The key to store
+  - `value` (string): The value to store
+- **Returns**: `nil`
+
+#### `dictDel(key)`
+Deletes a key from persistent dictionary storage.
+- **Parameters**:
+  - `key` (string): The key to delete
+- **Returns**: `nil`
+
+#### `dictSave()`
+Saves the dictionary to persistent storage.
+- **Returns**: `nil`
+
+#### `dictLoad()`
+Loads the dictionary from persistent storage.
+- **Returns**: `nil`
+
+#### `dictFormat()`
+Formats/clears the dictionary storage.
+- **Returns**: `nil`
+
 ## Servo Control
 
 #### `servoPause(servoId)`
@@ -833,12 +969,13 @@ Sets the maximum number of connected remote controls.
   - `count` (int): The maximum number of devices.
 - **Returns**: `nil`
 
-#### `acceptBLETypes(service, characteristic)`
-Defines the UUIDs of a specific BLE controller and its services to be connected.
+#### `acceptBLETypes(service, characteristicStream, characteristicId)`
+Now takes 3 parameters instead of 2:
 - **Parameters**:
-  - `service` (string): The service UUID.
-  - `characteristic` (string): The characteristic UUID.
-- **Returns**: `int` (The ID of the accepted BLE type).
+  - `service` (string): The service UUID
+  - `characteristicStream` (string): The stream characteristic UUID
+  - `characteristicId` (string): The ID characteristic UUID
+- **Returns**: `int` (The ID of the accepted BLE type)
 
 ## Led strips
 
@@ -901,7 +1038,153 @@ Sets the tween speed for a specific LED segment. Ideally used with a led not ass
 ## startPanels()
 Init the panels and allocate the memmory for the DMA
 
+## Serial Communication
+
+### Primary Serial (USB/Console)
+
+#### `serialAvailable()`
+Returns the number of bytes available to read from the primary serial port.
+- **Returns**: `int` (Number of bytes available)
+
+#### `serialRead()`
+Reads one byte from the primary serial port.
+- **Returns**: `int` (The byte read, or -1 if none available)
+
+#### `serialReadStringUntil(terminator)`
+Reads characters from the primary serial port until the terminator is found.
+- **Parameters**:
+  - `terminator` (char, optional): The terminating character (default: '\n')
+- **Returns**: `string` (The read string)
+
+#### `serialAvailableForWrite()`
+Returns the number of bytes that can be written without blocking.
+- **Returns**: `int` (Available space in output buffer)
+
+#### `serialWrite(data)`
+Writes a single byte to the primary serial port.
+- **Parameters**:
+  - `data` (int): The byte to write (0-255)
+- **Returns**: `int` (Number of bytes written)
+
+#### `serialWriteString(data)`
+Writes a string to the primary serial port.
+- **Parameters**:
+  - `data` (string): The string to write
+- **Returns**: `int` (Number of bytes written)
+
+### Secondary Serial (IO1/IO2)
+
+#### `beginSerialIo(baud)`
+Initializes the secondary serial port (IO1/IO2 pins).
+- **Parameters**:
+  - `baud` (int, optional): Baud rate (default: 115200)
+- **Returns**: `nil`
+
+#### `serialIoAvailable()`
+Returns the number of bytes available to read from the secondary serial port.
+- **Returns**: `int` (Number of bytes available)
+
+#### `serialIoRead()`
+Reads one byte from the secondary serial port.
+- **Returns**: `int` (The byte read, or -1 if none available)
+
+#### `serialIoReadStringUntil(terminator)`
+Reads characters from the secondary serial port until the terminator is found.
+- **Parameters**:
+  - `terminator` (char, optional): The terminating character (default: '\n')
+- **Returns**: `string` (The read string)
+
+#### `serialIoAvailableForWrite()`
+Returns the number of bytes that can be written without blocking to secondary serial.
+- **Returns**: `int` (Available space in output buffer)
+
+#### `serialIoWrite(data)`
+Writes a single byte to the secondary serial port.
+- **Parameters**:
+  - `data` (int): The byte to write (0-255)
+- **Returns**: `int` (Number of bytes written)
+
+#### `serialIoWriteString(data)`
+Writes a string to the secondary serial port.
+- **Parameters**:
+  - `data` (string): The string to write
+- **Returns**: `int` (Number of bytes written)
+
+## I2C Communication
+
+#### `wireBegin(address)`
+Initializes I2C communication as a master or slave.
+- **Parameters**:
+  - `address` (uint8_t): 7-bit slave address (0 for master mode)
+- **Returns**: `bool` (true if successful)
+
+#### `wireAvailable()`
+Returns the number of bytes available for reading.
+- **Returns**: `int` (Number of bytes available)
+
+#### `wireBeginTransmission(address)`
+Begins a transmission to the specified I2C device.
+- **Parameters**:
+  - `address` (uint8_t): 7-bit device address
+- **Returns**: `nil`
+
+#### `wireEndTransmission([sendStop])`
+Ends a transmission to the I2C device.
+- **Parameters**:
+  - `sendStop` (bool, optional): Whether to send stop condition (default: true)
+- **Returns**: `uint8_t` (Transmission status code)
+
+#### `wireRequestFrom(address, size, [sendStop])`
+Requests bytes from an I2C slave device.
+- **Parameters**:
+  - `address` (uint16_t): 7-bit device address
+  - `size` (size_t): Number of bytes to request
+  - `sendStop` (bool, optional): Whether to send stop condition (default: true)
+- **Returns**: `uint8_t` (Number of bytes received)
+
+#### `wireRead()`
+Reads one byte from the I2C buffer.
+- **Returns**: `int` (The byte read)
+
+#### `wireReadBytes(length)`
+Reads multiple bytes from the I2C buffer.
+- **Parameters**:
+  - `length` (int): Number of bytes to read
+- **Returns**: `table` (Array of bytes read)
+
+#### `wirePeek()`
+Peeks at the next byte in the I2C buffer without removing it.
+- **Returns**: `int` (The next byte)
+
+#### `wireFlush()`
+Flushes the I2C buffer.
+- **Returns**: `nil`
+
+#### `wireParseFloat()`
+Parses a float from the I2C buffer.
+- **Returns**: `float`
+
+#### `wireParseInt()`
+Parses an integer from the I2C buffer.
+- **Returns**: `int`
+
+#### `wireSetTimeout(timeout)`
+Sets the I2C operation timeout.
+- **Parameters**:
+  - `timeout` (uint32_t): Timeout in milliseconds
+- **Returns**: `nil`
+
+#### `wireGetTimeout()`
+Gets the current I2C operation timeout.
+- **Returns**: `uint32_t` (Timeout in milliseconds)
+
 # Lua Constants
+
+- [Engine Related](#engine-related)
+- [Input](#input)
+- [LED Behavior](#led-behavior)
+- [Pins](#pins)
+- [ESP32 Reset Reason](#esp32-reset-reason)
 
 ## Engine related
 
@@ -962,6 +1245,18 @@ Init the panels and allocate the memmory for the DMA
 - `OUTPUT_OPEN_DRAIN`, `OPEN_DRAIN`: Constants representing open-drain output mode.
 - `PULLDOWN`: Constant representing pull-down mode.
 
+## ESP32 reset reason
+- `ESP_RST_UNKNOWN`
+- `ESP_RST_POWERON` 
+- `ESP_RST_EXT`
+- `ESP_RST_SW`
+- `ESP_RST_PANIC`
+- `ESP_RST_INT_WDT`
+- `ESP_RST_TASK_WDT`
+- `ESP_RST_WDT`
+- `ESP_RST_DEEPSLEEP`
+- `ESP_RST_BROWNOUT`
+- `ESP_RST_SDIO`
 
 # Led behaviors
 
