@@ -16,16 +16,16 @@ class BleManager;
 
 class BleSensorData{
   public:
-    BleSensorData():x(0),y(0),z(0),ax(0),ay(0),az(0),temp(0){
+    BleSensorData():x(0),y(0),z(0),ax(0),ay(0),az(0),temp(0),controllerId(0){
       for (int i=0;i<MAX_BLE_BUTTONS;i++){
         buttons[i] = 0;
       }
     }
     int16_t x,y,z;
     int16_t ax,ay,az;
-    int16_t controllerId;
     int16_t temp;
-    uint8_t buttons[MAX_BLE_BUTTONS+1];
+    uint8_t buttons[MAX_BLE_BUTTONS+2];
+    uint8_t controllerId;
 };
 
 class BleSensorHandlerData : public BleSensorData{
@@ -40,8 +40,9 @@ class BleSensorHandlerData : public BleSensorData{
       this->ay = aux->ay;
       this->az = aux->az;
       this->temp = aux->temp;
-      for (int i = 0; i < MAX_BLE_BUTTONS; ++i) {
-          this->buttons[i] = aux->buttons[i];
+      this->controllerId = aux->buttons[0];
+      for (int i = 1; i < MAX_BLE_BUTTONS+1; ++i) {
+          this->buttons[i-1] = aux->buttons[i];
       }
     }
 

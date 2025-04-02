@@ -85,7 +85,8 @@ void notifyCB(NimBLERemoteCharacteristic* pRemoteCharacteristic, uint8_t* pData,
   BleSensorData* data = (BleSensorData*)pData;
 
   if (pRemoteCharacteristic != nullptr){
-    int id = ((int16_t*)pData)[7];    
+    int16_t *data16 = &((int16_t*)pData)[7];
+    int id = ((uint8_t*)data16)[0];    
     if (id >= 0){
       BleManager::remoteData[id].copy(data);
       BleManager::remoteData[id].setLastUpdate();
