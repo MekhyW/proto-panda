@@ -2,5 +2,7 @@
   {"name": "normal", "use_alias": "normal", "frames": [1,2,1,2,1,2,3,4,3], "duration": 200},
   {"name": "fast", "use_alias": "fast", "frames": [1,2,3,4], "duration": 10},
   {"name": "sus", "use_alias": "amogus", "frames": [1,2], "duration": 200},
-  {"name": "noise", "use_alias": "noise", "frames": [1,2,3], "duration": 5}
+  {"name": "noise", "use_alias": "noise", "frames": [1,2,3], "duration": 5},
+  {"name": "shy enter", "use_alias": "shy_enter", "frames": [1,2,3,4,5,4,5,4,5,4,3,2,1], "duration": 200},
+  {"name": "shy stay", "use_alias": "shy_cycle", "frames": [1,2,3,2], "duration": 250}
 ]

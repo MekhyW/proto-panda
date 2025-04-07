@@ -786,6 +786,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegisterFromObjectOpt("ledsSegmentTweenBehavior", &g_leds, &LedStrip::setSegmentTweenBehavior, 0, 0, 0, 0);
   m_lua->FuncRegisterFromObjectOpt("ledsSegmentTweenSpeed", &g_leds, &LedStrip::setSegmentTweenSpeed);
   m_lua->FuncRegisterFromObjectOpt("setLedColor", &g_leds, &LedStrip::setLedColor);
+  m_lua->FuncRegisterFromObjectOpt("displayLeds", &g_leds, &LedStrip::Display);
 }
 
 void LuaInterface::RegisterConstants()

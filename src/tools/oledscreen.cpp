@@ -136,7 +136,7 @@ void OledScreen::DrawBottomBar(){
     if (showFps){
         display.printf("FPS: %d", (int)Devices::getFps());
     }else{
-        display.printf("Ram: %2.2f%%", Devices::getFreePsram());
+        display.printf("Ram: %2.2f%%", (100.0f-Devices::getFreePsram()));
     }
     if (swapTimer < millis()){
         swapTimer = millis() + 5 * 1000;

@@ -10,7 +10,7 @@ void PersistentDictionary::Format(){
 }
 
 void PersistentDictionary::Save() {
-    File outfile = SD.open("/dict.bin", FILE_WRITE);
+    File outfile = SD.open("/cache/dict.bin", FILE_WRITE);
     if (!outfile) {
         Logger::Error("Failed to open file for writing!");
         return;
@@ -34,7 +34,7 @@ void PersistentDictionary::Save() {
 void PersistentDictionary::Load() {
     Logger::Info("Loading dictionary...");
 
-    File infile = SD.open("/dict.bin", FILE_READ);
+    File infile = SD.open("/cache/dict.bin", FILE_READ);
     if (!infile) {
         set("clear", "1");
         Save();

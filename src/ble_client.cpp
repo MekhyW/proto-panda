@@ -63,8 +63,7 @@ void ClientCallbacks::onAuthenticationComplete(ble_gap_conn_desc* desc){
 };
 
 void AdvertisedDeviceCallbacks::onResult(NimBLEAdvertisedDevice* advertisedDevice) {
-    Logger::Info("[BLE] Advertised Device found: %s", advertisedDevice->toString().c_str());
-
+    //Logger::Info("[BLE] Advertised Device found: %s", advertisedDevice->toString().c_str());
     auto vecOfTuples = bleObj->GetAcceptedUUIDS();
     for (size_t i = 0; i < vecOfTuples.size(); ++i) {
       const auto it = vecOfTuples[i];
@@ -87,7 +86,7 @@ void notifyCB(NimBLERemoteCharacteristic* pRemoteCharacteristic, uint8_t* pData,
   if (pRemoteCharacteristic != nullptr){
     int16_t *data16 = &((int16_t*)pData)[7];
     int id = ((uint8_t*)data16)[0];    
-    if (id >= 0){
+    if (id >= 0 && id < MAX_BLE_CLIENTS){
       BleManager::remoteData[id].copy(data);
       BleManager::remoteData[id].setLastUpdate();
     }
@@ -274,8 +273,7 @@ void BleManager::updateButtons(){
 }
 
 void BleManager::beginScanning(){
-  NimBLEDevice::getScan()->start(0, scanEndedCB);
-  isScanning = true;
+  isScanning = false;
   m_canScan = true;
 }
 
@@ -298,6 +296,7 @@ void BleManager::update(){
       if (clients.size() < maxClients){
         if (!isScanning){
           isScanning = true;
+          NimBLEDevice::getScan()->clearResults();
           NimBLEDevice::getScan()->start(0, scanEndedCB);
         }
       }

@@ -42,12 +42,9 @@ void setup() {
   /*
     Startup regulator pins and shoot it low asap.
   */
-  pinMode(45, OUTPUT);
-  pinMode(45, LOW);
 
   digitalWrite(PIN_ENABLE_REGULATOR, LOW);
-  pinMode(EDIT_MODE_PIN, INPUT);
-  pinMode(21, INPUT);
+  pinMode(EDIT_MODE_PIN, INPUT_PULLDOWN);
   pinMode(PIN_ENABLE_REGULATOR, OUTPUT);
   digitalWrite(PIN_ENABLE_REGULATOR, LOW);
   pinMode(PIN_USB_BATTERY_IN, INPUT);

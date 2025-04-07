@@ -6,6 +6,8 @@ MODE_CHANGE_PANEL_BRIGHTNESS = 4
 MODE_CHANGE_LED_BRIGHTNESS = 5
 MODE_SCRIPTS = 6
 
+local scripts = require("scripts")
+
 MAX_INTERFACE_ICONS = 5
 MENU_SPACING = 13
 
@@ -92,7 +94,7 @@ function _M.draw()
         oledDrawIcon(112, 16, _M.settings_icon)
         oledDrawIcon(112, 32, _M.settings_icon)
         oledDrawIcon(112, 2, _M.face_icon)
-    	oledFaceToScreen(0, 0) 
+        oledFaceToScreen(0, 0) 
         oledDrawBottomBar()
         oledDisplay()
     elseif _M.mode == MODE_FACE_QUICK then
@@ -236,23 +238,23 @@ function _M.draw()
 end
 
 
-function _M.handleMenu(boop, dt)
-	--Clear internal screen
+function _M.handleMenu(dt)
+    --Clear internal screen
 
     if _M.mode == MODE_MAIN_MENU then 
-        _M.handleMainMenu(boop, dt)
+        _M.handleMainMenu(dt)
     elseif _M.mode == MODE_FACE_MENU then 
-        _M.handleFaceMenu(boop, dt)
+        _M.handleFaceMenu(dt)
     elseif _M.mode == MODE_SETTINGS_MENU then 
-        _M.handleSettingsMenu(boop, dt)   
+        _M.handleSettingsMenu(dt)   
     elseif _M.mode == MODE_FACE_QUICK then 
-        _M.handleFaceQuickMenu(boop, dt)
+        _M.handleFaceQuickMenu(dt)
     elseif _M.mode == MODE_CHANGE_PANEL_BRIGHTNESS then 
-        _M.handleBrightnessMenu(boop, dt)
+        _M.handleBrightnessMenu(dt)
     elseif _M.mode == MODE_CHANGE_LED_BRIGHTNESS then 
-        _M.handleLedBrightnessMenu(boop, dt)
+        _M.handleLedBrightnessMenu(dt)
     elseif _M.mode == MODE_SCRIPTS then 
-        if not _M.handleSciptsMenu(boop, dt) then  
+        if not _M.handleSciptsMenu(dt) then  
             return
         end
     end
@@ -292,7 +294,7 @@ function _M.handleMainMenu()
 end
 
 
-function _M.handleSciptsMenu(_, dt)
+function _M.handleSciptsMenu(dt)
     local scriptList = scripts.GetScripts() 
 
     if readButtonStatus(BUTTON_DOWN) == BUTTON_JUST_PRESSED then 
@@ -317,6 +319,7 @@ function _M.handleSciptsMenu(_, dt)
     if readButtonStatus(BUTTON_LEFT) == BUTTON_JUST_PRESSED then 
         _M.enterMainMenu()
         toneDuration(440, 100)
+        return
     end 
 
     if readButtonStatus(BUTTON_CONFIRM) == BUTTON_JUST_PRESSED then
@@ -370,7 +373,7 @@ function _M.handleSettingsMenu()
     end
 end
 
-function _M.handleBrightnessMenu(boop, dt)
+function _M.handleBrightnessMenu(dt)
     if readButtonStatus(BUTTON_CONFIRM) == BUTTON_JUST_PRESSED then 
         _M.enterSettingMenu()
         dictSet("panel_brightness", tostring(_M.brigthness))
@@ -406,7 +409,7 @@ function _M.handleBrightnessMenu(boop, dt)
     end
 end
 
-function _M.handleLedBrightnessMenu(boop, dt)
+function _M.handleLedBrightnessMenu(dt)
     if readButtonStatus(BUTTON_CONFIRM) == BUTTON_JUST_PRESSED then 
         _M.enterSettingMenu()
         dictSet("led_brightness", tostring(_M.led_brightness))
@@ -441,7 +444,7 @@ function _M.handleLedBrightnessMenu(boop, dt)
 end
 
 
-function _M.handleFaceQuickMenu(boop, dt)
+function _M.handleFaceQuickMenu(dt)
     if readButtonStatus(BUTTON_LEFT) == BUTTON_JUST_PRESSED then
         expressions.Previous()
         toneDuration(340, 10)
@@ -465,7 +468,7 @@ function _M.handleFaceQuickMenu(boop, dt)
 end
 
 
-function _M.handleFaceMenu(boop, dt)
+function _M.handleFaceMenu(dt)
     _M.timer = _M.timer - dt
     if readButtonStatus(BUTTON_LEFT) == BUTTON_JUST_PRESSED then 
         if _M.selected < MAX_INTERFACE_ICONS then
@@ -518,7 +521,6 @@ function _M.handleFaceMenu(boop, dt)
         local exps = expressions.GetExpressions()
         expressions.SetExpression(exps[_M.selected])
         _M.timer = _M.displayTime
-        boop.isOnLidar = false
         toneDuration(440, 10)
 
     end
