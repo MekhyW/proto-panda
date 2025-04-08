@@ -154,47 +154,48 @@ void setup() {
   Devices::CalculateMemmoryUsage();  
   Devices::BuzzerTone(880);
   delay(100);
+  g_lua.CallFunction("onPreflight");
   Devices::BuzzerNoTone();
 }
 
 
+int64_t lastDelay = 0;
 void second_loop(void*){
-  g_lua.CallFunction("onPreflight");
+  
   for( ;; )
   { 
-    if (Devices::AutoCheckPowerLevel() && !Devices::CheckPowerLevel()){
-      Devices::WaitForPower();
-      break;
+    Devices::BeginAutoFrame();
+    Devices::ReadSensors();
+    g_animation.Update(g_frameRepo.takeFile());
+    g_frameRepo.freeFile();
+    g_leds.Update();
+    g_leds.Display();
+    if (lastDelay < millis()){
+      lastDelay = millis() + 10000;
+      Devices::CalculateMemmoryUsage();  
     }
-
-    Devices::BeginFrame();
-    g_remoteControls.updateButtons();
-    g_lua.CallFunctionT("onLoop", Devices::getDeltaTime());
-    
-    Devices::EndFrame();
+    Devices::EndAutoFrame();
     vTaskDelay(1);
   }
 }
 
 
-int64_t lastDelay = 0;
 void loop() {
-  
   if (g_editMode.IsOnEditMode()){
     g_editMode.LoopEditMode();
     return;
   }
   
-  Devices::BeginAutoFrame();
-  Devices::ReadSensors();
-  g_animation.Update(g_frameRepo.takeFile());
-  g_frameRepo.freeFile();
-  g_remoteControls.update();
-  g_leds.Update();
-  g_leds.Display();
-  if (lastDelay < millis()){
-    lastDelay = millis() + 10000;
-    Devices::CalculateMemmoryUsage();  
+
+  if (Devices::AutoCheckPowerLevel() && !Devices::CheckPowerLevel()){
+    Devices::WaitForPower();
+    return;
   }
-  Devices::EndAutoFrame();
+
+  Devices::BeginFrame();
+  g_remoteControls.update();
+  g_remoteControls.updateButtons();
+  g_lua.CallFunctionT("onLoop", Devices::getDeltaTime());
+  
+  Devices::EndFrame();  
 }

@@ -59,10 +59,11 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="598" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="main.c" selected="1" top="577" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="config/sdk_config.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="602" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="main.c" selected="1" top="590" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1515" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="config/sdk_config.h" selected="0" top="1488" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="6" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="LIS3DHTR.c" selected="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="52" y="104" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="LIS3DHTR.h" selected="0" top="74" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="198" useTextEdit="1" openedFrom="C:/Users/mathe/Documents/PlatformIO/Projects/protopanda/remote-control/main.c" useBinaryEdit="0" left="0" path="C:/nrf/modules/nrfx/hal/nrf_gpio.h" selected="0" top="174" codecName="Default"/>
  </Files>
  <ARMCrossStudioWindow activeProject="proto_panda_paw_nrf52832_no_rtc" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Release" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="C:/nrf/modules/nrfx/drivers/src" debugSearchPath="" autoConnectCapabilities="3711"/>
 </session>

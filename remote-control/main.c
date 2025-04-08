@@ -219,6 +219,10 @@ static void sleep_mode_enter(void) {
 
   nrf_delay_ms(2000);
 
+  for (int i = 0; i < 5; i++) {
+      nrf_gpio_cfg_input(button_pins[i], NRF_GPIO_PIN_PULLDOWN);
+  }
+
   nrf_gpio_pin_clear(PIN_LED_1);
   nrf_gpio_pin_clear(PIN_LED_2);
   nrf_gpio_pin_clear(PIN_LED_3);
@@ -493,14 +497,14 @@ static void app_timer_handler(void * p_context) {
     uint8_t * aux = (uint8_t * )&AccValue[7];
 
     aux[0] = config_integer;
+    
 
-    for (int i = 1; i < 6; i++) {
-      uint32_t state = nrf_gpio_pin_read(button_pins[i-1]);
-      //if (button_states[i] == state) {
-      aux[i] = !state;
-      //}
-      NRF_LOG_INFO("B %d=%d", i, state);
+    for (int i = 0; i < 5; i++) {
+      uint32_t state = nrf_gpio_pin_read(button_pins[i]);
+      aux[i+1] = !state;
     }
+
+
     if (rebeginCycles > 0) {
       rebeginCycles--;
     } else {
@@ -616,9 +620,10 @@ int main(void) {
   nrf_gpio_pin_clear(PIN_LED_2);
   nrf_gpio_pin_clear(PIN_LED_1);
 
-  for (int i = 0; i < 5; i++) {
-    nrf_gpio_cfg_input(button_pins[i], NRF_GPIO_PIN_PULLUP);
-  }
+   for (int i = 0; i < 5; i++) {
+      nrf_gpio_cfg_input(button_pins[i], NRF_GPIO_PIN_PULLUP);
+   }
+
 
   nrf_delay_ms(200);
   nrf_gpio_pin_set(PIN_LED_3);

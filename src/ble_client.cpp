@@ -63,7 +63,7 @@ void ClientCallbacks::onAuthenticationComplete(ble_gap_conn_desc* desc){
 };
 
 void AdvertisedDeviceCallbacks::onResult(NimBLEAdvertisedDevice* advertisedDevice) {
-    //Logger::Info("[BLE] Advertised Device found: %s", advertisedDevice->toString().c_str());
+    Logger::Info("[BLE] Advertised Device found: %s", advertisedDevice->toString().c_str());
     auto vecOfTuples = bleObj->GetAcceptedUUIDS();
     for (size_t i = 0; i < vecOfTuples.size(); ++i) {
       const auto it = vecOfTuples[i];
@@ -282,7 +282,8 @@ void BleManager::update(){
     return;
   }
   
-  if (millis() - lastScanClearTime >= (120*1000) ) {
+  if (millis() - lastScanClearTime >= (30*1000) ) {
+    NimBLEDevice::getScan()->clearDuplicateCache();
     NimBLEDevice::getScan()->clearResults(); // Clear the scan results
     lastScanClearTime = millis(); // Reset the timer
     Logger::Info("[BLE] Scan results cleared");
@@ -296,6 +297,7 @@ void BleManager::update(){
       if (clients.size() < maxClients){
         if (!isScanning){
           isScanning = true;
+          NimBLEDevice::getScan()->clearDuplicateCache();
           NimBLEDevice::getScan()->clearResults();
           NimBLEDevice::getScan()->start(0, scanEndedCB);
         }
@@ -317,8 +319,6 @@ void BleManager::update(){
     }
   }
 }
-
-
 
 int BleManager::acceptTypes(std::string service, std::string characteristicStream, std::string characteristicId){
 
@@ -360,6 +360,7 @@ bool BleManager::hasChangedClients(){
   }
   return false;
 }
+
 bool BleManager::isElementIdConnected(int id){
   for (auto &obj : clients){
     if (obj.second->m_controllerId == id){
@@ -368,5 +369,3 @@ bool BleManager::isElementIdConnected(int id){
   }
   return false;
 }
-
-

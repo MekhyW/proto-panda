@@ -9,9 +9,9 @@ function onSetup()
     setPoweringMode(POWER_MODE_USB_5V)
     panelPowerOn()
     dictLoad()
-    startBLE()
     setMaximumControls(2)
     acceptBLETypes("d4d31337-c4c1-c2c3-b4b3-b2b1a4a3a2a1", "afaf", "fafb")
+    startBLE()
     
     brightness = tonumber(dictGet("panel_brightness")) or 64
     print("Panel is: "..dictGet("panel_brightness").." led is "..dictGet("led_brightness"))
@@ -26,7 +26,6 @@ function onSetup()
 
     expressions.Load("/expressions.json") 
     scripts.Load("/scripts.json") 
-
 
     ledsBeginDual(25, 25, tonumber(dictGet("led_brightness") ) or 64) 
     displayLeds()
