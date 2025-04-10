@@ -10,9 +10,12 @@
 #include "drawing/ledstrip.hpp"
 #include "ble_client.hpp"
 
+#include <FFat.h>
+
 extern FrameRepository g_frameRepo;
 extern Animation g_animation;
 extern LedStrip g_leds;
+
 
 static PersistentDictionary dict;
 
@@ -413,6 +416,62 @@ void setPoweringMode(int mode)
   Devices::SetPowerMode((PowerMode)mode);
 }
 
+std::vector<std::string> listFiles(std::string path, bool recursive) {
+  std::vector<std::string> fileList;
+  if (path.back() != '/') {
+      path += '/';
+  }
+  File dir = SD.open(path.c_str());
+  if (!dir) {
+      return fileList;
+  }
+  if (!dir.isDirectory()) {
+      dir.close();
+      return fileList;
+  }
+  File file = dir.openNextFile();
+  while (file) {
+      std::string fileName = file.name();
+      if (fileName == "." || fileName == "..") {
+          file.close();
+          file = dir.openNextFile();
+          continue;
+      }
+      std::string fullPath = path + fileName;
+      if (file.isDirectory()) {
+          if (recursive) {
+              std::vector<std::string> subDirFiles = listFiles(fullPath, recursive);
+              fileList.insert(fileList.end(), subDirFiles.begin(), subDirFiles.end());
+          }
+      } else {
+          fileList.push_back(fullPath);
+      }
+      file.close();
+      file = dir.openNextFile();
+  }
+  dir.close();
+  return fileList;
+}
+
+bool moveFile(std::string path, std::string pathtgt){
+  return SD.rename(path.c_str(), pathtgt.c_str());
+}
+
+bool removeFile(std::string path){
+  return SD.remove(path.c_str());
+}
+
+bool createDir(std::string path){
+  return SD.mkdir(path.c_str());
+}
+
+bool fileExists(std::string path){
+  return SD.exists(path.c_str());
+}
+
+void deleteBulkFile(){
+  FFat.remove("/frames.bulk");
+}
 
 void composeBulkFile()
 {
@@ -521,7 +580,6 @@ void DrawPanelFaceToScreen(int x, int y)
 
 SizedArray *decodePng(std::string filename)
 {
-  uint32_t started = millis();
   int lastRcError = 0;
   size_t x;
   size_t y;
@@ -541,9 +599,6 @@ SizedArray *decodePng(std::string filename)
   aux->size =  x * y;
   aux->deleteAfterInsertion = heap_caps_free;
   //This is required, as LUA and BLE share the same core, if this operation takes too we need to yield here a bit.
-  if ((millis()-started) > 50){
-    vTaskDelay(1);
-  }
   return aux;
 }
 
@@ -655,7 +710,6 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("oledDrawPixel", DrawPixelScreen);
   m_lua->FuncRegister("oledDrawLine", DrawLineScreen);
   m_lua->FuncRegister("oledDrawCircle", DrawCircleScreen);
-  m_lua->FuncRegister("oledDrawCircle", DrawCircleScreen);
   m_lua->FuncRegister("oledDrawFilledCircle", DrawFilledCircleScreen);
   //BLE
   m_lua->FuncRegister("startBLE", startBLE);
@@ -727,7 +781,6 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegisterFromObjectOpt("getAnimationStackSize", &g_animation, &Animation::getAnimationStackSize); 
   m_lua->FuncRegister("color565", color565);
   m_lua->FuncRegister("color444", color444);
-  m_lua->FuncRegister("composeBulkFile", composeBulkFile);
   m_lua->FuncRegister("getFrameAliasByName", GetAliasByName);
   m_lua->FuncRegister("decodePng", decodePng); 
   //Aarduino
@@ -787,6 +840,14 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegisterFromObjectOpt("ledsSegmentTweenSpeed", &g_leds, &LedStrip::setSegmentTweenSpeed);
   m_lua->FuncRegisterFromObjectOpt("setLedColor", &g_leds, &LedStrip::setLedColor);
   m_lua->FuncRegisterFromObjectOpt("displayLeds", &g_leds, &LedStrip::Display);
+  //Files
+  m_lua->FuncRegister("listFiles", listFiles);
+  m_lua->FuncRegister("moveFile", moveFile);
+  m_lua->FuncRegister("removeFile", removeFile);
+  m_lua->FuncRegister("createDir", createDir);
+  m_lua->FuncRegister("fileExists", fileExists);
+  m_lua->FuncRegister("composeBulkFile", composeBulkFile);
+  m_lua->FuncRegister("deleteBulkFile", deleteBulkFile);
 }
 
 void LuaInterface::RegisterConstants()
@@ -885,6 +946,9 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("ESP_RST_SDIO", (int)ESP_RST_SDIO);
 
   m_lua->setConstant("PANDA_VERSION", PANDA_VERSION);
+
+  m_lua->setConstant("BUILT_IN_POWER_MODE", (int)BUILT_IN_POWER_MODE);
+
 }
 
 bool LuaInterface::Start()

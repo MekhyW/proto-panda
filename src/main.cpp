@@ -35,7 +35,6 @@ TaskHandle_t g_secondCore;
 TaskHandle_t g_firstCore;
 EditMode g_editMode;
 
-
 void second_loop(void*);
 
 void setup() {
@@ -85,12 +84,8 @@ void setup() {
 
   Logger::Begin();
   Devices::DisplayResetInfo();
-  Devices::CalculateMemmoryUsage();  
   Devices::I2CScan();
   Devices::StartAvaliableDevices();
-
-  Devices::CalculateMemmoryUsage();  
-
 
   Devices::CalculateMemmoryUsage();  
   if (!g_frameRepo.Begin()){
@@ -117,7 +112,6 @@ void setup() {
     }
   }
   Devices::CalculateMemmoryUsage(); 
-  
   if (!DMADisplay::Start()){
     OledScreen::CriticalFail("Failed to initialize DMA display!");
     Devices::BuzzerTone(300);
@@ -126,6 +120,7 @@ void setup() {
     for(;;){}
   }
   Logger::Info("DMA display initialized!");
+
   Devices::CalculateMemmoryUsage(); 
   if (!g_lua.LoadFile("/init.lua")){
     OledScreen::CriticalFail("Failed to load init.lua");
@@ -136,9 +131,13 @@ void setup() {
   }
 
   Devices::CalculateMemmoryUsage();
-  
-  Devices::CalculateMemmoryUsage();
+
   OledScreen::SetConsoleMode(false);
+  OledScreen::display.setCursor(0,0);
+  OledScreen::display.setTextSize(2);
+  OledScreen::display.printf("Starting\nLua");
+  OledScreen::display.display();
+  OledScreen::display.setTextSize(1);
   g_lua.CallFunction("onSetup");
   Devices::BuzzerTone(150);
   delay(100);
@@ -196,6 +195,5 @@ void loop() {
   g_remoteControls.update();
   g_remoteControls.updateButtons();
   g_lua.CallFunctionT("onLoop", Devices::getDeltaTime());
-  
   Devices::EndFrame();  
 }

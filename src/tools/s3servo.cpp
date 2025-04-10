@@ -71,7 +71,12 @@ float s3servo::mapf(float x, float in_min, float in_max, float out_min, float ou
 
 void s3servo::write(float angle) {
     int duty = (int)mapf(angle, _minAngle, _maxAngle, _minPulseWidth, _maxPulseWidth);
-    constrain(duty, _minPulseWidth, _maxPulseWidth);
+    if (duty < _minPulseWidth){
+        duty = _minPulseWidth;
+    }
+    if (duty > _maxPulseWidth){
+        duty = _maxPulseWidth;
+    }
     ledcWrite(_channel, duty);
 };
 

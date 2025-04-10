@@ -166,6 +166,7 @@ void Devices::SetMaxBrighteness(uint8_t b){
 
 
 bool Devices::WaitForPower(){
+  BuzzerNoTone();
   digitalWrite(PIN_ENABLE_REGULATOR, LOW);
   int tries = 0;
   bool oldState = g_animation.isManaged();
@@ -209,7 +210,6 @@ bool Devices::WaitForPower(){
     DMADisplay::Display->setBrightness(a); 
     DMADisplay::DrawTestScreen();
   }
-  g_animation.setManaged(oldState);
   g_animation.setManaged(oldState);
   return true;
 }
