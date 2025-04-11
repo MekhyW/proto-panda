@@ -265,15 +265,14 @@ void Animation::SetShader(int id){
 }
 
 void Animation::Update(File *file){
+    
     xSemaphoreTake(m_mutex, portMAX_DELAY);
     if (m_animations.size() > 0){
         auto &elem = m_animations.top();
         xSemaphoreGive(m_mutex);
         bool canPop = internalUpdate(file, elem);
         if (canPop){
-            xSemaphoreTake(m_mutex, portMAX_DELAY);
-            m_animations.pop();
-            xSemaphoreGive(m_mutex);
+            PopAnimation();
         }
     }else{
         xSemaphoreGive(m_mutex);
@@ -290,8 +289,6 @@ void Animation::setManaged(bool v){
 }
 
 bool Animation::internalUpdate(File *file, AnimationSequence &running){
-
-    
     switch (running.Update(m_interruptPin)){
     case ANIMATION_FINISHED:
         return 1;
@@ -328,7 +325,7 @@ int Animation::getCurrentAnimationStorage(){
 }
 
 void Animation::SetInterruptAnimation(int duration, std::vector<int> frames){
-    xSemaphoreTake(m_mutex, portMAX_DELAY);
+    
 
     AnimationSequence newSeq;
     newSeq.m_duration = max(duration,1);
@@ -337,17 +334,19 @@ void Animation::SetInterruptAnimation(int duration, std::vector<int> frames){
     newSeq.m_frame = 0;
     newSeq.m_repeat = -1;
     newSeq.m_updateMode = 1;
-
+    xSemaphoreTake(m_mutex, portMAX_DELAY);
     m_animations.emplace(newSeq);
     xSemaphoreGive(m_mutex);
 }
 
 void Animation::SetAnimation(int duration, std::vector<int> frames, int repeatTimes, bool dropAll, int externalStorageId){
-    xSemaphoreTake(m_mutex, portMAX_DELAY);
+    
     if (dropAll){
+        xSemaphoreTake(m_mutex, portMAX_DELAY);
         while (m_animations.size() > 0){
             m_animations.pop();
         }
+        xSemaphoreGive(m_mutex);
     }
     m_isOnText = false;
     AnimationSequence newSeq;
@@ -357,7 +356,7 @@ void Animation::SetAnimation(int duration, std::vector<int> frames, int repeatTi
     newSeq.m_frame = 0;
     newSeq.m_repeat = repeatTimes;
     newSeq.m_storageId = externalStorageId;
-
+    xSemaphoreTake(m_mutex, portMAX_DELAY);
     m_animations.emplace(newSeq);
     xSemaphoreGive(m_mutex);
 }

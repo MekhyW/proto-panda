@@ -104,7 +104,7 @@ class ConnectTuple{
 
 class BleManager{
   public:
-    BleManager():clientCount(0), maxClients(1),lastScanClearTime(0),m_started(false),m_canScan(false),nextId(0){}
+    BleManager():clientCount(0), maxClients(1),lastScanClearTime(0),m_started(false),m_canScan(false),nextId(0),m_mutex(xSemaphoreCreateMutex()){}
     bool begin();
     void update();
     void updateButtons();
@@ -139,7 +139,7 @@ class BleManager{
     uint8_t nextId;
 
     std::vector<std::tuple<NimBLEUUID,NimBLEUUID,NimBLEUUID>> m_acceptedUUIDs;
-
+    SemaphoreHandle_t m_mutex;
     friend class ClientCallbacks;
 };
 

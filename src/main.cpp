@@ -148,7 +148,7 @@ void setup() {
   g_frameRepo.displayFFATInfo();
   Serial.printf("Running upon %d\n", xPortGetCoreID());
   
-  xTaskCreatePinnedToCore(second_loop, "second loop", 10000, NULL, 100, &g_secondCore, 0);
+  xTaskCreatePinnedToCore(second_loop, "second loop", 10000, NULL, ( 2 | portPRIVILEGE_BIT ), &g_secondCore, 0);
 
   Devices::CalculateMemmoryUsage();  
   Devices::BuzzerTone(880);
@@ -157,24 +157,25 @@ void setup() {
   Devices::BuzzerNoTone();
 }
 
-
-int64_t lastDelay = 0;
 void second_loop(void*){
   
   for( ;; )
   { 
+    uint32_t st = millis();
     Devices::BeginAutoFrame();
-    Devices::ReadSensors();
     g_animation.Update(g_frameRepo.takeFile());
+    vTaskDelay(1);
+    uint32_t st2 = millis()-st;
     g_frameRepo.freeFile();
     g_leds.Update();
     g_leds.Display();
-    if (lastDelay < millis()){
-      lastDelay = millis() + 10000;
-      Devices::CalculateMemmoryUsage();  
-    }
-    Devices::EndAutoFrame();
     vTaskDelay(1);
+    Devices::EndAutoFrame();
+    st = millis()-st;
+    if (st > 80){
+      Logger::Info("Animation cycle took too long %d and %d ms", st2, st);
+    }
+    vTaskDelay(3);
   }
 }
 
@@ -192,6 +193,7 @@ void loop() {
   }
 
   Devices::BeginFrame();
+  Devices::ReadSensors();
   g_remoteControls.update();
   g_remoteControls.updateButtons();
   g_lua.CallFunctionT("onLoop", Devices::getDeltaTime());

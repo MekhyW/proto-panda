@@ -23,6 +23,8 @@ void ClientCallbacks::onConnect(NimBLEClient* pClient) {
 void ClientCallbacks::onDisconnect(NimBLEClient* pClient) {
   Logger::Info("[BLE] Device disconnected %s", pClient->getPeerAddress().toString().c_str());
   Devices::BuzzerToneDuration(400, 300);
+  Logger::Info("[BLE] eeeeeeeeeeeee");
+  xSemaphoreTake(g_remoteControls.m_mutex, portMAX_DELAY);
   auto aux = g_remoteControls.clients[pClient->getPeerAddress().toString()];
   if (aux != nullptr){
     Logger::Info("[BLE] Device adr=%d", (int)aux);
@@ -32,6 +34,7 @@ void ClientCallbacks::onDisconnect(NimBLEClient* pClient) {
     }
     aux->connected = false;
   }
+  xSemaphoreGive(g_remoteControls.m_mutex);
 };
 
 bool ClientCallbacks::onConnParamsUpdateRequest(NimBLEClient* pClient, const ble_gap_upd_params* params) {
@@ -63,7 +66,7 @@ void ClientCallbacks::onAuthenticationComplete(ble_gap_conn_desc* desc){
 };
 
 void AdvertisedDeviceCallbacks::onResult(NimBLEAdvertisedDevice* advertisedDevice) {
-    Logger::Info("[BLE] Advertised Device found: %s", advertisedDevice->toString().c_str());
+    //Logger::Info("[BLE] Advertised Device found: %s", advertisedDevice->toString().c_str());
     auto vecOfTuples = bleObj->GetAcceptedUUIDS();
     for (size_t i = 0; i < vecOfTuples.size(); ++i) {
       const auto it = vecOfTuples[i];
@@ -199,6 +202,7 @@ bool BleManager::connectToServer(ConnectTuple *tlp){
 
   tlp->m_client = pClient;
   clients[pClient->getPeerAddress().toString()] = tlp;
+  clientCount++;
 
   Logger::Info("[BLE] Done with this device! ConnID=%d %s", pClient->getConnId(), pClient->getPeerAddress().toString().c_str());
   Devices::BuzzerToneDuration(1500, 300);
@@ -294,7 +298,7 @@ void BleManager::update(){
     toConnect = nullptr;
   }else{
     if (m_canScan){
-      if (clients.size() < maxClients){
+      if (clientCount < maxClients){
         if (!isScanning){
           isScanning = true;
           NimBLEDevice::getScan()->clearDuplicateCache();
@@ -302,21 +306,29 @@ void BleManager::update(){
           NimBLEDevice::getScan()->start(0, scanEndedCB);
         }
       }
-     
-      std::string toErase;
-      for (auto &aux : clients){
-        if (!aux.second->connected){
-            toErase = aux.first;
-        }
-      }
       
-      if (toErase.size() > 0){
-        NimBLEDevice::deleteClient(clients[toErase]->m_client);
-        delete clients[toErase]->callbacks;
-        delete clients[toErase];
-        clients.erase(toErase);
+      if (clientCount > 0){
+        std::string toErase;
+        xSemaphoreTake(m_mutex, portMAX_DELAY);
+        for (auto &aux : clients){
+          if (!aux.second->connected){
+              toErase = aux.first;
+          }
+        }
+        
+        
+        if (toErase.size() > 0){
+          NimBLEDevice::deleteClient(clients[toErase]->m_client);
+          delete clients[toErase]->callbacks;
+          delete clients[toErase];
+          clients.erase(toErase);
+          clientCount--;
+        }
+        xSemaphoreGive(m_mutex);
       }
+      //
     }
+    
   }
 }
 
@@ -354,18 +366,24 @@ int BleManager::acceptTypes(std::string service, std::string characteristicStrea
 }
 
 bool BleManager::hasChangedClients(){
+  xSemaphoreTake(m_mutex, portMAX_DELAY);
   if (clientCount != clients.size()){
     clientCount = clients.size();
+    xSemaphoreGive(m_mutex);
     return true;
   }
+  xSemaphoreGive(m_mutex);
   return false;
 }
 
 bool BleManager::isElementIdConnected(int id){
+  xSemaphoreTake(m_mutex, portMAX_DELAY);
   for (auto &obj : clients){
     if (obj.second->m_controllerId == id){
+      xSemaphoreGive(m_mutex);
       return true;
     }
   }
+  xSemaphoreGive(m_mutex);
   return false;
 }
