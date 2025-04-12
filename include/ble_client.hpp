@@ -104,7 +104,7 @@ class ConnectTuple{
 
 class BleManager{
   public:
-    BleManager():clientCount(0), maxClients(1),lastScanClearTime(0),m_started(false),m_canScan(false),nextId(0),m_mutex(xSemaphoreCreateMutex()){}
+    BleManager():clientCount(0), maxClients(1),lastScanClearTime(0),m_started(false),m_canScan(false),m_logDiscoveredClients(false),nextId(0),m_mutex(xSemaphoreCreateMutex()){}
     bool begin();
     void update();
     void updateButtons();
@@ -120,6 +120,13 @@ class BleManager{
     bool isElementIdConnected(int id);
 
     bool hasChangedClients();
+    void setLogDiscoveredClients(bool log){
+      m_logDiscoveredClients = log;
+    }
+
+    bool canLogDiscoveredClients(){
+      return m_logDiscoveredClients;
+    }
 
 
     static BleSensorHandlerData remoteData[MAX_BLE_CLIENTS];
@@ -134,7 +141,7 @@ class BleManager{
     uint16_t clientCount;
   
     uint32_t  maxClients, lastScanClearTime;
-    bool m_started, m_canScan;
+    bool m_started, m_canScan, m_logDiscoveredClients;
     std::stack<uint8_t> availableIds;
     uint8_t nextId;
 

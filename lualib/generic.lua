@@ -15,6 +15,15 @@ function _M.setAutoPowerMode(brightness)
 	end
 end
 
+function _M.displaySplashMessage(msg)
+	oledClearScreen()
+	oledSetCursor(0,0)
+	oledSetFontSize(2)
+	oledDrawText(msg)
+	oledDisplay()
+	oledSetFontSize(1)
+end
+
 function _M.displayWarning(headMessage, message, duration)
 	duration = duration or 2000
 	print("Warning: "..headMessage.." | "..message.." | "..duration)

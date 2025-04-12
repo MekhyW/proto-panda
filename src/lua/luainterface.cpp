@@ -518,6 +518,10 @@ bool startBLE()
   Devices::CalculateMemmoryUsage();
   return true;
 }
+void setLogDiscoveredBle(bool log)
+{
+  g_remoteControls.setLogDiscoveredClients(log);
+}
 
 int isElementIdConnected(int id)
 {
@@ -726,6 +730,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("beginBleScanning", beginScanning);
   m_lua->FuncRegister("setMaximumControls", setMaximumControls);
   m_lua->FuncRegister("acceptBLETypes", acceptTypes);
+  m_lua->FuncRegister("setLogDiscoveredBleDevices", setLogDiscoveredBle);
   //System
   m_lua->FuncRegister("panelPowerOn", powerOn);
   m_lua->FuncRegister("panelPowerOff", powerOff);
@@ -864,12 +869,6 @@ void LuaInterface::RegisterMethods()
 
 void LuaInterface::RegisterConstants()
 {
-  m_lua->setConstant("VCC_THRESHOLD_HALT", VCC_THRESHOLD_HALT);
-  m_lua->setConstant("VCC_THRESHOLD_START", VCC_THRESHOLD_START);
-  m_lua->setConstant("OLED_SCREEN_WIDTH", OLED_SCREEN_WIDTH);
-  m_lua->setConstant("OLED_SCREEN_HEIGHT", OLED_SCREEN_HEIGHT);
-  m_lua->setConstant("PANEL_WIDTH", PANEL_WIDTH);
-  m_lua->setConstant("PANEL_HEIGHT", PANEL_HEIGHT);
 
   m_lua->setConstant("BUTTON_RELEASED", BUTTON_RELEASED);
   m_lua->setConstant("BUTTON_JUST_PRESSED", BUTTON_JUST_PRESSED);
@@ -919,9 +918,6 @@ void LuaInterface::RegisterConstants()
    
   }
 
-  m_lua->setConstant("MAX_BLE_BUTTONS", (int)MAX_BLE_BUTTONS);
-  m_lua->setConstant("MAX_BLE_CLIENTS", (int)MAX_BLE_CLIENTS);
-  m_lua->setConstant("SERVO_COUNT", (int)SERVO_COUNT);
 
   m_lua->setConstant("POWER_MODE_USB_5V", (int)POWER_MODE_USB_5V);
   m_lua->setConstant("POWER_MODE_USB_9V", (int)POWER_MODE_USB_9V);
@@ -958,8 +954,30 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("ESP_RST_SDIO", (int)ESP_RST_SDIO);
 
   m_lua->setConstant("PANDA_VERSION", PANDA_VERSION);
-
   m_lua->setConstant("BUILT_IN_POWER_MODE", (int)BUILT_IN_POWER_MODE);
+  m_lua->setConstant("PIN_ENABLE_REGULATOR", (int)PIN_ENABLE_REGULATOR);
+  m_lua->setConstant("PIN_USB_BATTERY_IN", (int)PIN_USB_BATTERY_IN);
+  m_lua->setConstant("RESISTOR_DIVIDER_R8", (float)RESISTOR_DIVIDER_R8);
+  m_lua->setConstant("RESISTOR_DIVIDER_R9", (float)RESISTOR_DIVIDER_R9);
+  m_lua->setConstant("V_REF", (float)V_REF);
+  m_lua->setConstant("VCC_THRESHOLD_START", VCC_THRESHOLD_START);
+  m_lua->setConstant("VCC_THRESHOLD_HALT", VCC_THRESHOLD_HALT);
+  m_lua->setConstant("OLED_SCREEN_WIDTH", OLED_SCREEN_WIDTH);
+  m_lua->setConstant("OLED_SCREEN_HEIGHT", OLED_SCREEN_HEIGHT);
+  m_lua->setConstant("PANEL_WIDTH", PANEL_WIDTH);
+  m_lua->setConstant("PANEL_HEIGHT", PANEL_HEIGHT);
+  m_lua->setConstant("MAX_BLE_BUTTONS", (int)MAX_BLE_BUTTONS);
+  m_lua->setConstant("MAX_BLE_CLIENTS", (int)MAX_BLE_CLIENTS);
+  m_lua->setConstant("SERVO_COUNT", (int)SERVO_COUNT);
+  m_lua->setConstant("MAX_LED_GROUPS", MAX_LED_GROUPS);
+  m_lua->setConstant("EDIT_MODE_PIN", EDIT_MODE_PIN);
+  m_lua->setConstant("WIFI_AP_NAME", WIFI_AP_NAME);
+  m_lua->setConstant("WIFI_AP_PASSWORD", WIFI_AP_PASSWORD);
+  m_lua->setConstant("EDIT_MODE_FTP_USER", EDIT_MODE_FTP_USER);
+  m_lua->setConstant("EDIT_MODE_FTP_PASSWORD", EDIT_MODE_FTP_PASSWORD);
+  m_lua->setConstant("EDIT_MODE_FTP_PORT", EDIT_MODE_FTP_PORT);
+  m_lua->setConstant("SERVO_COUNT", SERVO_COUNT);
+  m_lua->setConstant("PANEL_CHAIN", PANEL_CHAIN);
 
 }
 

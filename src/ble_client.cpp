@@ -63,19 +63,20 @@ void ClientCallbacks::onAuthenticationComplete(ble_gap_conn_desc* desc){
 };
 
 void AdvertisedDeviceCallbacks::onResult(NimBLEAdvertisedDevice* advertisedDevice) {
-    //Logger::Info("[BLE] Advertised Device found: %s", advertisedDevice->toString().c_str());
-    auto vecOfTuples = bleObj->GetAcceptedUUIDS();
-    for (size_t i = 0; i < vecOfTuples.size(); ++i) {
-      const auto it = vecOfTuples[i];
+  if (bleObj->canLogDiscoveredClients()){
+    Logger::Info("[BLE] Advertised Device found: %s", advertisedDevice->toString().c_str());
+  }
+  auto vecOfTuples = bleObj->GetAcceptedUUIDS();
+  for (size_t i = 0; i < vecOfTuples.size(); ++i) {
+    const auto it = vecOfTuples[i];
 
-      if(advertisedDevice->isAdvertisingService(std::get<0>(it)))
-      {
-          NimBLEDevice::getScan()->stop();
-          isScanning = false;
-          toConnect = new ConnectTuple(advertisedDevice, std::get<0>(it), std::get<1>(it), std::get<2>(it));
-          return;
-      }
+    if(advertisedDevice->isAdvertisingService(std::get<0>(it))){
+      NimBLEDevice::getScan()->stop();
+      isScanning = false;
+      toConnect = new ConnectTuple(advertisedDevice, std::get<0>(it), std::get<1>(it), std::get<2>(it));
+      return;
     }
+  }
 };
 
 
