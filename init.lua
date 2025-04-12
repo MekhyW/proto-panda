@@ -32,7 +32,7 @@ function onSetup()
 end
 
 function onPreflight()
-    generic.setAutoPowerMode()
+    generic.setAutoPowerMode(tonumber(dictGet("panel_brightness")) or 64)
     beginBleScanning()
     ledsGentlySeBrightness(tonumber(dictGet("led_brightness") ) or 64)
     gentlySetPanelBrightness(tonumber(dictGet("panel_brightness")) or 64)

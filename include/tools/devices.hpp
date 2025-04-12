@@ -40,7 +40,7 @@ class Devices{
         static void SetAutoCheckPowerLevel(bool b){
             s_autoCheckPower = b;
         };
-        static bool WaitForPower();
+        static bool WaitForPower(uint8_t brightness);
         static void UpdateFrameSpeed(uint32_t mils);
         static void DisplayResetInfo();
 
@@ -83,6 +83,9 @@ class Devices{
         static bool ReadInternalTemperature();
 
         static void SetGentlyBrightness(uint8_t bright, uint8_t rate = 1, uint8_t startAmount=0){
+            if (maxBrightness == bright){
+                return;
+            }
             SetMaxBrightness(startAmount);
             gentlyTurnOn = true;
             targetBrigthness = maxBrightness = bright;

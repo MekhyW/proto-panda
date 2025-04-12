@@ -730,7 +730,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("panelPowerOn", powerOn);
   m_lua->FuncRegister("panelPowerOff", powerOff);
   m_lua->FuncRegister("setPoweringMode", setPoweringMode);
-  m_lua->FuncRegister("waitForPower", Devices::WaitForPower);
+  m_lua->FuncRegisterOptional("waitForPower", Devices::WaitForPower, 64);
   m_lua->FuncRegister("setAutoCheckPowerLevel", Devices::SetAutoCheckPowerLevel);
   m_lua->FuncRegister("setVoltageStopThreshold", Devices::SetVoltageStopThreshold);
   m_lua->FuncRegister("setVoltageStartThreshold", Devices::SetVoltageStartThreshold);

@@ -190,7 +190,7 @@ void loop() {
   
 
   if (Devices::AutoCheckPowerLevel() && !Devices::CheckPowerLevel()){
-    Devices::WaitForPower();
+    Devices::WaitForPower(0);
     return;
   }
 

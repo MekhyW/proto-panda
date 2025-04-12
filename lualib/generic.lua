@@ -6,10 +6,10 @@ function _M.map(x, in_min, in_max, out_min, out_max)
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 end
 
-function _M.setAutoPowerMode()
+function _M.setAutoPowerMode(brightness)
 	setPoweringMode(BUILT_IN_POWER_MODE)
 	if BUILT_IN_POWER_MODE == POWER_MODE_USB_9V or BUILT_IN_POWER_MODE == POWER_MODE_BATTERY then 
-		waitForPower()
+		waitForPower(brightness)
 	else
 		panelPowerOn()
 	end

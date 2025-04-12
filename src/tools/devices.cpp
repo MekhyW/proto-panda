@@ -37,7 +37,7 @@ uint32_t Devices::freePsramBytes = 0;
 uint32_t Devices::totalPsramBytes = 1;
 float Devices::percentagePsramFree = 1;
 float Devices::percentageHeapFree = 1;
-uint8_t Devices::maxBrightness = 128;
+uint8_t Devices::maxBrightness = 64;
 
 
 std::map<byte,bool> Devices::foundDevices;
@@ -166,7 +166,10 @@ void Devices::SetMaxBrightness(uint8_t b){
 }
 
 
-bool Devices::WaitForPower(){
+bool Devices::WaitForPower(uint8_t brightness){
+  if (brightness == 0){
+    brightness = maxBrightness;
+  }
   BuzzerNoTone();
   digitalWrite(PIN_ENABLE_REGULATOR, LOW);
   int tries = 0;
@@ -192,14 +195,14 @@ bool Devices::WaitForPower(){
 
 
   char buff[50];
-  for (int a=1; a<maxBrightness;a+=4){
+  for (int a=1; a<brightness;a+=4){
     Sensors::FullMeasureVoltage();
     if (!Devices::CheckPowerLevel()){
         digitalWrite(PIN_ENABLE_REGULATOR, LOW);
         delay(500);
         goto retry;
     }
-    sprintf(buff, "Power: %fV\n", Sensors::GetAvgBatteryVoltage());
+    sprintf(buff, "Power: %fV\nBrightness: %d/%d", Sensors::GetAvgBatteryVoltage(), a, maxBrightness );
     OledScreen::DrawProgressBar(a, maxBrightness, buff);
     uint16_t rd = Sensors::GetAvgBatteryVoltage();
     if (rd <= VoltageStopThreshold){
@@ -211,6 +214,7 @@ bool Devices::WaitForPower(){
     DMADisplay::Display->setBrightness(a); 
     DMADisplay::DrawTestScreen();
   }
+  SetMaxBrightness(brightness);
   g_animation.setManaged(oldState);
   return true;
 }
