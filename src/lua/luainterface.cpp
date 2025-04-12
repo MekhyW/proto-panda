@@ -196,14 +196,14 @@ void setBrownoutDetection(bool enable) {
 int getResetReason() {
   return (int)esp_reset_reason();
 }
-void setPanelBrighteness(uint8_t bright)
+void setPanelBrightness(uint8_t bright)
 {
   DMADisplay::Display->setBrightness(bright);
   DMADisplay::Display->setBrightnessExt(bright);
   return;
 }
 
-uint8_t getPanelBrighteness()
+uint8_t getPanelBrightness()
 {
   return DMADisplay::Display->getBrightnessExt();
 }
@@ -211,9 +211,9 @@ uint8_t getPanelBrighteness()
 
 
 
-void gentlySetPanelBrighteness(uint8_t bright, uint8_t rate)
+void gentlySetPanelBrightness(uint8_t bright, uint8_t rate)
 {
-  Devices::SetGentlyBrighteness(bright, rate);
+  Devices::SetGentlyBrightness(bright, rate);
   return;
 }
 
@@ -299,12 +299,13 @@ uint32_t readButtonStatus(uint32_t button)
     return 0;
   }
   uint32_t id = button/uint32_t(MAX_BLE_BUTTONS);
+  button -= id*MAX_BLE_BUTTONS;
   return BleManager::remoteData[id].real_inputButtonsStatus[button];
 }
 
 uint32_t getBleDeviceUpdateDt(uint32_t device)
 {
-  if (device >= MAX_BLE_BUTTONS*MAX_BLE_CLIENTS)
+  if (device >= MAX_BLE_CLIENTS)
   {
     return 0;
   }
@@ -313,7 +314,7 @@ uint32_t getBleDeviceUpdateDt(uint32_t device)
 
 uint32_t getBleDeviceLastUpdate(uint32_t device)
 {
-  if (device >= MAX_BLE_BUTTONS*MAX_BLE_CLIENTS)
+  if (device >= MAX_BLE_CLIENTS)
   {
     return 0;
   }
@@ -627,6 +628,12 @@ void DrawRectScreen(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
   return;
   
 }
+void DrawRectFilledScreen(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
+{
+  OledScreen::display.fillRect(x,y,w,h, color);
+  return;
+  
+}
 
 void DrawPixelScreen(int16_t x, int16_t y,uint16_t color)
 {
@@ -707,6 +714,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegisterOptional("oledSetTextColor", DrawSetTextColor, BLACK);
   m_lua->FuncRegister("oledDrawText", DrawTextScreen);
   m_lua->FuncRegister("oledDrawRect", DrawRectScreen);
+  m_lua->FuncRegister("oledDrawFilledRect", DrawRectFilledScreen);
   m_lua->FuncRegister("oledDrawPixel", DrawPixelScreen);
   m_lua->FuncRegister("oledDrawLine", DrawLineScreen);
   m_lua->FuncRegister("oledDrawCircle", DrawCircleScreen);
@@ -766,15 +774,14 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("drawPanelFace", DrawFace);
   m_lua->FuncRegisterOptional("setPanelAnimation", setAnimation, -1, false, -1, 250);
   m_lua->FuncRegister("popPanelAnimation", popPanelAnimation); 
-  m_lua->FuncRegister("setPanelMaxBrighteness", Devices::SetMaxBrighteness);
-  m_lua->FuncRegisterOptional("gentlySetPanelBrighteness", gentlySetPanelBrighteness, 4);
+  m_lua->FuncRegisterOptional("gentlySetPanelBrightness", gentlySetPanelBrightness, 0, 4);
   m_lua->FuncRegister("setPanelManaged", setManaged);
   m_lua->FuncRegister("isPanelManaged", isManaged);
   m_lua->FuncRegister("getCurrentAnimationStorage", getCurrentAnimationStorage);
   m_lua->FuncRegister("getPanelCurrentFace", getCurrentFace);
   m_lua->FuncRegister("drawPanelCurrentFrame", DrawCurrentFrame);
-  m_lua->FuncRegister("setPanelBrighteness", setPanelBrighteness);
-  m_lua->FuncRegister("getPanelBrighteness", getPanelBrighteness);
+  m_lua->FuncRegister("setPanelBrightness", setPanelBrightness);
+  m_lua->FuncRegister("getPanelBrightness", getPanelBrightness);
   m_lua->FuncRegister("setInterruptFrames", setInterruptFrames);  
   m_lua->FuncRegister("setInterruptAnimationPin", setInterruptAnimationPin); 
   m_lua->FuncRegisterFromObjectOpt("setRainbowShader", &g_animation, &Animation::setRainbowShader, true); 
@@ -831,6 +838,7 @@ void LuaInterface::RegisterMethods()
   //debug
   m_lua->FuncRegisterRaw("dumpStackToSerial", dumpStackToSerial);
   //Leds
+  m_lua->FuncRegisterFromObjectOpt("ledsGetBrightness", &g_leds, &LedStrip::getBrightness);
   m_lua->FuncRegisterFromObjectOpt("ledsSetBrightness", &g_leds, &LedStrip::setBrightness, (uint8_t)128);
   m_lua->FuncRegisterFromObjectOpt("ledsBegin", &g_leds, &LedStrip::Begin, (uint8_t)128);
   m_lua->FuncRegisterFromObjectOpt("ledsBeginDual", &g_leds, &LedStrip::BeginDual, (uint8_t)128);
@@ -838,8 +846,12 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegisterFromObjectOpt("ledsSegmentBehavior", &g_leds, &LedStrip::setSegmentBehavior, 0, 0, 0, 0);
   m_lua->FuncRegisterFromObjectOpt("ledsSegmentTweenBehavior", &g_leds, &LedStrip::setSegmentTweenBehavior, 0, 0, 0, 0);
   m_lua->FuncRegisterFromObjectOpt("ledsSegmentTweenSpeed", &g_leds, &LedStrip::setSegmentTweenSpeed);
-  m_lua->FuncRegisterFromObjectOpt("setLedColor", &g_leds, &LedStrip::setLedColor);
-  m_lua->FuncRegisterFromObjectOpt("displayLeds", &g_leds, &LedStrip::Display);
+  m_lua->FuncRegisterFromObjectOpt("ledsSegmentColor", &g_leds, &LedStrip::setSegmentColor);
+  m_lua->FuncRegisterFromObjectOpt("ledsSetColor", &g_leds, &LedStrip::setLedColor);
+  m_lua->FuncRegisterFromObjectOpt("ledsDisplay", &g_leds, &LedStrip::Display);
+  m_lua->FuncRegisterFromObjectOpt("ledsSetManaged", &g_leds, &LedStrip::SetManaged);
+  m_lua->FuncRegisterFromObjectOpt("ledsIsManaged", &g_leds, &LedStrip::IsManaged);
+  m_lua->FuncRegisterFromObjectOpt("ledsGentlySeBrightness", &g_leds, &LedStrip::GentlySeBrightness, 0, 2);
   //Files
   m_lua->FuncRegister("listFiles", listFiles);
   m_lua->FuncRegister("moveFile", moveFile);

@@ -37,7 +37,7 @@ uint32_t Devices::freePsramBytes = 0;
 uint32_t Devices::totalPsramBytes = 1;
 float Devices::percentagePsramFree = 1;
 float Devices::percentageHeapFree = 1;
-uint8_t Devices::maxBrighteness = 128;
+uint8_t Devices::maxBrightness = 128;
 
 
 std::map<byte,bool> Devices::foundDevices;
@@ -55,7 +55,7 @@ PowerMode Devices::s_powerMode = POWER_MODE_USB_5V;
 
 bool Devices::gentlyTurnOn = false;
 uint8_t Devices::targetBrigthness = 0;
-uint8_t Devices::currentTargetBrigtness = 0;
+uint16_t Devices::currentTargetBrigtness = 0;
 uint8_t Devices::turnOnRate = 1;
 
 #ifdef USE_LIDAR
@@ -160,8 +160,9 @@ bool Devices::CheckPowerLevel(){
   return true;
 }
 
-void Devices::SetMaxBrighteness(uint8_t b){
-  maxBrighteness = b;
+void Devices::SetMaxBrightness(uint8_t b){
+  maxBrightness = b;
+  DMADisplay::Display->setBrightness(b); 
 }
 
 
@@ -191,7 +192,7 @@ bool Devices::WaitForPower(){
 
 
   char buff[50];
-  for (int a=1; a<maxBrighteness;a+=4){
+  for (int a=1; a<maxBrightness;a+=4){
     Sensors::FullMeasureVoltage();
     if (!Devices::CheckPowerLevel()){
         digitalWrite(PIN_ENABLE_REGULATOR, LOW);
@@ -199,7 +200,7 @@ bool Devices::WaitForPower(){
         goto retry;
     }
     sprintf(buff, "Power: %fV\n", Sensors::GetAvgBatteryVoltage());
-    OledScreen::DrawProgressBar(a, maxBrighteness, buff);
+    OledScreen::DrawProgressBar(a, maxBrightness, buff);
     uint16_t rd = Sensors::GetAvgBatteryVoltage();
     if (rd <= VoltageStopThreshold){
       digitalWrite(PIN_ENABLE_REGULATOR, LOW);
@@ -230,7 +231,7 @@ void Devices::BeginAutoFrame(){
       currentTargetBrigtness = targetBrigthness;
       gentlyTurnOn = false;
     }
-    DMADisplay::Display->setBrightness(currentTargetBrigtness);
+    SetMaxBrightness(currentTargetBrigtness);
   }
 }
 

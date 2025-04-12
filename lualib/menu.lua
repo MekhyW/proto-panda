@@ -58,7 +58,7 @@ function _M.setup(expressions)
     _M.settings.addElement(function() return "Rebuild bulk file" end,  function()
         setPanelManaged(false)
         ledsSetBrightness(0)
-        setPanelBrighteness(0)
+        setPanelBrightness(0)
         panelPowerOff()
         noTone() --Since the beep is managed by the same core thats running the composing, the beep wouldn't stop. So we kill it right now
         composeBulkFile()
@@ -70,8 +70,13 @@ function _M.setup(expressions)
         dictFormat()
         _M.face_selection_style = "GRID"
         _M.brigthness = 64
-        setPanelMaxBrighteness(_M.brigthness)
-        setPanelBrighteness(_M.brigthness)
+        _M.led_brightness = 64
+        dictSet("face_selection_style", "GRID")
+        dictSet("led_brightness", 64)
+        dictSet("panel_brightness", 64)
+        ledsGentlySeBrightness(_M.led_brightness)
+        gentlySetPanelBrightness(_M.brigthness)
+        dictSave()
         _M.enterMainMenu()
     end)
     --scripts ui
@@ -332,8 +337,8 @@ function _M.handleBrightnessMenu(dt)
             if (_M.brigthness  < 0) then 
                 _M.brigthness  = 0
             end
-            setPanelMaxBrighteness(_M.brigthness)
-            setPanelBrighteness(_M.brigthness)
+            
+            setPanelBrightness(_M.brigthness)
         end
     end
 
@@ -345,8 +350,8 @@ function _M.handleBrightnessMenu(dt)
             if (_M.brigthness  > 255) then 
                 _M.brigthness  = 255
             end
-            setPanelMaxBrighteness(_M.brigthness)
-            setPanelBrighteness(_M.brigthness)
+
+            setPanelBrightness(_M.brigthness)
         end
     end
 end

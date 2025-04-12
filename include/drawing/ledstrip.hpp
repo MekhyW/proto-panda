@@ -78,14 +78,11 @@ class LedGroup : public BaseLedGroup{
 
 class LedStrip { 
     public:
-        LedStrip():m_ledAmount(0),m_maxBrighteness(0),m_leds(nullptr),m_enabled(false){};
-        bool Begin(uint16_t ledCount, uint16_t maxbrighteness){
-            return BeginDual(ledCount, 0, maxbrighteness);
+        LedStrip():m_ledAmount(0),m_maxBrightness(0),m_targetBrigthness(0),m_turnOnRate(0),m_currentTargetBrigtness(0),m_leds(nullptr),m_enabled(false),m_managed(false),m_gentlyTurnOn(false){};
+        bool Begin(uint16_t ledCount, uint16_t maxbrightness){
+            return BeginDual(ledCount, 0, maxbrightness);
         }
-        bool BeginDual(uint16_t ledCount, uint16_t secondLedCount, uint8_t maxbrighteness);
-        void Meme(int a, int b, int c){
-            Serial.printf("Memes: %d %d %d\n", a,b,c);
-        }
+        bool BeginDual(uint16_t ledCount, uint16_t secondLedCount, uint8_t maxbrightness);
         void Update();
         
         
@@ -106,10 +103,28 @@ class LedStrip {
             return m_leds+i;
         }
 
-        uint8_t getBrighteness(){
-            return m_maxBrighteness;
+        uint8_t getBrightness(){
+            return m_maxBrightness;
+        }
+        void SetManaged(bool set){
+            m_managed = set;
+        }
+        bool IsManaged(){
+            return m_managed;
         }
         void setBrightness(uint8_t amount);
+
+        void GentlySeBrightness(uint8_t bright, uint8_t rate = 1, uint8_t startAmount=0){
+            setBrightness(startAmount); 
+            m_gentlyTurnOn = true;
+            m_targetBrigthness = bright;
+            m_turnOnRate = rate;
+            m_currentTargetBrigtness = 0;
+            if (m_turnOnRate == 0){
+                m_turnOnRate = 1;
+            }
+        }
+
 
         void Display();
 
@@ -126,8 +141,9 @@ class LedStrip {
         LedGroup m_groups[16];
     
         int m_ledAmount;
-        uint8_t m_maxBrighteness;
+        uint8_t m_maxBrightness, m_targetBrigthness, m_turnOnRate;
+        uint16_t m_currentTargetBrigtness;
         CRGB *m_leds;
 
-        bool m_enabled;
+        bool m_enabled, m_managed, m_gentlyTurnOn;
 };

@@ -4,24 +4,24 @@
 #include "config.hpp"
 #include <Arduino.h>
 
-bool LedStrip::BeginDual(uint16_t ledCount, uint16_t secondLedCount, uint8_t maxbrighteness){
+bool LedStrip::BeginDual(uint16_t ledCount, uint16_t secondLedCount, uint8_t maxbrightness){
     if (ledCount > 0){
         Logger::Info("Starting total of %d leds", ledCount+secondLedCount);
         m_ledAmount = ledCount+secondLedCount;
-        m_maxBrighteness = maxbrighteness;
+        m_maxBrightness = maxbrightness;
         m_leds = new CRGB[m_ledAmount+secondLedCount+1];
         if (m_leds == nullptr){
             return false;
         }
 
-        FastLED.addLeds<LED_STRIP_TYPE,LED_STRIP_PIN_1,GRB>(m_leds, ledCount).setCorrection(TypicalLEDStrip).setDither(m_maxBrighteness < 255);
+        FastLED.addLeds<LED_STRIP_TYPE,LED_STRIP_PIN_1,GRB>(m_leds, ledCount).setCorrection(TypicalLEDStrip).setDither(m_maxBrightness < 255);
         Logger::Info("Led started at addr %d to %d", (int)m_leds, ledCount);
         if (secondLedCount > 0){
             Logger::Info("Second started at addr %d to %d", ((int)m_leds)+ ledCount, secondLedCount);
-            FastLED.addLeds<LED_STRIP_TYPE,LED_STRIP_PIN_2,GRB>(m_leds + ledCount, secondLedCount).setCorrection(TypicalLEDStrip).setDither(m_maxBrighteness < 255);
+            FastLED.addLeds<LED_STRIP_TYPE,LED_STRIP_PIN_2,GRB>(m_leds + ledCount, secondLedCount).setCorrection(TypicalLEDStrip).setDither(m_maxBrightness < 255);
         }
 
-        FastLED.setBrightness(m_maxBrighteness);
+        FastLED.setBrightness(m_maxBrightness);
 
         for (int i=0;i<MAX_LED_GROUPS;i++){
             m_groups[i] = LedGroup();
@@ -58,6 +58,17 @@ void LedStrip::Update(){
     if (!m_enabled){
         return;
     }
+    if (m_gentlyTurnOn){
+        m_currentTargetBrigtness += m_turnOnRate;
+        if (m_currentTargetBrigtness >= m_targetBrigthness){
+            m_currentTargetBrigtness = m_targetBrigthness;
+            m_gentlyTurnOn = false;
+        }
+        FastLED.setBrightness(m_currentTargetBrigtness);
+    }
+    if (!m_managed){
+        return;
+    }
     for (int i=0;i<MAX_LED_GROUPS;i++){
         
         if (m_groups[i].to > 0){
@@ -76,8 +87,8 @@ void LedStrip::setSegmentColor(int id, int r, int g, int b){
 }
 
 void LedStrip::setBrightness(uint8_t val){
-    m_maxBrighteness = val;
-    FastLED.setBrightness(m_maxBrighteness);
+    m_maxBrightness = val;
+    FastLED.setBrightness(m_maxBrightness);
 }
 
 void LedStrip::setLedColor(int id, int r, int g, int b){

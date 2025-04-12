@@ -84,8 +84,10 @@ end
 
 function _M.StoreState() 
 	_M.previous_state[#_M.previous_state+1] = {
-		managed = isPanelManaged(),
-		brightness = getPanelBrighteness()
+		panel_managed = isPanelManaged(),
+		led_managed = ledsIsManaged(),
+		led_brightness = ledsGetBrightness(),
+		panel_brightness = getPanelBrightness(),
 	}
 end
 
@@ -98,8 +100,18 @@ function _M.PopState()
 	if not res then 
 		return
 	end
-	setPanelManaged(res.managed)
-	setPanelBrighteness(res.brightness)
+	setPanelManaged(res.panel_managed)
+	ledsSetManaged(res.led_managed)
+
+	if ledsGetBrightness() ~= res.led_brightness then
+		ledsGentlySeBrightness(res.led_brightness, 1, ledsGetBrightness())
+	end
+
+	if getPanelBrightness() ~= res.panel_brightness then
+		gentlySetPanelBrightness(res.led_brightness, 1, res.panel_brightness)
+	end
+
+
 	_M.previous_state[#_M.previous_state] = nil
 end
 

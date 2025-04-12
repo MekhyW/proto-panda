@@ -21,14 +21,11 @@ void ClientCallbacks::onConnect(NimBLEClient* pClient) {
 
 
 void ClientCallbacks::onDisconnect(NimBLEClient* pClient) {
-  Logger::Info("[BLE] Device disconnected %s", pClient->getPeerAddress().toString().c_str());
+  //Logger::Info("[BLE] Device disconnected %s", pClient->getPeerAddress().toString().c_str());
   Devices::BuzzerToneDuration(400, 300);
-  Logger::Info("[BLE] eeeeeeeeeeeee");
   xSemaphoreTake(g_remoteControls.m_mutex, portMAX_DELAY);
   auto aux = g_remoteControls.clients[pClient->getPeerAddress().toString()];
   if (aux != nullptr){
-    Logger::Info("[BLE] Device adr=%d", (int)aux);
-    Logger::Info("[BLE] Device disconnected=%d", aux->m_controllerId);
     if (aux->m_controllerId < 0xff){
       g_remoteControls.availableIds.push(aux->m_controllerId);
     }

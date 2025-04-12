@@ -63,9 +63,9 @@ class Devices{
         static float getFps();
         static float getAutoFps();
 
-        static void SetMaxBrighteness(uint8_t b);
-        static uint8_t GetMaxBrighteness(){
-            return maxBrighteness;
+        static void SetMaxBrightness(uint8_t b);
+        static uint8_t GetMaxBrightness(){
+            return maxBrightness;
         }
 
        
@@ -82,11 +82,15 @@ class Devices{
         static bool ReadInternalGyroscope();
         static bool ReadInternalTemperature();
 
-        static void SetGentlyBrighteness(uint8_t bright, uint8_t rate = 1){
+        static void SetGentlyBrightness(uint8_t bright, uint8_t rate = 1, uint8_t startAmount=0){
+            SetMaxBrightness(startAmount);
             gentlyTurnOn = true;
-            targetBrigthness = bright;
+            targetBrigthness = maxBrightness = bright;
             turnOnRate = turnOnRate;
             currentTargetBrigtness = 0;
+            if (turnOnRate == 0){
+                turnOnRate = 1;
+            }
         };
         
         static bool ServoMove(int servoId, float angle);
@@ -125,7 +129,7 @@ class Devices{
         };
         
     private:
-        static uint8_t maxBrighteness;
+        static uint8_t maxBrightness;
         static uint32_t freeHeapBytes;
         static uint32_t totalHeapBytes;
         static uint32_t freePsramBytes;
@@ -149,7 +153,7 @@ class Devices{
 
         static bool gentlyTurnOn;
         static uint8_t targetBrigthness;
-        static uint8_t currentTargetBrigtness;
+        static uint16_t currentTargetBrigtness;
         static uint8_t turnOnRate;
 
 #ifdef USE_INTERNAL_ACCELEROMETER

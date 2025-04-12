@@ -519,14 +519,16 @@ static void app_timer_handler(void * p_context) {
     }
   } else {
     advCountToSleep++;
-    int16_t x=0;
-    int16_t y=0;
-    int16_t z=0;
+
+    int16_t gx=0;
+    int16_t gy=0;
+    int16_t gz=0;
     if (hasLis3) {
-      LSM6_readAcceleration( & x, & y, & z);
+
+      LSM6_readGyro( & gx, & gy, & gz);
     }
     if (advCountToSleep < 799) {
-      NRF_LOG_INFO("Count: %d/%d (%d, %d, %d) = %d", advCountToSleep, started_timer, x, y, z, nrf_gpio_pin_read(button_wakeup_pins[0]));
+      NRF_LOG_INFO("Count: %d/%d (%d, %d, %d) ", advCountToSleep, started_timer,gx, gy, gz);
     }
 
     if (advCountToSleep >= 801) {
@@ -625,20 +627,20 @@ int main(void) {
    }
 
 
-  nrf_delay_ms(200);
+  nrf_delay_ms(50);
   nrf_gpio_pin_set(PIN_LED_3);
-  nrf_delay_ms(200);
+  nrf_delay_ms(50);
   nrf_gpio_pin_set(PIN_LED_2);
-  nrf_delay_ms(200);
+  nrf_delay_ms(50);
   nrf_gpio_pin_set(PIN_LED_1);
-  nrf_delay_ms(200);
+  nrf_delay_ms(50);
 
   nrf_gpio_pin_clear(PIN_LED_3);
-  nrf_delay_ms(200);
+  nrf_delay_ms(50);
   nrf_gpio_pin_clear(PIN_LED_2);
-  nrf_delay_ms(200);
+  nrf_delay_ms(50);
   nrf_gpio_pin_clear(PIN_LED_1);
-  nrf_delay_ms(200);
+  nrf_delay_ms(50);
 
   nrf_gpio_cfg_input(button_wakeup_pins[0], NRF_GPIO_PIN_PULLDOWN);
 
@@ -649,7 +651,7 @@ int main(void) {
 
   twi_master_init();
   NRF_LOG_FLUSH();
-  nrf_delay_ms(300);
+  nrf_delay_ms(50);
  
   power_management_init();
 

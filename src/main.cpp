@@ -168,7 +168,9 @@ void second_loop(void*){
     uint32_t st2 = millis()-st;
     g_frameRepo.freeFile();
     g_leds.Update();
-    g_leds.Display();
+    if (g_leds.IsManaged()){
+      g_leds.Display();
+    }
     vTaskDelay(1);
     Devices::EndAutoFrame();
     st = millis()-st;

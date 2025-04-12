@@ -1,7 +1,7 @@
 #pragma once
 
 
-#define PANDA_VERSION "1.0.2"
+#define PANDA_VERSION "1.0.3"
 /*
     Pin to enable the buck converter.
     With this pin on HIGH the buck converter will start regulating the USB/Battery input

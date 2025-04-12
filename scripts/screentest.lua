@@ -49,8 +49,7 @@ end
 
 function _M.onSetup()
 	setPanelManaged(false)
-	_M.oldBrightness = getPanelBrighteness()
-	--setPanelBrighteness()
+	_M.oldBrightness = getPanelBrightness()
 	_M.moveRange = 10
 	delay(500)
 end
@@ -140,14 +139,14 @@ function _M.onLoop(dt)
 	elseif _M.step >= 11 and _M.step < 28 then
 		local brightness = math.min(255, math.max(8, (_M.step-11) * 16))
 		_M.moveRange = 5
-		setPanelBrighteness(brightness)
+		setPanelBrightness(brightness)
 		drawPanelFillRect(0,0, 128, 64, color565(255,255,255))
 		_M.drawTextCentered(32 ,5 , "Brightness", nil, color565(255,255,255))
 		_M.drawTextCentered(32 + x ,20 + y, tostring(brightness), color565(0,0,0), color565(255,255,255))
 	elseif _M.step == 28 then
 		drawPanelFillRect(0,0, 128, 64, color565(255,255,255))
 	else
-		setPanelBrighteness(_M.oldBrightness)
+		setPanelBrightness(_M.oldBrightness)
 		_M.shouldStop = true
 	end
 
