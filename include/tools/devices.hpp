@@ -84,6 +84,7 @@ class Devices{
 
         static void SetGentlyBrightness(uint8_t bright, uint8_t rate = 1, uint8_t startAmount=0){
             if (maxBrightness == bright){
+                SetMaxBrightness(startAmount);
                 return;
             }
             SetMaxBrightness(startAmount);

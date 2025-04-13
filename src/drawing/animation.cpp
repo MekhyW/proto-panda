@@ -50,6 +50,11 @@ AnimationFrameAction AnimationSequence::ChangeFrame(){
 }
 
 AnimationFrameAction AnimationSequence::Update(int m_interruptPin){
+    if (m_isNew){
+        m_counter = millis()+m_duration;
+        m_isNew = false;
+        return ANIMATION_FRAME_CHANGED;
+    }
     if (m_counter <= millis()){
         m_counter = millis()+m_duration;
         if (m_interruptPin < 0){
@@ -352,8 +357,9 @@ void Animation::SetAnimation(int duration, std::vector<int> frames, int repeatTi
     AnimationSequence newSeq;
     newSeq.m_duration = max(duration,1);
     newSeq.m_frames = frames;
-    newSeq.m_counter = millis()+duration;
+    newSeq.m_counter = 0;
     newSeq.m_frame = 0;
+    newSeq.m_isNew = true;
     newSeq.m_repeat = repeatTimes;
     newSeq.m_storageId = externalStorageId;
     xSemaphoreTake(m_mutex, portMAX_DELAY);

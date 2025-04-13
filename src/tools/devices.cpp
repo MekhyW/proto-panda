@@ -37,7 +37,7 @@ uint32_t Devices::freePsramBytes = 0;
 uint32_t Devices::totalPsramBytes = 1;
 float Devices::percentagePsramFree = 1;
 float Devices::percentageHeapFree = 1;
-uint8_t Devices::maxBrightness = 64;
+uint8_t Devices::maxBrightness = 0;
 
 
 std::map<byte,bool> Devices::foundDevices;
