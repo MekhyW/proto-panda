@@ -4,12 +4,14 @@ local StackExpression = expressions.StackExpression
 local IsFrameFromAnimation = expressions.IsFrameFromAnimation
 
 local _M = {
-	isOnLidar = false,
+    isOnLidar = false,
     config = {
-	   triggerStart = 100,
-	   triggerStop = 150,
+       triggerStart = 100,
+       triggerStop = 150,
     },
-	isOnLidar = false,
+    readyToTrigger  = false,
+    isOnLidar = false,
+    proximityTimer = 500
 }
 
 function _M.Load(filename)
@@ -83,6 +85,14 @@ function _M.Load(filename)
         if type(_M.config["transictionInOnlyOnSpecificFrame"]) ~= "number" then 
             error("Field 'transictionInOnlyOnSpecificFrame' should be an number")
         end
+    end 
+    
+    if _M.config["triggerMinIgnore"] then
+        if type(_M.config["triggerMinIgnore"]) ~= "number" then 
+            error("Field 'triggerMinIgnore' should be an number")
+        end
+    else
+        _M.config.triggerMinIgnore = 40
     end
 
     if _M.config["transictionOutOnlyOnSpecificFrame"] then
@@ -96,12 +106,22 @@ function _M.reset()
     _M.isOnLidar = false
 end
 
-function _M.manageBoop()
-	if hasLidar() then 
+function _M.manageBoop(dt)
+    if hasLidar() then 
         local config = _M.config
         local distance = readLidar()
-        if distance < config.triggerStart then 
-            if not _M.isOnLidar then 
+
+        if not _M.isOnLidar then 
+            if distance <= config.triggerStart and (distance >= config.triggerMinIgnore or distance >= config.triggerStop) then 
+                _M.proximityTimer = _M.proximityTimer - dt  
+                if _M.proximityTimer < 0 then  
+                    _M.readyToTrigger = true
+                end
+            else 
+                _M.proximityTimer = 500
+                _M.readyToTrigger = false
+            end
+            if _M.readyToTrigger then 
                 local isOnCorrectFrame = true
                 if config.transictionOnlyOnAnimation then  
                     if not IsFrameFromAnimation(getPanelCurrentFace(), config.transictionOnlyOnAnimation)  then  
@@ -126,6 +146,8 @@ function _M.manageBoop()
                 end
             end
         elseif distance >= config.triggerStop and _M.isOnLidar then
+            _M.readyToTrigger = false
+            _M.proximityTimer = 500
             if IsFrameFromAnimation(getPanelCurrentFace(), config.boopAnimationName)  then  
                 if config.transictionOutOnlyOnSpecificFrame then 
                     if config.transictionOutOnlyOnSpecificFrame ~= GetCurrentFrame() then  

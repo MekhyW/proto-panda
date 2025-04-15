@@ -28,7 +28,7 @@ local _M = {
 function _M.setup(expressions)
     _M.brigthness = tonumber(dictGet("panel_brightness")) or 64
     _M.led_brightness = tonumber(dictGet("led_brightness")) or 64
-    _M.has_boop = dictGet("has_boop") == "1" and "1" or "0"
+    _M.has_boop = dictGet("has_boop") == "1" 
     _M.settings_icon = oledCreateIcon({0x00, 0x00, 0x16, 0x80, 0x3f, 0xc0, 0x7f, 0xe0, 0x39, 0xc0, 0x70, 0xe0, 0x70, 0xe0, 0x39, 0xc0, 0x7f, 0xe0, 0x3f, 0xc0, 0x16, 0x80, 0x00, 0x00}, 12, 12)
     _M.face_icon = oledCreateIcon({0x00, 0x00, 0x00, 0x00, 0x01, 0xc0, 0x21, 0xc0, 0x60, 0x00, 0x00, 0x00, 0x00, 0x20, 0x15, 0x40, 0x2a, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, 12, 12)
     _M.enterMainMenu()
@@ -79,13 +79,13 @@ function _M.setup(expressions)
         _M.enterMainMenu()
     end)
 
-    _M.settings.addElement(function() return _M.has_boop == "1" and "Disable boop" or "Enable boop" end,  function()
-        if _M.has_boop == "1" then  
-            _M.has_boop = "0"
+    _M.settings.addElement(function() return _M.has_boop  and "Disable boop" or "Enable boop" end,  function()
+        if _M.has_boop  then  
+            _M.has_boop = nil
         else 
-            _M.has_boop = "1"
+            _M.has_boop = true
         end
-        dictSet("has_boop", _M.has_boop)
+        dictSet("has_boop", _M.has_boop and "1" or "0")
         dictSave()
     end)
 
@@ -300,7 +300,7 @@ function _M.handleMenu(dt)
     end
 
     if _M.has_boop then  
-        boop.manageBoop()
+        boop.manageBoop(dt)
     end
 
     _M.draw()
