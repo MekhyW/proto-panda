@@ -1,0 +1,10 @@
+{
+	"enabled": true,
+	"triggerStart": 100,
+	"triggerStop": 150,
+	"transitionIn": "boop_begin", 
+	"boopAnimationName": "boop",
+	"transitionOut":  "boop_end",
+	"transictionOnlyOnAnimation": "normal",
+	"transictionInOnlyOnSpecificFrame": 1
+}

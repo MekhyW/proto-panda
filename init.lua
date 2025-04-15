@@ -2,8 +2,7 @@ local expressions = require("expressions")
 local scripts = require("scripts")
 local generic = require("generic")
 local menu = require("menu")
-
-local brightness
+local boop = require("boop")
 
 function onSetup()
 
@@ -18,11 +17,16 @@ function onSetup()
     math.randomseed(seed)
     print("Random seed is "..seed)
     dictSet("random_seed", tostring(seed))
+    if dictGet("created") ~= "1" then
+        menu.setDictDefaultValues()
+    end
     dictSave()
     generic.displaySplashMessage("Starting:\nExpressions")
 
     expressions.Load("/expressions.json") 
     scripts.Load("/scripts.json") 
+    boop.Load("/boop.json")
+
     generic.displaySplashMessage("Starting:\nLeds")
     ledsBeginDual(25, 25, 0) 
     ledsDisplay()
@@ -32,6 +36,7 @@ function onSetup()
     ledsSegmentBehavior(1, BEHAVIOR_PRIDE)
     generic.displaySplashMessage("Starting:\nMenu") 
     menu.setup()
+
 end
 
 function onPreflight()
@@ -43,6 +48,9 @@ function onPreflight()
     setPanelManaged(true)
     expressions.Next()
 end
+local IsFrameFromAnimation = expressions.IsFrameFromAnimation
+local GetCurrentFrame = expressions.GetCurrentFrame
+local StackExpression = expressions.StackExpression
 
 function onLoop(dt)
     if not scripts.Handle(dt) then

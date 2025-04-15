@@ -3,7 +3,7 @@
     {"pattern": "/expressions/normal_by_maremar (%d).png", "flip_left": true, "from": 1, "to": 4, "alias": "normal"},
     {"pattern": "/expressions/noise (%d).png", "flip_left": false, "from": 1, "to": 3, "alias": "noise"},
     {"pattern": "/expressions/amogus (%d).png", "flip_left": true, "from": 1, "to": 2, "alias": "amogus"},
-    {"pattern": "/expressions/shy_1 (%d).png", "flip_left": true, "from": 1, "to": 5, "alias": "shy_enter"},
-    {"pattern": "/expressions/shy_cycle (%d).png", "flip_left": true, "from": 1, "to": 3, "alias": "shy_cycle"}
+    {"pattern": "/expressions/boop_cycle_%d.png", "flip_left": true, "from": 1, "to": 3, "alias": "boop"},
+    {"pattern": "/expressions/boop_transiction_%d.png", "flip_left": true, "from": 1, "to": 3, "alias": "boop_transiction"}
   ]
 }

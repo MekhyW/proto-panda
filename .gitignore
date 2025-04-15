@@ -5,4 +5,3 @@
 .vscode/ipch
 remote-control/Output/
 remote-control/*.emSession
-include/config.hpp

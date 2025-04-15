@@ -4,9 +4,8 @@ local _M = {
 	by_frame = {},
 	count = 0,
 }
-print("Loading json!")
-local json = require("json")
 
+local json = require("json")
 
 function _M.Load(filename)
 	local fp, err = io.open(filename, "r")
@@ -170,6 +169,8 @@ function _M.StackExpression(id)
 		else 
 			setPanelAnimation(aux.frames, aux.duration, repeats, false)
 		end
+	else
+		print("Unknown ID: "..id)
 	end
 end
 

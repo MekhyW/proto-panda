@@ -9,8 +9,9 @@ MODE_SCRIPTS = 6
 local scripts = require("scripts")
 local ui = require("ui")
 local generic = require("generic")
+local boop = require("boop")
 
-MAX_INTERFACE_ICONS = 5
+MAX_INTERFACE_ICONS = 4
 MENU_SPACING = 13
 
 local _M = {
@@ -24,10 +25,10 @@ local _M = {
     shader = false
 }
 
-
 function _M.setup(expressions)
     _M.brigthness = tonumber(dictGet("panel_brightness")) or 64
     _M.led_brightness = tonumber(dictGet("led_brightness")) or 64
+    _M.has_boop = dictGet("has_boop") == "1" and "1" or "0"
     _M.settings_icon = oledCreateIcon({0x00, 0x00, 0x16, 0x80, 0x3f, 0xc0, 0x7f, 0xe0, 0x39, 0xc0, 0x70, 0xe0, 0x70, 0xe0, 0x39, 0xc0, 0x7f, 0xe0, 0x3f, 0xc0, 0x16, 0x80, 0x00, 0x00}, 12, 12)
     _M.face_icon = oledCreateIcon({0x00, 0x00, 0x00, 0x00, 0x01, 0xc0, 0x21, 0xc0, 0x60, 0x00, 0x00, 0x00, 0x00, 0x20, 0x15, 0x40, 0x2a, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, 12, 12)
     _M.enterMainMenu()
@@ -71,14 +72,23 @@ function _M.setup(expressions)
         _M.face_selection_style = "GRID"
         _M.brigthness = 64
         _M.led_brightness = 64
-        dictSet("face_selection_style", "GRID")
-        dictSet("led_brightness", 64)
-        dictSet("panel_brightness", 64)
+        _M.setDictDefaultValues()
         ledsGentlySeBrightness(_M.led_brightness)
         gentlySetPanelBrightness(_M.brigthness)
         dictSave()
         _M.enterMainMenu()
     end)
+
+    _M.settings.addElement(function() return _M.has_boop == "1" and "Disable boop" or "Enable boop" end,  function()
+        if _M.has_boop == "1" then  
+            _M.has_boop = "0"
+        else 
+            _M.has_boop = "1"
+        end
+        dictSet("has_boop", _M.has_boop)
+        dictSave()
+    end)
+
     --scripts ui
     local scriptList = scripts.GetScripts()
     _M.scripts = ui.generateUi("Press < To back", nil, _M.enterMainMenu)
@@ -235,7 +245,11 @@ function _M.draw()
             oledDrawLine(64,32, 64 - sin, 32 - cos,1)
             oledDrawLine(64,32, 64 - sin, 32 + cos,1)
         end
-
+        local maxExpressions = expressions.GetExpressionCount()
+        local lastPage = math.floor((maxExpressions-1)/(MAX_INTERFACE_ICONS*2))
+        local currentPage = math.floor((_M.selected-1)/(MAX_INTERFACE_ICONS*2))
+        oledSetCursor(10, 64-8)
+        oledDrawText("anim: ".._M.selected.." PAGE "..currentPage.."/"..lastPage)
         oledDisplay()
     elseif _M.mode == MODE_SETTINGS_MENU then
         _M.settings.draw()
@@ -264,7 +278,6 @@ end
 
 
 function _M.handleMenu(dt)
-    --Clear internal screen
 
     if _M.mode == MODE_MAIN_MENU then 
         _M.handleMainMenu(dt)
@@ -284,6 +297,10 @@ function _M.handleMenu(dt)
         if not _M.scripts.handle(dt) then 
             return
         end    
+    end
+
+    if _M.has_boop then  
+        boop.manageBoop()
     end
 
     _M.draw()
@@ -394,11 +411,13 @@ end
 function _M.handleFaceQuickMenu(dt)
     if readButtonStatus(BUTTON_LEFT) == BUTTON_JUST_PRESSED then
         expressions.Previous()
+        boop.reset()
         toneDuration(340, 10)
     end
 
     if readButtonStatus(BUTTON_RIGHT) == BUTTON_JUST_PRESSED then
         expressions.Next()
+        boop.reset()
         toneDuration(540, 10)
     end
 
@@ -418,11 +437,14 @@ end
 function _M.handleFaceMenu(dt)
     _M.timer = _M.timer - dt
     if readButtonStatus(BUTTON_LEFT) == BUTTON_JUST_PRESSED then 
+        toneDuration(340, 50)
         if _M.selected < MAX_INTERFACE_ICONS then
-            toneDuration(340, 10)
             local maxExpressions = expressions.GetExpressionCount()
-            local offsetBy5 = _M.selected%MAX_INTERFACE_ICONS
-            _M.selected = maxExpressions-(MAX_INTERFACE_ICONS-offsetBy5)
+            local lastPage = math.floor((maxExpressions-1)/MAX_INTERFACE_ICONS)
+            _M.selected = lastPage*MAX_INTERFACE_ICONS + _M.selected
+            if _M.selected > maxExpressions then  
+                _M.selected = maxExpressions
+            end
         else
             _M.selected = _M.selected-MAX_INTERFACE_ICONS
         end
@@ -430,27 +452,45 @@ function _M.handleFaceMenu(dt)
 
     if readButtonStatus(BUTTON_RIGHT) == BUTTON_JUST_PRESSED then 
         local maxExpressions = expressions.GetExpressionCount()
-        toneDuration(540, 10)
+  
+        toneDuration(540, 50)
         _M.selected = _M.selected+MAX_INTERFACE_ICONS
         if _M.selected > maxExpressions then 
-            _M.selected = _M.selected%MAX_INTERFACE_ICONS
-        end
-    end
+            local lastPage = math.floor((maxExpressions-1)/MAX_INTERFACE_ICONS)
+            local currentPage = math.floor((_M.selected-1)/MAX_INTERFACE_ICONS)
+            if currentPage > lastPage then  
+                _M.selected = (_M.selected%MAX_INTERFACE_ICONS)
+            else
+                _M.selected = maxExpressions
+            end
+        end    end
 
     if readButtonStatus(BUTTON_UP) == BUTTON_JUST_PRESSED then 
-        toneDuration(540, 10)
+        toneDuration(540, 50)
         if (_M.selected%MAX_INTERFACE_ICONS == 1) then 
             _M.selected = _M.selected +(MAX_INTERFACE_ICONS-1)
+            local maxExpressions = expressions.GetExpressionCount()
+            if _M.selected > maxExpressions then 
+                _M.selected = maxExpressions
+            end
         else
             _M.selected = _M.selected -1
         end
+        if _M.selected <= 0 then  
+            _M.selected = MAX_INTERFACE_ICONS-1
+        end
     end
     if readButtonStatus(BUTTON_DOWN) == BUTTON_JUST_PRESSED then 
-        toneDuration(340, 10)
+        toneDuration(340, 50)
         if (_M.selected%MAX_INTERFACE_ICONS == 0) then 
             _M.selected = _M.selected -(MAX_INTERFACE_ICONS-1)
         else 
             _M.selected = _M.selected +1
+        end
+        local maxExpressions = expressions.GetExpressionCount()
+        if _M.selected > maxExpressions then  
+            local lastPage = math.floor((maxExpressions-1)/MAX_INTERFACE_ICONS)
+            _M.selected = (lastPage*MAX_INTERFACE_ICONS)+1
         end
     end
 
@@ -467,6 +507,7 @@ function _M.handleFaceMenu(dt)
     if readButtonStatus(BUTTON_CONFIRM) == BUTTON_JUST_RELEASED then 
         local exps = expressions.GetExpressions()
         expressions.SetExpression(exps[_M.selected])
+        boop.reset()
         _M.timer = _M.displayTime
         toneDuration(440, 10)
 
@@ -474,6 +515,11 @@ function _M.handleFaceMenu(dt)
 
 end
 
-
+function _M.setDictDefaultValues()
+    dictSet("face_selection_style", "GRID")
+    dictSet("led_brightness", "64")
+    dictSet("panel_brightness", "64")
+    dictSet("created", "1")
+end
 
 return _M
