@@ -26,9 +26,13 @@ local _M = {
 }
 
 function _M.setup(expressions)
+    _M.original_left = BUTTON_LEFT
+    _M.original_right = BUTTON_RIGHT
     _M.brigthness = tonumber(dictGet("panel_brightness")) or 64
     _M.led_brightness = tonumber(dictGet("led_brightness")) or 64
     _M.has_boop = dictGet("has_boop") == "1" 
+    _M.inverted_left_right = dictGet("inverted_left_right") == "1" 
+    _M.reapplyButtons()
     _M.settings_icon = oledCreateIcon({0x00, 0x00, 0x16, 0x80, 0x3f, 0xc0, 0x7f, 0xe0, 0x39, 0xc0, 0x70, 0xe0, 0x70, 0xe0, 0x39, 0xc0, 0x7f, 0xe0, 0x3f, 0xc0, 0x16, 0x80, 0x00, 0x00}, 12, 12)
     _M.face_icon = oledCreateIcon({0x00, 0x00, 0x00, 0x00, 0x01, 0xc0, 0x21, 0xc0, 0x60, 0x00, 0x00, 0x00, 0x00, 0x20, 0x15, 0x40, 0x2a, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, 12, 12)
     _M.enterMainMenu()
@@ -66,18 +70,7 @@ function _M.setup(expressions)
         generic.displayWarning("Restart", "System will reboot", 2000)
         restart()
     end)
-    
-    _M.settings.addElement(function() return "Reset default" end,  function()
-        dictFormat()
-        _M.face_selection_style = "GRID"
-        _M.brigthness = 64
-        _M.led_brightness = 64
-        _M.setDictDefaultValues()
-        ledsGentlySeBrightness(_M.led_brightness)
-        gentlySetPanelBrightness(_M.brigthness)
-        dictSave()
-        _M.enterMainMenu()
-    end)
+
 
     _M.settings.addElement(function() return _M.has_boop  and "Disable boop" or "Enable boop" end,  function()
         if _M.has_boop  then  
@@ -87,6 +80,34 @@ function _M.setup(expressions)
         end
         dictSet("has_boop", _M.has_boop and "1" or "0")
         dictSave()
+    end)
+
+    _M.settings.addElement(function() return _M.inverted_left_right  and "Invert controls" or "De invert controls" end,  function()
+        if _M.inverted_left_right  then  
+            _M.inverted_left_right = nil
+        else 
+            _M.inverted_left_right = true
+        end
+        dictSet("inverted_left_right", _M.inverted_left_right and "1" or "0")
+        _M.reapplyButtons()
+        dictSave()
+    end)
+
+    _M.settings.addElement(function() return "Reset default" end,  function()
+        dictFormat()
+        _M.has_boop = false
+        _M.face_selection_style = "GRID"
+        _M.inverted_left_right = false
+        _M.brigthness = 64
+        _M.led_brightness = 64
+        _M.setDictDefaultValues()
+        ledsGentlySeBrightness(_M.led_brightness)
+        gentlySetPanelBrightness(_M.brigthness)
+        dictSet("inverted_left_right", "0") 
+        dictset("has_boop", "0")
+        dictSave()
+        _M.reapplyButtons()
+        _M.enterMainMenu()
     end)
 
     --scripts ui
@@ -99,6 +120,16 @@ function _M.setup(expressions)
         end)
     end
 
+end
+
+function _M.reapplyButtons()
+    if _M.inverted_left_right then 
+        BUTTON_RIGHT = _M.original_left
+        BUTTON_LEFT = _M.original_right
+    else 
+        BUTTON_LEFT = _M.original_left
+        BUTTON_RIGHT = _M.original_right
+    end
 end
 
 function _M.enterMainMenu()

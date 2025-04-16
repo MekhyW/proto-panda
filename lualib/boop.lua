@@ -110,7 +110,9 @@ function _M.manageBoop(dt)
     if hasLidar() then 
         local config = _M.config
         local distance = readLidar()
-
+        if not config.enabled then
+            return
+        end
         if not _M.isOnLidar then 
             if distance <= config.triggerStart and (distance >= config.triggerMinIgnore or distance >= config.triggerStop) then 
                 _M.proximityTimer = _M.proximityTimer - dt  
