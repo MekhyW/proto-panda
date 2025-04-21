@@ -5,6 +5,7 @@ MODE_FACE_QUICK = 3
 MODE_CHANGE_PANEL_BRIGHTNESS = 4
 MODE_CHANGE_LED_BRIGHTNESS = 5
 MODE_SCRIPTS = 6
+MODE_CALIBRATE_BOOP = 7
 
 local scripts = require("scripts")
 local ui = require("ui")
@@ -41,6 +42,14 @@ function _M.setup(expressions)
     --settings ui
     _M.settings = ui.generateUi("Press < To back", nil, _M.enterMainMenu)
 
+    _M.settings.addElement(function() return "Calibrate boop" end,  function()
+        if boop.onEnter() then 
+            _M.has_boop = false
+            _M.mode = MODE_CALIBRATE_BOOP
+        end
+    end)
+
+
     _M.settings.addElement(function() return "Rainbow ["..(_M.shader and "ON" or "OFF").."]" end, function()
         _M.shader = not _M.shader
         setRainbowShader(_M.shader)
@@ -60,6 +69,19 @@ function _M.setup(expressions)
         dictSave()
     end)
 
+
+    _M.settings.addElement(function() return "Boop ["..(_M.has_boop and "ON" or "OFF").."]" end,  function()
+        if _M.has_boop  then  
+            _M.has_boop = nil
+        else 
+            _M.has_boop = true
+        end
+        dictSet("has_boop", _M.has_boop and "1" or "0")
+        dictSave()
+    end)
+
+    
+
     _M.settings.addElement(function() return "Rebuild bulk file" end,  function()
         setPanelManaged(false)
         ledsSetBrightness(0)
@@ -71,16 +93,6 @@ function _M.setup(expressions)
         restart()
     end)
 
-
-    _M.settings.addElement(function() return _M.has_boop  and "Disable boop" or "Enable boop" end,  function()
-        if _M.has_boop  then  
-            _M.has_boop = nil
-        else 
-            _M.has_boop = true
-        end
-        dictSet("has_boop", _M.has_boop and "1" or "0")
-        dictSave()
-    end)
 
     _M.settings.addElement(function() return _M.inverted_left_right  and "Invert controls" or "De invert controls" end,  function()
         if _M.inverted_left_right  then  
@@ -304,6 +316,9 @@ function _M.draw()
         oledDisplay()
     elseif _M.mode == MODE_SCRIPTS then 
         _M.scripts.draw()
+    elseif _M.mode == MODE_CALIBRATE_BOOP then 
+        boop.CalibrateDraw()
+        return
     end
 end
 
@@ -328,6 +343,13 @@ function _M.handleMenu(dt)
         if not _M.scripts.handle(dt) then 
             return
         end    
+    elseif _M.mode == MODE_CALIBRATE_BOOP then 
+        boop.Calibrate(dt)
+        if boop.quit then  
+            _M.enterMainMenu()
+            toneDuration(440, 10)
+            return
+        end
     end
 
     if _M.has_boop then  

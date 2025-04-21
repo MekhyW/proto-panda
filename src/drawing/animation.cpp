@@ -231,8 +231,8 @@ void Animation::DrawFrame(File *file, int i){
             hsv_to_rgb(  (((frameId+x)%64) / 64.0f) * 255, 255, gray, r, g, b);
         }
 
-        DMADisplay::Display->updateMatrixDMABuffer_2((PANEL_WIDTH-1)-x, y, r, g, b);
         reorder_rgb(color_mode, &r, &g, &b);
+        DMADisplay::Display->updateMatrixDMABuffer_2((PANEL_WIDTH-1)-x, y, r, g, b);
         if (reverse&1){
            DMADisplay::Display->updateMatrixDMABuffer_2((PANEL_WIDTH)+x, y, r, g, b);
         }else{

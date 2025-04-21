@@ -1,5 +1,6 @@
 [
-  {"name": "color and lidar test", "file": "/scripts/colortest.lua"},
+  {"name": "lidar test", "file": "/scripts/lidartest.lua"},
+  {"name": "color test", "file": "/scripts/colortest.lua"},
   {"name": "screen test", "file": "/scripts/screentest.lua"},
   {"name": "controls test", "file": "/scripts/controls.lua"},
   {"name": "snake", "file": "/scripts/snake.lua"},

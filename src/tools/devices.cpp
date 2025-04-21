@@ -324,7 +324,7 @@ void Devices::StartAvaliableDevices(){
             Devices::lidar.startContinuous(5);
             Devices::lastLidarReadTime = millis()+100;
             s_hasLidar = true;
-            Logger::Info("Lidar initialized");
+            Logger::Info("Lidar initialized with %d budget", Devices::lidar.getMeasurementTimingBudget());
         }
     }
 #endif
@@ -353,7 +353,7 @@ uint16_t Devices::ReadLidar(){
   #ifdef USE_LIDAR
   if (Devices::lastLidarReadTime < millis()){
     Devices::lastLidarReading = Devices::lidar.readRangeContinuousMillimeters();
-    Devices::lastLidarReadTime = millis()+10;
+    Devices::lastLidarReadTime = millis()+20;
     //Logger::Info("Lidar reads: %d", Devices::lastLidarReading); 
   }
   return Devices::lastLidarReading;

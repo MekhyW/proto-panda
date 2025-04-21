@@ -83,4 +83,24 @@ function _M.scrollingText(message, maxSize, stepDuration)
 	}
 end
 
+function _M.DrawSprite(xpos,ypos, w, h, data)
+	local pix = 1
+	for y=1, h do 
+        for x=1, w do 
+        	local pixdata = data[pix] 
+            if pixdata ~= 0 and pixdata ~= nil then 
+                drawPanelPixel(xpos+x, ypos+y, pixdata)
+            end
+            pix = pix+1
+        end
+    end
+end
+
+function _M.DrawText(x,y, str, color, bg)
+	bg = bg or 0
+	for i=1,#str do  
+		drawPanelChar(x + (i-1)*6, y, string.byte(str:sub(i,i)), color, bg, 1)
+	end
+end
+
 return _M

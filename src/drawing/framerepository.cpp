@@ -108,7 +108,9 @@ bool FrameRepository::loadCachedData(){
     auto err2 = deserializeJson( json_doc_aux, conf );
     conf.close();
     if( err2 ) {
-       OledScreen::CriticalFail(err.c_str());
+       char miniHBuffer[1000];
+       sprintf(miniHBuffer, "config.json:\n%s", err.c_str());
+       OledScreen::CriticalFail(miniHBuffer);
        for(;;){}
        return false;
     }
@@ -181,7 +183,9 @@ void FrameRepository::composeBulkFile(){
     auto err = deserializeJson( json_doc, file );
     file.close();
     if( err ) {
-        OledScreen::CriticalFail(err.c_str() );
+        char miniHBuffer[1000];
+        sprintf(miniHBuffer, "config.json:\n%s", err.c_str());
+        OledScreen::CriticalFail(miniHBuffer);
     }
 
     File fdesc = SD.open( "/frame_description.txt",  FILE_WRITE);
