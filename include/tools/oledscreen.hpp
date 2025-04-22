@@ -17,6 +17,15 @@ class OledIcon{
         uint8_t *icon;
 };
 
+typedef enum InfoTypeShown_{
+    SHOW_FIRST = 0,
+    SHOW_FPS = 0,
+    SHOW_FREE_RAM,
+    SHOW_PANEL_FPS,
+    SHOW_FREE_HEAP,
+    SHOW_RESET,
+} InfoTypeShown;
+
 class OledScreen{
     public:
         static bool Start();
@@ -40,6 +49,6 @@ class OledScreen{
 
         static std::vector<OledIcon> icons;
     private:
-        static bool showFps;
+        static InfoTypeShown infoShown;
         static uint32_t swapTimer;
 };

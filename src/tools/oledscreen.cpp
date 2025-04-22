@@ -28,7 +28,7 @@ bool OledScreen::consoleMode = false;
 std::list<std::string> OledScreen::lines;
 uint8_t OledScreen::DisplayFace[PANEL_WIDTH * PANEL_HEIGHT];
 
-bool OledScreen::showFps = true;
+InfoTypeShown OledScreen::infoShown = SHOW_FPS;
 uint32_t OledScreen::swapTimer = 0;
 
 std::vector<OledIcon> OledScreen::icons;
@@ -139,14 +139,30 @@ void OledScreen::DrawBottomBar(){
     display.drawFastVLine(startX+33,posY,posY+17,1);
 
     display.setCursor(startX+35, posY+4);
-    if (showFps){
-        display.printf("FPS: %d", (int)Devices::getFps());
-    }else{
-        display.printf("Ram: %2.2f%%", (100.0f-Devices::getFreePsram()));
+    switch (infoShown)
+    {
+        case SHOW_FPS:
+            display.printf("Lua FPS: %d", (int)Devices::getFps());
+            break;
+        case SHOW_FREE_RAM:
+            display.printf("F.Ram: %2.2f%%", (Devices::getFreePsram()));
+            break;
+        case SHOW_PANEL_FPS:
+            display.printf("P.FPS: %d", (int)Devices::getAutoFps());
+            break;
+        case SHOW_FREE_HEAP:
+            display.printf("F.Heap: %d", (int)Devices::getFreeHeap());
+            break;
+        default:
+            break;
     }
+
     if (swapTimer < millis()){
         swapTimer = millis() + 5 * 1000;
-        showFps = !showFps;
+        infoShown = InfoTypeShown(int(infoShown)+1);
+        if (infoShown == SHOW_RESET){
+            infoShown = SHOW_FIRST;
+        }
     }
 
     if (g_remoteControls.isElementIdConnected(0)){

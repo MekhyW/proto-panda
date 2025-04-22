@@ -18,7 +18,6 @@ local _M = {
     avg = 0,
     measurements=0,
     minimumLidar=0,
-    maximumLidar=0,
     triggerPosition=0,
     maxLidarProcessing = 400,
 
@@ -40,6 +39,19 @@ function _M.onEnter()
     toneDuration(440, 500)
     _M.calibration_stage = 1
     _M.triggerPosition=0
+    _M.quit = false
+    return true
+end
+
+function _M.EnterDisplayConfig()
+    if not hasLidar() then  
+        return false
+    end
+    _M.old_managed = isPanelManaged()
+    setPanelManaged(false)
+    delay(500)
+    toneDuration(440, 500)
+    _M.calibration_stage = 7
     _M.quit = false
     return true
 end
@@ -74,9 +86,10 @@ function _M.Calibrate(dt)
             _M.calibration_stage = 9
             toneDuration(440, 500)
             _M.quit = true
+            dictSet("has_boop", "1")
             dictSet("boop_configured", "1")
             dictSet("boop_min", tostring(_M.minimumLidar))
-            dictSet("boop_trigg", tostring(_M.maximumLidar))
+            dictSet("boop_trigg", tostring(_M.triggerPosition))
             dictSet("boop_duration", tostring(_M.boopTimerDuration))
             dictSave()
             if _M.old_managed then
@@ -115,6 +128,9 @@ function _M.Calibrate(dt)
 
     if _M.calibration_stage == 7 then 
         if readButtonStatus(BUTTON_UP) == BUTTON_JUST_PRESSED then 
+            if _M.boopTimerDuration == 1 then 
+                _M.boopTimerDuration = 0
+            end
             _M.boopTimerDuration = _M.boopTimerDuration + 50
             toneDuration(340, 50)
             _M.boopTimer = 0
@@ -123,8 +139,8 @@ function _M.Calibrate(dt)
             _M.boopTimerDuration = _M.boopTimerDuration - 50
             toneDuration(640, 50)
             _M.boopTimer = 0
-            if _M.boopTimerDuration < 0 then  
-                _M.boopTimerDuration = 0
+            if _M.boopTimerDuration <= 0 then  
+                _M.boopTimerDuration = 1
             end
         end
         _M.calibrationReading, _M.calibrationOk = _M.readLidar()
@@ -199,7 +215,7 @@ function _M.CalibrateDraw()
             DrawText(64+17, 23, "----", color565(255,255,255), color565(0,0,0))
         end
         oledSetFontSize(1)
-        oledSetCursor(0, 32) 
+        oledSetCursor(0, 38) 
         oledDrawText("This is ok?")
         oledSetCursor(10, 64-8)
         oledDrawText("[<<<] Back [Confirm] Next")
@@ -217,7 +233,6 @@ function _M.CalibrateDraw()
     elseif _M.calibration_stage == 7 then 
         clearPanelBuffer()
         
-
         oledSetCursor(20, 24) 
         _M.drawLidarBar(_M.calibrationReading, _M.calibrationOk)
 
@@ -377,9 +392,17 @@ function _M.Load(filename)
     end
     _M.configured = true
 
-    _M.minimumLidar = tonumber(dictGet("boop_min") or 0)
-    _M.maximumLidar = tonumber(dictGet("boop_trigg") or 0)
-    _M.boopTimerDuration = tonumber(dictGet("boop_duration") or 0)
+    _M.minimumLidar = tonumber(dictGet("boop_min") ) or 0
+    _M.triggerPosition = tonumber(dictGet("boop_trigg"))  or 0
+    _M.boopTimerDuration = tonumber(dictGet("boop_duration")) or 0
+
+    print("Boop configuration loaded min=".._M.minimumLidar.." trigger=".._M.triggerPosition.." timer=".._M.boopTimerDuration)
+
+    if _M.triggerPosition == 0 then 
+        print("Boop is not configured yet!")
+        _M.configured = false
+        return
+    end
 
     if _M.config["transitionIn"] then
         if type(_M.config["transitionIn"]) ~= "string" then 

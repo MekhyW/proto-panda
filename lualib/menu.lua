@@ -42,22 +42,14 @@ function _M.setup(expressions)
     --settings ui
     _M.settings = ui.generateUi("Press < To back", nil, _M.enterMainMenu)
 
-    _M.settings.addElement(function() return "Calibrate boop" end,  function()
-        if boop.onEnter() then 
-            _M.has_boop = false
-            _M.mode = MODE_CALIBRATE_BOOP
-        end
-    end)
-
-
     _M.settings.addElement(function() return "Rainbow ["..(_M.shader and "ON" or "OFF").."]" end, function()
         _M.shader = not _M.shader
         setRainbowShader(_M.shader)
     end)
 
-    _M.settings.addElement(function() return "Panel Brightness [".._M.brigthness.."]" end, _M.enterPanelBrightnessMenu)
+    _M.settings.addElement(function() return "P. Brightness [".._M.brigthness.."]" end, _M.enterPanelBrightnessMenu)
 
-    _M.settings.addElement(function() return "Panel Brightness [".._M.led_brightness.."]" end, _M.enterLedBrightnessMenu)
+    _M.settings.addElement(function() return "Led Brightness [".._M.led_brightness.."]" end, _M.enterLedBrightnessMenu)
 
     _M.settings.addElement(function() return "Faces [".._M.face_selection_style.."]" end,  function()
         if _M.face_selection_style == "GRID" then 
@@ -80,7 +72,19 @@ function _M.setup(expressions)
         dictSave()
     end)
 
-    
+    _M.settings.addElement(function() return "Calibrate boop" end,  function()
+        if boop.onEnter() then 
+            _M.has_boop = false
+            _M.mode = MODE_CALIBRATE_BOOP
+        end
+    end)
+
+    _M.settings.addElement(function() return "Check boop cnfg" end,  function()
+        if boop.EnterDisplayConfig() then 
+            _M.has_boop = false
+            _M.mode = MODE_CALIBRATE_BOOP
+        end
+    end)
 
     _M.settings.addElement(function() return "Rebuild bulk file" end,  function()
         setPanelManaged(false)
@@ -345,7 +349,8 @@ function _M.handleMenu(dt)
         end    
     elseif _M.mode == MODE_CALIBRATE_BOOP then 
         boop.Calibrate(dt)
-        if boop.quit then  
+        if boop.quit then
+            _M.has_boop = true  
             _M.enterMainMenu()
             toneDuration(440, 10)
             return
