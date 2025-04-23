@@ -857,6 +857,8 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegisterFromObjectOpt("ledsSetManaged", &g_leds, &LedStrip::SetManaged);
   m_lua->FuncRegisterFromObjectOpt("ledsIsManaged", &g_leds, &LedStrip::IsManaged);
   m_lua->FuncRegisterFromObjectOpt("ledsGentlySeBrightness", &g_leds, &LedStrip::GentlySeBrightness, 0, 2);
+  m_lua->FuncRegisterFromObjectOpt("ledsStackCurrentBehavior", &g_leds, &LedStrip::StackBehavior);
+  m_lua->FuncRegisterFromObjectOpt("ledsPopBehavior", &g_leds, &LedStrip::PopBehavior);
   //Files
   m_lua->FuncRegister("listFiles", listFiles);
   m_lua->FuncRegister("moveFile", moveFile);
@@ -890,6 +892,8 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("BEHAVIOR_ROTATE_SINE_S", (int)BEHAVIOR_ROTATE_SINE_S);
   m_lua->setConstant("BEHAVIOR_ROTATE_SINE_H", (int)BEHAVIOR_ROTATE_SINE_H);
   m_lua->setConstant("BEHAVIOR_FADE_IN", (int)BEHAVIOR_FADE_IN);
+  m_lua->setConstant("BEHAVIOR_NOISE", (int)BEHAVIOR_NOISE);
+  m_lua->setConstant("MAX_LED_GROUPS", (int)MAX_LED_GROUPS);
 
 
   m_lua->setConstant("BUTTON_LEFT", (int)0);

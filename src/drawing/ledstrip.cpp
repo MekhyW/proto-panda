@@ -69,16 +69,18 @@ void LedStrip::Update(){
     if (!m_managed){
         return;
     }
+    xSemaphoreTake(m_mutex, portMAX_DELAY);
     for (int i=0;i<MAX_LED_GROUPS;i++){
         
         if (m_groups[i].to > 0){
             m_groups[i].Update(m_leds);
         }
     }
+    xSemaphoreGive(m_mutex);
 }
 
 void LedStrip::setSegmentColor(int id, int r, int g, int b){
-    if (id < 0 || id > 15){
+    if (id < 0 || id > (MAX_LED_GROUPS-1)){
         return;
     }
     for (int x=m_groups[id].from;x<=m_groups[id].to;x++){
@@ -102,7 +104,7 @@ void LedStrip::setLedColor(int id, int r, int g, int b){
 }
 
 void LedStrip::setSegmentRange(int id, int from, int to){
-    if (id < 0 || id > 15){
+    if (id < 0 || id > (MAX_LED_GROUPS-1)){
         return;
     }
     if (to >= m_ledAmount){
@@ -119,28 +121,28 @@ void LedStrip::setSegmentRange(int id, int from, int to){
 }
 
 int* LedStrip::getSegmentParameter1(int id){
-    if (id < 0 || id > 15){
+    if (id < 0 || id > (MAX_LED_GROUPS-1)){
         return nullptr;
     }
     return &m_groups[id].parameter;
 }
 
 int* LedStrip::getSegmentParameter2(int id){
-    if (id < 0 || id > 15){
+    if (id < 0 || id > (MAX_LED_GROUPS-1)){
         return nullptr;
     }
     return &m_groups[id].parameter2;
 }
 
 int* LedStrip::getSegmentParameter3(int id){
-    if (id < 0 || id > 15){
+    if (id < 0 || id > (MAX_LED_GROUPS-1)){
         return nullptr;
     }
     return &m_groups[id].parameter3;
 }
 
 void LedStrip::setSegmentBehavior(int id, LedBehavior bh, int parameter, int parameter2, int parameter3,  int parameter4){
-    if (id < 0 || id > 15){
+    if (id < 0 || id > (MAX_LED_GROUPS-1)){
         return;
     }
     m_groups[id].val = 0;
@@ -153,16 +155,55 @@ void LedStrip::setSegmentBehavior(int id, LedBehavior bh, int parameter, int par
 }
 
 void LedStrip::setSegmentTweenSpeed(int id, int parameter){
-    if (id < 0 || id > 15){
+    if (id < 0 || id > (MAX_LED_GROUPS-1)){
         return;
     }
     m_groups[id].m_tweenRate = parameter;
 }
 void LedStrip::setSegmentTweenBehavior(int id, LedBehavior bh, int parameter, int parameter2, int parameter3,  int parameter4){
-    if (id < 0 || id > 15){
+    if (id < 0 || id > (MAX_LED_GROUPS-1)){
         return;
     }
     m_groups[id].addTween(0.001f, bh, parameter, parameter2 , parameter3 , parameter4);
+}
+
+int LedStrip::StackBehavior(){
+    xSemaphoreTake(m_mutex, portMAX_DELAY);
+    LedGroup *groups = new LedGroup[MAX_LED_GROUPS];
+    for (int i=0;i<MAX_LED_GROUPS;i++){
+        groups[i] = m_groups[i];
+        if (groups[i].m_tweenBuffer != nullptr){
+            groups[i].m_tweenBuffer = new CRGB[groups[i].to-groups[i].from+1];
+            for (int a=0;a<groups[i].m_tweenBufferSize;a++){
+                groups[i].m_tweenBuffer[a] = m_groups[i].m_tweenBuffer[a];
+            }
+        }
+    }
+    m_behaviorStack.push(groups);
+    xSemaphoreGive(m_mutex);
+    return m_behaviorStack.size();
+}
+
+int LedStrip::PopBehavior(){
+    xSemaphoreTake(m_mutex, portMAX_DELAY);
+    if (m_behaviorStack.size() == 0){
+        xSemaphoreGive(m_mutex);
+        return -1;
+    }
+    LedGroup *groups = m_behaviorStack.top();
+    m_behaviorStack.pop();
+
+    for (int i=0;i<MAX_LED_GROUPS;i++){
+        CRGB * oldBuffer = m_groups[i].m_tweenBuffer;
+        m_groups[i] = groups[i];
+        if (oldBuffer != nullptr){
+            delete [] oldBuffer;
+        }
+    }
+
+    delete [] groups;
+    xSemaphoreGive(m_mutex);
+    return 0;
 }
 
 void LedStrip::Display(){
@@ -295,6 +336,9 @@ void BaseLedGroup::Update(CRGB *leds){
         case BEHAVIOR_FADE_IN:
             behavior_fadeIn(leds);
             break;
+        case BEHAVIOR_NOISE:
+            behavior_Noise(leds);
+            break;
         default:
             behavior_black(leds);
             break;
@@ -333,6 +377,22 @@ void BaseLedGroup::behavior_fadeIn(CRGB *leds){
 
     for (int x=from;x<=to;x++){
         leds[x].setHSV(parameter, parameter2, val);
+    }
+    
+}
+
+void BaseLedGroup::behavior_Noise(CRGB *leds){
+    if (time <= millis()){
+        time = millis()+5+parameter4;
+        val += (1 + parameter3);
+        if (val > 255){
+            val = 255;
+        }
+    }
+
+    for (int x=from;x<=to;x++){
+        uint8_t col = rand()%255;
+        leds[x].setRGB(col, col, col);
     }
     
 }

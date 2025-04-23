@@ -209,50 +209,7 @@ void FrameRepository::composeBulkFile(){
 
     int fileIdx = 1;
     int jsonElement = 0;
-    for (JsonVariant element : framesJson) {
-        jsonElement++;
-        if ( element.containsKey("file") &&  element["file"].is<const char*>() ) {
-            const char *filePath = element["file"].as<const char*>();
-            if (strlen(filePath) >= 1024){
-                FrameBufferCriticalError(&bulkFile, "Path name is too big at element %d", jsonElement);
-                for(;;){}
-            }
-            sprintf(miniHBuffer, "Check file %s", filePath);
-            OledScreen::DrawProgressBar(fileIdx+1, maxFrames, miniHBuffer);
-            
-            File foundFile = SD.open( filePath, "r" );
-            if( !foundFile ) {
-                sprintf(miniHBuffer, "%s not found", filePath);
-                OledScreen::CriticalFail(miniHBuffer);
-                for(;;){}
-            }
-            foundFile.close();
-            fileIdx++;
-        }else{
-            const char* pattern = element["pattern"];
-            if (strlen(pattern) >= 800){
-                FrameBufferCriticalError(&bulkFile, "Pattern name too big on element %d", jsonElement);
-            }
-            int from = element["from"];
-            int to = element["to"];
-            for (int i=from;i<=to;i++){
-                sprintf(headerFileName, pattern, i);
-                sprintf(miniHBuffer, "Check file %d\n%s", fileIdx+1, headerFileName);
-                OledScreen::DrawProgressBar(fileIdx+1, maxFrames+1, miniHBuffer);
-                File foundFile = SD.open( headerFileName, "r" );
-                if( !foundFile ) {
-                    sprintf(miniHBuffer, "%s not found", headerFileName);
-                    OledScreen::CriticalFail(miniHBuffer);
-                    for(;;){}
-                }
-                foundFile.close();
-                fileIdx++;
-            }
-        }
-    }
 
-    fileIdx = 1;
-    jsonElement = 0;
     for (JsonVariant element : framesJson) {
         if (element.is<JsonObject>()) {
             if ( element.containsKey("alias") &&  element["alias"].is<const char*>() ) {
@@ -323,8 +280,6 @@ void FrameRepository::composeBulkFile(){
     bulkFile = FFat.open("/frames.bulk", FILE_READ);
     generateCacheFile();
     Logger::Info("Finished writing data to internal storage. in %d uS", micros()-start);
-
-
 
     xSemaphoreGive(m_mutex);    
 }

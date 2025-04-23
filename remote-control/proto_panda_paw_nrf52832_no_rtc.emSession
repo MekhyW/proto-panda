@@ -59,7 +59,7 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="602" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="main.c" selected="1" top="590" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="604" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="main.c" selected="1" top="592" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1515" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="config/sdk_config.h" selected="0" top="1488" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="6" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="LIS3DHTR.c" selected="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="52" y="104" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="LIS3DHTR.h" selected="0" top="74" codecName="Default"/>

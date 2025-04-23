@@ -36,6 +36,22 @@ function _M.Load(filename)
 		b.frame_offset = b.frame_offset or 0
 		b.duration = tonumber(b.duration) or 250
 		b.name = b.name or "expression "..id
+
+		if b.onEnter then 
+			local f = load(b.onEnter)
+			if not f then 
+				error("Error loading 'onEnter', contains syntax error")
+			end
+			b.onEnter = f
+		end
+		if b.onLeave then 
+			local f = load(b.onLeave)
+			if not f then 
+				error("Error loading 'onLeave', contains syntax error")
+			end
+			b.onLeave = f
+		end
+
 		_M.by_name[b.name] = id
 		if not b.transition then 
 			_M.count = _M.count+1
@@ -137,11 +153,18 @@ function _M.SetExpression(id)
 			repeats = 1
 			allDrop = false
 		end
+		if _M.previousExpression and _M.previousExpression.onLeave then 
+			_M.previousExpression.onLeave()
+		end
 		if tonumber(id) then
 			setPanelAnimation(aux.frames, aux.duration, repeats, allDrop, tonumber(id))
 		else 
 			setPanelAnimation(aux.frames, aux.duration, repeats, false)
 		end
+		if aux.onEnter then 
+			aux.onEnter()
+		end
+		_M.previousExpression = aux
 	end
 end
 
