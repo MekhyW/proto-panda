@@ -834,6 +834,21 @@ Initializes two individual leds strips.
 Check if the leds are in managed mode
 - **Returns**: `bool`.
 
+#### `ledsGentlySeBrightness(brightness, [rate, [startAmount]])`
+Slowly ramp up the brightness to a certain value
+- **Parameters**:
+  - `brightness` (int): Max brightness to be ramped up
+  - `led_count2` (int, optional): How many units of brightness to be increased every frame. Default is 1
+  - `max_brightness` (int, optional): Starting brigtness. Default is 0
+
+#### `ledsStackCurrentBehavior()`
+Store current led behavior state in a stack. Is useful to st temporary behaviors
+- **Returns**: `int`
+
+#### `ledsPopBehavior()`
+Update current led behavior with the stored behavior on the stack.
+- **Returns**: `int`
+
 #### `ledsSegmentRange(id int, from int, to int)`
 Defines a segment of the LED strip for independent control.
 - **Parameters**:
