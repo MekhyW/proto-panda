@@ -137,33 +137,33 @@ void hsv_to_rgb(uint8_t h, uint8_t s, uint8_t v, uint8_t& r, uint8_t& g, uint8_t
   b = (uint8_t)((b_temp + m) * 255);
 }
 
-void reorder_rgb(uint8_t mode, uint8_t *r, uint8_t *g, uint8_t *b){
+void reorder_rgb(ColorMode mode, uint8_t *r, uint8_t *g, uint8_t *b){
     uint8_t auxr = *r;
     uint8_t auxb = *b;
     uint8_t auxg = *g;
     switch (mode)
     {
-    case 0:
+    case COLOR_MODE_RGB:
         break;
-    case 1:
+    case COLOR_MODE_RBG:
         *b = auxg;
         *g = auxb;
         break;
-    case 2:
+    case COLOR_MODE_GRB:
         *r = auxg;
         *g = auxr;
         break;
-    case 3:
+    case COLOR_MODE_GBR:
         *g = auxr;
         *b = auxg;
         *r = auxb;
         break;
-    case 4:
+    case COLOR_MODE_BRG:
         *b = auxr;
         *r = auxg;
         *g = auxb;
         break;
-    case 5:
+    case COLOR_MODE_BGR:
         *b = auxr;
         *r = auxb;
         break;
@@ -203,10 +203,12 @@ void Animation::DrawFrame(File *file, int i){
     m_frameLoadDuration = micros()-ld;
     ld = micros();
 
+    auto currentMode = m_colorMode;
+
     
     uint8_t r, g, b;
     uint8_t reverse = buffer[0];
-    uint8_t color_mode = buffer[1];
+    
     int byteId = 1;
     uint16_t *readBuffer = (uint16_t *)(buffer);
     
@@ -224,6 +226,8 @@ void Animation::DrawFrame(File *file, int i){
             OledScreen::DisplayFace[byteId] = 0;
         }
         
+        
+
         DMADisplay::Display->color565to888(color, r, g, b);
 
         if (m_shader == 1 || (r == 60 && b == 120 && g == 180)){
@@ -231,7 +235,8 @@ void Animation::DrawFrame(File *file, int i){
             hsv_to_rgb(  (((frameId+x)%64) / 64.0f) * 255, 255, gray, r, g, b);
         }
 
-        reorder_rgb(color_mode, &r, &g, &b);
+        reorder_rgb(currentMode, &r, &g, &b);
+
         DMADisplay::Display->updateMatrixDMABuffer_2((PANEL_WIDTH-1)-x, y, r, g, b);
         if (reverse&1){
            DMADisplay::Display->updateMatrixDMABuffer_2((PANEL_WIDTH)+x, y, r, g, b);
@@ -311,6 +316,12 @@ bool Animation::internalUpdate(File *file, AnimationSequence &running){
                 DrawFrame(file, m_lastFace);
             }
         }
+        if (m_needRedraw){
+            m_needRedraw = false;
+            if (isManaged()){
+                DrawFrame(file, m_lastFace);
+            }
+        }
         break;
     }
     return false;
@@ -353,7 +364,7 @@ void Animation::SetAnimation(int duration, std::vector<int> frames, int repeatTi
         }
         xSemaphoreGive(m_mutex);
     }
-    m_isOnText = false;
+
     AnimationSequence newSeq;
     newSeq.m_duration = max(duration,1);
     newSeq.m_frames = frames;

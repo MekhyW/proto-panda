@@ -27,6 +27,21 @@ function _M.Load(filename)
 		if offset then 
 			b.frame_offset = offset
 			local frames = b.frames
+			if type(b.frames) ~= 'table' then  
+				if not b.frames == "auto" then  
+					b.frames = {}
+					if not b.use_alias then  
+						error("Cannot use 'frames=auto' when there is no alias defined")
+					end
+					local count = getFrameCountByAlias(b.use_alias)
+					if count == 0 then  
+						error("Using alias '"..b.use_alias.."' returned 0 frames. Are you sure this alias has loaded frames?")
+					end
+					for i=1,count do  
+						b.frames[i] = i
+					end
+				end
+			end
 			for a,c in pairs(b.frames) do 
 				frames[a] = c + offset
 				_M.by_frame[c + offset] = id

@@ -177,6 +177,7 @@ void FrameRepository::composeBulkFile(){
     }
 
     m_offsets.clear();
+    m_frameCountByAlias.clear();
 
     SpiRamAllocator allocator;
     JsonDocument  json_doc(&allocator);
@@ -210,10 +211,13 @@ void FrameRepository::composeBulkFile(){
     int fileIdx = 1;
     int jsonElement = 0;
 
+    std::string currentAlias;
+    
     for (JsonVariant element : framesJson) {
         if (element.is<JsonObject>()) {
             if ( element.containsKey("alias") &&  element["alias"].is<const char*>() ) {
                 const char *content = element["alias"];
+                currentAlias = std::string(content);
                 m_offsets[content] = fileIdx-1;
             }
             if ( element.containsKey("file") &&  element["file"].is<const char*>() ) {
@@ -230,7 +234,7 @@ void FrameRepository::composeBulkFile(){
                 if (!decodeFile(filePath, flipe_left, color_scheme_left)){
                     FrameBufferCriticalError(&bulkFile, "Failed to decode %s at element %d", filePath, jsonElement);
                 }
-                
+                m_frameCountByAlias[currentAlias]++;
                 fdesc.printf("%d = %s\n", fileIdx, filePath);
                 fileIdx++;
             }else{
@@ -253,6 +257,7 @@ void FrameRepository::composeBulkFile(){
                         FrameBufferCriticalError(&bulkFile, "Failed decode %s at element %d", headerFileName, jsonElement);
                     }
                     fdesc.printf("%d = %s\n", fileIdx, headerFileName);
+                    m_frameCountByAlias[currentAlias]++;
                     fileIdx++;
                 }
             }

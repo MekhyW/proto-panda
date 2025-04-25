@@ -32,6 +32,9 @@ class FrameRepository{
         int getAlias(std::string str){
             return m_offsets[str];
         }
+        int getAliasFrameCount(std::string str){
+            return m_frameCountByAlias[str];
+        }
     private:
         void extractModes(JsonVariant &element, bool &flip, int &scheme);
         bool decodeFile(const char *pathName, bool flip, int scheme);
@@ -40,6 +43,7 @@ class FrameRepository{
         void generateCacheFile();
         int m_frameCount;
         std::map<std::string, int> m_offsets;
+        std::map<std::string, int> m_frameCountByAlias;
         SemaphoreHandle_t m_mutex;
         File bulkFile;
 };      

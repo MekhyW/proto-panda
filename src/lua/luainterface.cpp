@@ -44,6 +44,11 @@ int GetAliasByName(std::string aliasName)
   return g_frameRepo.getAlias(aliasName);
 }
 
+int GetFrameCountByAlias(std::string aliasName)
+{
+  return g_frameRepo.getAliasFrameCount(aliasName);
+}
+
 int DrawFace(int i)
 {
   g_animation.DrawFrame(g_frameRepo.takeFile(), i);
@@ -221,6 +226,10 @@ void gentlySetPanelBrightness(uint8_t bright, uint8_t rate)
 bool popPanelAnimation()
 {
   return g_animation.PopAnimation();
+}
+
+void setColorMode(int mode){
+  g_animation.setColorMode((ColorMode)mode);
 }
 
 
@@ -779,6 +788,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("drawPanelFace", DrawFace);
   m_lua->FuncRegisterOptional("setPanelAnimation", setAnimation, -1, false, -1, 250);
   m_lua->FuncRegister("popPanelAnimation", popPanelAnimation); 
+  m_lua->FuncRegister("setPanelColorMode", setColorMode); 
   m_lua->FuncRegisterOptional("gentlySetPanelBrightness", gentlySetPanelBrightness, 0, 4);
   m_lua->FuncRegister("setPanelManaged", setManaged);
   m_lua->FuncRegister("isPanelManaged", isManaged);
@@ -794,6 +804,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("color565", color565);
   m_lua->FuncRegister("color444", color444);
   m_lua->FuncRegister("getFrameAliasByName", GetAliasByName);
+  m_lua->FuncRegister("getFrameCountByAlias", GetFrameCountByAlias);
   m_lua->FuncRegister("decodePng", decodePng); 
   //Aarduino
   m_lua->FuncRegister("tone", Devices::BuzzerTone);
@@ -982,6 +993,14 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("EDIT_MODE_FTP_PORT", EDIT_MODE_FTP_PORT);
   m_lua->setConstant("SERVO_COUNT", SERVO_COUNT);
   m_lua->setConstant("PANEL_CHAIN", PANEL_CHAIN);
+
+  m_lua->setConstant("COLOR_MODE_RGB", (int)COLOR_MODE_RGB);
+  m_lua->setConstant("COLOR_MODE_RBG", (int)COLOR_MODE_RBG);
+  m_lua->setConstant("COLOR_MODE_GRB", (int)COLOR_MODE_GRB);
+  m_lua->setConstant("COLOR_MODE_GBR", (int)COLOR_MODE_GBR);
+  m_lua->setConstant("COLOR_MODE_BRG", (int)COLOR_MODE_BRG);
+  m_lua->setConstant("COLOR_MODE_BGR", (int)COLOR_MODE_BGR);
+
 
 }
 

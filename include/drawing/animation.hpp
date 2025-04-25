@@ -31,9 +31,19 @@ class AnimationSequence{
     
 };
 
+enum ColorMode{
+    COLOR_MODE_RGB,
+    COLOR_MODE_RBG,
+    COLOR_MODE_GRB,
+    COLOR_MODE_GBR,
+    COLOR_MODE_BRG,
+    COLOR_MODE_BGR,
+    
+};
+
 class Animation{
     public:
-        Animation():m_animations(),m_shader(0),m_lastFace(0),m_interruptPin(-1),m_runningFFT(false),m_runningTetris(false),m_runningPong(false),m_runningShooter(false),m_runningHexagon(false),m_isOnText(false),m_needFlip(false),m_isManaged(true),m_frameDrawDuration(0),m_frameLoadDuration(0),m_cycleDuration(0),m_mutex(xSemaphoreCreateMutex()){};
+        Animation():m_animations(),m_shader(0),m_lastFace(0),m_interruptPin(-1),m_colorMode(COLOR_MODE_RGB),m_needFlip(false),m_isManaged(true),m_needRedraw(false),m_frameDrawDuration(0),m_frameLoadDuration(0),m_cycleDuration(0),m_mutex(xSemaphoreCreateMutex()){};
 
         void Update(File *file);
 
@@ -51,9 +61,11 @@ class Animation{
         void MakeFlip();
         void SetShader(int id);
 
-        bool getTextMode(){
-            return m_isOnText;
+        void setColorMode(ColorMode mode){
+            m_colorMode = mode;
+            m_needRedraw = true;
         };
+
         bool needFlipScreen(){
             return m_needFlip;
         };
@@ -94,14 +106,10 @@ class Animation{
         int m_shader;
         int m_lastFace;
         int m_interruptPin;
-        bool m_runningFFT;
-        bool m_runningTetris;
-        bool m_runningPong;
-        bool m_runningShooter;
-        bool m_runningHexagon;
-        bool m_isOnText;
+        ColorMode m_colorMode;
         bool m_needFlip;
         bool m_isManaged;
+        bool m_needRedraw;
         
         uint64_t m_frameDrawDuration;
         uint64_t m_frameLoadDuration;
