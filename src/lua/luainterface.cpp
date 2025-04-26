@@ -66,13 +66,18 @@ int getInternalButtonStatus()
   return digitalRead(EDIT_MODE_PIN);
 }
 
+void setTimeoutSerialIo(int tm){
+  Serial2.setTimeout(tm);
+}
 void beginSerialIo(int baud)
 {
   Serial2.begin(baud, SERIAL_8N1, 1, 2);
+ 
 }
 
 int serialIoAvaliable()
 {
+  
   return Serial2.available();
 }
 
@@ -825,6 +830,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("restart", restart);
   //Serial
   m_lua->FuncRegisterOptional("beginSerialIo", beginSerialIo, 115200);
+  m_lua->FuncRegister("setTimeoutSerialIo", setTimeoutSerialIo);
   m_lua->FuncRegister("serialIoAvaliable", serialIoAvaliable);
   m_lua->FuncRegister("serialAvaliable", serialAvaliable);
   m_lua->FuncRegisterOptional("serialReadStringUntil", serialReadStringUntil, '\n');

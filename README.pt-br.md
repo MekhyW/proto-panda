@@ -189,7 +189,7 @@ function onSetup()
     beginBleScanning()  
 ```  
 
-Eu sei, eu sei... é estático e não tem flexibilidade para aceitar qualquer tipo de dispositivo BLE/serviços... É um recurso planejado.  
+Eu sei, eu sei... é estático e não tem flexibilidade para aceitar qualquer tipo de dispositivo BLE/serviços... Talvez no futuro~
 
 # Hardware  
 

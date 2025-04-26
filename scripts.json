@@ -7,5 +7,7 @@
   {"name": "jumping wah", "file": "/scripts/wah.lua"},
   {"name": "tetris", "file": "/scripts/tetris.lua"},
   {"name": "proximity game", "file": "/scripts/proximitygame.lua"},
-  {"name": "breakout", "file": "/scripts/breakout.lua"}
+  {"name": "breakout", "file": "/scripts/breakout.lua"},
+  {"name": "color shift", "file": "/scripts/colorshift.lua"},
+  {"name": "FFT", "file": "/scripts/fft.lua"}
 ]

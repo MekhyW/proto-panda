@@ -52,6 +52,7 @@ void setup() {
   Serial.begin(115200);
   Serial.printf("Starting proto panda v%s!\n", PANDA_VERSION);
 
+
   Devices::BuzzerTone(2220);
   delay(200);
   Devices::BuzzerTone(1220);
