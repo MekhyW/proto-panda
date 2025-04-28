@@ -179,6 +179,12 @@ function _M.SetExpression(id)
 		if aux.onEnter then 
 			aux.onEnter()
 		end
+		if aux.intro then
+			_M.StackExpression(aux.intro)
+		end
+		if _M.previousExpression and _M.previousExpression.outro then  
+			_M.StackExpression(_M.previousExpression.outro)
+		end
 		_M.previousExpression = aux
 	end
 end
