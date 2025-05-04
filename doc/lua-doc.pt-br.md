@@ -334,11 +334,18 @@ Habilita ou desabilita o shader de arco-íris, que converte pixels para um padr�
   - `enabled` (bool): `true` para habilitar o shader, `false` para desabilitar.  
 - **Retorna**: `nil`  
 
-#### `getFrameAliasByName(name)`  
-Retorna o ID do quadro associado ao alias fornecido.  
+#### `getFrameOffsetByName(name)`  
+Retorna o offset do quadro associado aos frames.  
 - **Parâmetros**:  
-  - `name` (string): O nome do alias.  
-- **Retorna**: `int` (O ID do quadro).  
+  - `name` (string): O nome dos frames.  
+- **Retorna**: `int` (O offset).  
+
+#### `getFrameCountByName(name)`  
+Retorna a quantidade de frames que um grupo de frames tem
+- **Parâmetros**:  
+  - `name` (string): O nome dos frames.  
+- **Retorna**: `int` (Quantos frames).  
+
 
 ## Decodificação de Imagem  
 

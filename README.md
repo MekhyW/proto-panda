@@ -65,90 +65,127 @@ Protopanda uses images from the SD card and a few JSON files to construct the an
 - [Bulk File](#bulk-file)
 - [Managed Mode](#managed-mode)
 
-## Loading frames
+### Loading Frames  
+To load frames, add them to the SD card and specify their locations in the `config.json` file:  
 
-To load frames, you need to add them to the SD card and specify their locations in the config.json file:
 ```json
 {
   "frames": [
-    {"pattern": "/bolinha/input-onlinegiftools-%d.png", "from": 1, "to": 155, "flip_left": false, "alias": "bolinha"},
-    {"pattern": "/atlas/Atlas comissão expressão padrao frame %d Azul.png", "flip_left": true, "from": 1, "to": 4, "color_scheme_left": "rbg", "alias": "atlas"},
-    {"pattern": "/atlas/Atlas comissão expressão Vergonha e boop frame %d.png", "flip_left": true, "from": 1, "to": 4, "color_scheme_left": "rbg", "alias": "vergonha"},
-    {"pattern": "/atlas/trans%d.png", "flip_left": true, "from": 1, "to": 4, "color_scheme_left": "rbg", "alias": "vergonha_trans"},
-    {"pattern": "/atlas/Atlas comissão expressão OWO frame %d.png", "flip_left": true, "from": 1, "to": 4, "color_scheme_left": "rbg", "alias": "owo"},
-    {"pattern": "/atlas/Atlas comissão expressão cute pidao frame %d.png", "flip_left": true, "from": 1, "to": 3, "color_scheme_left": "rbg", "alias": "cute"},
-    {"pattern": "/atlas/Atlas comissão expressão raiva frame %d.png", "flip_left": true, "from": 1, "to": 5, "color_scheme_left": "rbg", "alias": "anger"},
-    {"pattern": "/atlas/Atlas comissão expressão apaixonado %d.png", "flip_left": true, "from": 1, "to": 2, "color_scheme_left": "rbg", "alias": "apaixonado"},
-    {"pattern": "/atlas/Atlas comissão expressão surpreso frame %d.png", "flip_left": true, "from": 1, "to": 5, "color_scheme_left": "rbg", "alias": "surpreso"},
-    {"pattern": "/atlas/Atlas comissão expressão feliz frame %d.png", "flip_left": true, "from": 1, "to": 4, "color_scheme_left": "rbg", "alias": "feliz"},
-    {"pattern": "/atlas/Atlas comissão expressão morte frame %d.png", "flip_left": true, "from": 1, "to": 2, "color_scheme_left": "rbg", "alias": "morto"},
-    {"file": "/atlas/Atlas comissão expressão tela azul.png", "flip_left": true, "alias": "tela_azul"}
-  ]
+    {"pattern": "/expressions/normal_by_maremar (%d).png", "flip_left": true, "from": 1, "to": 4, "name": "frames_normal"},
+    {"pattern": "/expressions/noise (%d).png", "flip_left": false, "from": 1, "to": 3, "name": "frames_noise"},
+    {"pattern": "/expressions/amogus (%d).png", "flip_left": true, "from": 1, "to": 2, "name": "frames_amogus"},
+    {"pattern": "/expressions/boop_cycle_%d.png", "flip_left": true, "from": 1, "to": 3, "name": "frames_boop"},
+    {"pattern": "/expressions/boop_transition_%d.png", "flip_left": true, "from": 1, "to": 3, "name": "frames_boop_transition"}
+  ],
+  "expressions": [],
+  "scripts": [],
+  "boop": {}
 }
 ```
 
-> Modifying the config.json file adding or removing files will force the system to rebuild the [frame bulk file](#bulk-file).
+> **Note:** Modifying `config.json` (adding/removing files) forces the system to rebuild the [frame bulk file](#bulk-file).  
 
-Each element in the `frames` array, can be either the path of the file, or an object that describe multiple files.
+Each entry in the `frames` array can be either:  
+- A file path, **or**  
+- An object describing multiple files.  
+  *(Tip: Use [this tool](https://onlinetexttools.com/printf-text) for `printf`-style patterns.)*  
 
-* pattern  (string)
-Much like `printf`, which uses `%d` to specify a number, when using pattern it is required to have the fields `from` and `to`. For example:
-Given an example:
+#### Frame Object Properties  
+- **`pattern`** (string)  
+  Uses `%d` as a placeholder for numbers (like `printf`). Requires `from` and `to` fields.  
+  **Example:**  
+  ```json
+  {"pattern": "/bolinha/input-onlinegiftools-%d.png", "from": 1, "to": 155}
+  ```  
+  Loads frames from `/bolinha/input-onlinegiftools-1.png` to `...-155.png`.  
+
+- **`flip_left`** (boolean)  
+  Flips the left-side frame horizontally (useful for panel orientation).  
+
+- **`name`** (string)  
+  Assigns an identifier to a frame or group. The name refers to the first frame in the `pattern`.  
+  *Why?* Hardcoding frame orders (e.g., `[1, 2, 3]`) becomes problematic if you later insert a new frame. Names act as offsets for flexibility.  
+
+- **`color_scheme_left`** (string)  
+  Flips specific color channels if needed.  
+
+---
+
+### Expressions  
+After loading frames, [Lua scripts](#programming-in-lua) manage expressions. These are defined in `/expressions.json`:  
+
 ```json
-{"pattern": "/bolinha/input-onlinegiftools-%d.png", "from": 1, "to": 155},
+{
+  "frames": [],
+  "expressions": [
+    {
+      "name": "normal",
+      "frames": "frames_normal",
+      "animation": [1, 2, 1, 2, 1, 2, 3, 4, 3],
+      "duration": 250
+    },
+    {
+      "name": "sus",
+      "frames": "frames_amogus",
+      "animation": "auto",
+      "duration": 200
+    },
+    {
+      "name": "noise",
+      "frames": "frames_noise",
+      "animation": "auto",
+      "duration": 5,
+      "onEnter": "ledsStackCurrentBehavior(); ledsSegmentBehavior(0, BEHAVIOR_NOISE); ledsSegmentBehavior(1, BEHAVIOR_NOISE)",
+      "onLeave": "ledsPopBehavior()"
+    },
+    {
+      "name": "boop",
+      "frames": "frames_boop",
+      "animation": [1, 2, 3, 2],
+      "duration": 250
+    },
+    {
+      "name": "boop_begin",
+      "frames": "frames_boop_transition",
+      "animation": [1, 2, 3],
+      "duration": 250,
+      "transition": true
+    },
+    {
+      "name": "boop_end",
+      "frames": "frames_boop_transition",
+      "animation": [3, 2, 1],
+      "duration": 250,
+      "transition": true
+    }
+  ],
+  "scripts": [],
+  "boop": {}
+}
 ```
-This will load `/bolinha/input-onlinegiftools-1.png` to `/bolinha/input-onlinegiftools-155.png`
-* flip_left  (bool)
-Due to the orientation of the panels, it might be necessary to flip the left side horizontally.
-* alias  (string)
-The animations are preety much like:
-```
-Draw frame 1
-wait some time
-Draw frame 2
-```
-This can be a problem if you hardcode the animations and need to add a frame in between. To solve this problem, you can create an alias for an image or a group of images. The alias is just an name given to the first frame of the `pattern`. Much like an offset.
-* color_scheme_left  (string)
-If you need to flip one or more channels, use this to do so.
 
-## Expressions
+#### Expression Properties  
+- **`name`** (string, *optional*)  
+  Identifies the animation (e.g., for menus or scripting).  
 
-Once the frames are loaded, and the execution starts, its the job of the (lua scripts)[#programming-in-lua] to handle the expressions. 
-The expressions are stored in `expressions.json` at the root of the SD card.
-```json
-[
-  {"name": "atlas", "use_alias": "atlas", "frames": [1,1,1,1,1,2,3,4,3,2,1], "duration": 150},
-  {"name": "vergonha", "use_alias": "vergonha", "frames": [1,2,3,4], "duration": 100},
-  {"name": "owo", "use_alias": "owo", "frames": [1,2,3,4,3,2,1], "duration": 250},
-  {"name": "vergonha_transicao_in", "use_alias": "vergonha_trans", "frames":  [4,3,2,1], "duration": 100, "single": true},
-  {"name": "vergonha_transicao_out", "use_alias": "vergonha_trans", "frames": [1,2,3,4], "duration": 100, "single": true},
-  {"name": "cute", "use_alias": "cute", "frames": [1,2,3], "duration": 100},
-  {"name": "anger", "use_alias": "anger", "frames": [1,1,1,2,3,4,5,4,3,2,1,1], "duration": 100},
-  {"name": "apaixonado", "use_alias": "apaixonado", "frames": [1,2], "duration": 100},
-  {"name": "surpreso", "use_alias": "surpreso", "frames":  [1,1,1,1,1,2,3,4,5,4,3,2,1], "duration": 100},
-  {"name": "feliz", "use_alias": "feliz", "frames": [1,1,1,1,1,2,3,4,3,2,1], "duration": 150},
-  {"name": "morto", "use_alias": "morto", "frames": [1,2], "duration": 100},
-  {"name": "tela_azul", "use_alias": "tela_azul", "frames": [1], "duration": 100}
-]
-```
+- **`frames`** (string)  
+  References a frame group from `config.json`.  
 
-Each element of the array is an expression.
-* **name** (string)  
-  It's not required to have a name, but it's a way to make it easier to call an animation and to visualize its name on the menu.
+- **`animation`** (int[] or `"auto"`)  
+  - `int[]`: Explicit frame order (e.g., `[1, 2, 3]`).  
+  - `"auto"`: Sequential frames (e.g., `1, 2, 3...`).  
 
-* **use_alias** (string)  
-  Imagine a scenario where you have 200 frames, and you want to create an expression with frames 50 to 55. To do so, you fill the frames object with 50 to 55. But if you add a new frame at ID 40, it will mess up your existing expression. To avoid that, you define aliases in the frames section and then use the alias to add an offset.
+- **`duration`** (int)  
+  Frame display time (in milliseconds).  
 
-  For example, say your alias is "angry". Using `"use_alias": "angry"` and the frames `[0, 1, 2, 3, 4, 5]` will actually call frames 50 to 55 because the "angry" alias starts at 50.
+- **`transition`** (boolean)  
+  If `true`, the animation plays once and reverts to the previous state.  
 
-* **frames** (int array)  
-  The ID of each frame to be shown.
+- **`onEnter`** (string, Lua code)  
+  Executes when the animation starts.  
 
-* **duration** (int)  
-  The duration of each frame.
-
-* **single** (bool)  
-  This forces the animation to not repeat. Once it finishes, it falls back to the previous animation.
+- **`onLeave`** (string, Lua code)  
+  Executes when the animation ends (either due to `transition=true` or interruption).  
 
 ## Expression stack
 

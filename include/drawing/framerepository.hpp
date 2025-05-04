@@ -29,10 +29,10 @@ class FrameRepository{
         void composeBulkFile();
         void displayFFATInfo();
 
-        int getAlias(std::string str){
+        int getOffsetByName(std::string str){
             return m_offsets[str];
         }
-        int getAliasFrameCount(std::string str){
+        int getFrameCountByName(std::string str){
             return m_frameCountByAlias[str];
         }
     private:

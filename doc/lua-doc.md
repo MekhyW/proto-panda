@@ -338,11 +338,18 @@ Enables or disables the rainbow shader, which converts pixels to a rainbow patte
   - `enabled` (bool): `true` to enable the shader, `false` to disable.
 - **Returns**: `nil`
 
-#### `getFrameAliasByName(name)`
-Returns the frame ID associated with the given alias.
+#### `getFrameOffsetByName(name)`
+Returns the frame offset associated with the given name.
 - **Parameters**:
-  - `name` (string): The alias name.
-- **Returns**: `int` (The frame ID).
+  - `name` (string): The frame name.
+- **Returns**: `int` (The frame offset).
+
+#### `getFrameCountByName(name)`
+Returns the amount of frames a given frame group has
+- **Parameters**:
+  - `name` (string): The frame name.
+- **Returns**: `int` (The frame count).
+
 
 
 ## Image Decoding

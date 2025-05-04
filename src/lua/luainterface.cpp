@@ -39,14 +39,14 @@ int ClearScreen()
   return 0;
 }
 
-int GetAliasByName(std::string aliasName)
+int GetOffsetByName(std::string aliasName)
 {
-  return g_frameRepo.getAlias(aliasName);
+  return g_frameRepo.getOffsetByName(aliasName);
 }
 
-int GetFrameCountByAlias(std::string aliasName)
+int GetFrameCountByName(std::string aliasName)
 {
-  return g_frameRepo.getAliasFrameCount(aliasName);
+  return g_frameRepo.getFrameCountByName(aliasName);
 }
 
 int DrawFace(int i)
@@ -498,11 +498,22 @@ void powerOff()
   digitalWrite(PIN_ENABLE_REGULATOR, LOW);
 }
 
-void LuaInterface::luaCallbackError(const char *errMsg)
+void LuaInterface::luaCallbackError(const char *errMsg, lua_State *L)
 {
   Logger::Info("Lua error: %s\n", errMsg);
   
   lastError = errMsg;
+
+  lua_getglobal(L, "debug");
+  lua_getfield(L, -1, "traceback");
+
+  lua_pushstring(L, "Trace");
+  lua_pushinteger(L, 2);
+  lua_call(L, 2, 1);
+  
+  const char* traceback = lua_tostring(L, -1);
+
+  Logger::Info("Lua traceback:\n%s\n", traceback);
 
   if (LuaInterface::HaltIfError)
   {
@@ -808,8 +819,8 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegisterFromObjectOpt("getAnimationStackSize", &g_animation, &Animation::getAnimationStackSize); 
   m_lua->FuncRegister("color565", color565);
   m_lua->FuncRegister("color444", color444);
-  m_lua->FuncRegister("getFrameAliasByName", GetAliasByName);
-  m_lua->FuncRegister("getFrameCountByAlias", GetFrameCountByAlias);
+  m_lua->FuncRegister("getFrameOffsetByName", GetOffsetByName);
+  m_lua->FuncRegister("getFrameCountByName", GetFrameCountByName);
   m_lua->FuncRegister("decodePng", decodePng); 
   //Aarduino
   m_lua->FuncRegister("tone", Devices::BuzzerTone);

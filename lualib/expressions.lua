@@ -1,3 +1,5 @@
+local configloader = require("configloader")
+
 local _M = {
 	animations = {},
 	by_name = {},
@@ -5,48 +7,42 @@ local _M = {
 	count = 0,
 }
 
-local json = require("json")
-
-function _M.Load(filename)
-	local fp, err = io.open(filename, "r")
-	if not fp then 
-		error("Failed to load "..filename..": "..tostring(err))
-	end
-	local content = fp:read("*a")
-	fp:close()
-	json.filename = filename
-	local raw_expressions = json.decode(content)
+function _M.Load()
 	content = nil
-	for id ,b in pairs(raw_expressions) do 
+	local conf = configloader.Get()
+	for id ,b in pairs(conf.expressions) do 
 		local offset = nil 
-		if b.frame_offset and type(b.use_alias) == "number" then 
+		if b.frame_offset and type(b.frames) == "number" then 
 			offset = b.frame_offset
-		elseif b.use_alias and type(b.use_alias) == "string" then 
-			offset = getFrameAliasByName(b.use_alias)
+		elseif b.frames and type(b.frames) == "string" then 
+			offset = getFrameOffsetByName(b.frames)
 		end
 		if offset then 
 			b.frame_offset = offset
-			local frames = b.frames
-			if type(b.frames) ~= 'table' then  
-				if not b.frames == "auto" then  
-					b.frames = {}
-					if not b.use_alias then  
+			local animation = b.animation
+			if type(b.animation) ~= 'table' then  
+				if b.animation == "auto" then  
+					b.animation = {}
+					animation = b.animation
+					if not b.frames then  
 						error("Cannot use 'frames=auto' when there is no alias defined")
 					end
-					local count = getFrameCountByAlias(b.use_alias)
+					local count = getFrameCountByName(b.frames)
 					if count == 0 then  
-						error("Using alias '"..b.use_alias.."' returned 0 frames. Are you sure this alias has loaded frames?")
+						error("Using frame group '"..b.frames.."' returned 0 frames. Are you sure this alias has loaded frames?")
 					end
 					for i=1,count do  
-						b.frames[i] = i
+						b.animation[i] = i
 					end
+				else 
+					error("Animation can only e numeric array or 'auto'")
 				end
 			end
-			for a,c in pairs(b.frames) do 
-				frames[a] = c + offset
+			for a,c in pairs(b.animation) do 
+				animation[a] = c + offset
 				_M.by_frame[c + offset] = id
 			end
-			b.frames = frames
+			b.animation = animation
 		end
 		b.frame_offset = b.frame_offset or 0
 		b.duration = tonumber(b.duration) or 250
@@ -72,7 +68,7 @@ function _M.Load(filename)
 			_M.count = _M.count+1
 		end
 	end
-	_M.animations = raw_expressions
+	_M.animations = conf.expressions
 	return true
 end
 
@@ -172,9 +168,9 @@ function _M.SetExpression(id)
 			_M.previousExpression.onLeave()
 		end
 		if tonumber(id) then
-			setPanelAnimation(aux.frames, aux.duration, repeats, allDrop, tonumber(id))
+			setPanelAnimation(aux.animation, aux.duration, repeats, allDrop, tonumber(id))
 		else 
-			setPanelAnimation(aux.frames, aux.duration, repeats, false)
+			setPanelAnimation(aux.animation, aux.duration, repeats, false)
 		end
 		if aux.onEnter then 
 			aux.onEnter()
@@ -192,7 +188,7 @@ end
 function _M.IsFrameFromAnimation(frameId, id)
 	local aux = _M.GetExpression(id)
 	if aux then 
-		for i,b in pairs(aux.frames) do 
+		for i,b in pairs(aux.animation) do 
 			if b == frameId then
 				return true
 			end
@@ -209,12 +205,12 @@ function _M.StackExpression(id)
 			repeats = 1
 		end
 		if tonumber(id) then
-			setPanelAnimation(aux.frames, aux.duration, repeats, false, tonumber(id))
+			setPanelAnimation(aux.animation, aux.duration, repeats, false, tonumber(id))
 		else 
-			setPanelAnimation(aux.frames, aux.duration, repeats, false)
+			setPanelAnimation(aux.animation, aux.duration, repeats, false)
 		end
 	else
-		print("Unknown ID: "..id)
+		print("Unknown ID: "..tostring(id))
 	end
 end
 

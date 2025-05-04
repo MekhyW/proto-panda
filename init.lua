@@ -3,6 +3,7 @@ local scripts = require("scripts")
 local generic = require("generic")
 local menu = require("menu")
 local boop = require("boop")
+local configloader = require("configloader")
 
 function onSetup()
 
@@ -23,9 +24,11 @@ function onSetup()
     dictSave()
     generic.displaySplashMessage("Starting:\nExpressions")
 
-    expressions.Load("/expressions.json") 
-    scripts.Load("/scripts.json") 
-    boop.Load("/boop.json")
+    configloader.Load("/config.json")
+
+    expressions.Load() 
+    scripts.Load() 
+    boop.Load()
 
     generic.displaySplashMessage("Starting:\nLeds")
     ledsBeginDual(25, 25, 0) 
@@ -40,17 +43,15 @@ function onSetup()
 end
 
 function onPreflight()
+    ledsSetManaged(true)
+    setPanelManaged(true)
+    expressions.Next()
     generic.setAutoPowerMode(tonumber(dictGet("panel_brightness")) or 64)
     beginBleScanning()
     ledsGentlySeBrightness(tonumber(dictGet("led_brightness") ) or 64)
     gentlySetPanelBrightness(tonumber(dictGet("panel_brightness")) or 64)
-    ledsSetManaged(true)
-    setPanelManaged(true)
-    expressions.Next()
+    
 end
-local IsFrameFromAnimation = expressions.IsFrameFromAnimation
-local GetCurrentFrame = expressions.GetCurrentFrame
-local StackExpression = expressions.StackExpression
 
 function onLoop(dt)
     if not scripts.Handle(dt) then

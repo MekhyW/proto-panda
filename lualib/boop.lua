@@ -1,5 +1,6 @@
 local expressions = require("expressions")
 local generic = require("generic")
+local configloader = require("configloader")
 local DrawText = generic.DrawText
 local DrawSprite = generic.DrawSprite
 local Map = generic.map
@@ -28,6 +29,95 @@ local _M = {
 
     isBooped = false,
 }
+
+
+function _M.Load(filename)
+    _M.gear_sprite = decodePng("/lualib/gear.png")
+    _M.config = configloader.Get().boop
+
+    if dictGet("boop_configured") ~= "1" then  
+        print("Boop is not configured yet.")
+        _M.configured = false
+        return
+    end
+    _M.configured = true
+
+    _M.minimumLidar = tonumber(dictGet("boop_min") ) or 0
+    _M.triggerPosition = tonumber(dictGet("boop_trigg"))  or 0
+    _M.boopTimerDuration = tonumber(dictGet("boop_duration")) or 0
+
+    print("Boop configuration loaded min=".._M.minimumLidar.." trigger=".._M.triggerPosition.." timer=".._M.boopTimerDuration)
+
+    if _M.triggerPosition == 0 then 
+        print("Boop is not configured yet!")
+        _M.configured = false
+        return
+    end
+
+    if _M.config["transitionIn"] then
+        if type(_M.config["transitionIn"]) ~= "string" then 
+            error("Field 'triggerStop' should be an string")
+        end
+        local exp = expressions.GetExpression(_M.config["transitionIn"])
+        if not exp then 
+            error("On boop 'transitionIn' is defined the ".._M.config["transitionIn"].." but thats not a valid expression")
+        end
+        if not exp.transition then 
+            error("On boop 'transitionIn' the animation should have transition=true")
+        end
+    end
+
+    if _M.config["transitionOut"] then
+        if type(_M.config["transitionOut"]) ~= "string" then 
+            error("Field 'triggerStop' should be an string")
+        end
+        local exp = expressions.GetExpression(_M.config["transitionOut"])
+        if not exp then 
+            error("On boop 'transitionOut' is defined the ".._M.config["transitionOut"].." but thats not a valid expression")
+        end
+        if not exp.transition then 
+            error("On boop 'transitionOut' the animation should have transition=true")
+        end
+    end
+
+    if _M.config["boopAnimationName"] then
+        if type(_M.config["boopAnimationName"]) ~= "string" then 
+            error("Field 'boopAnimation' should be an string")
+        end
+        local exp = expressions.GetExpression(_M.config["boopAnimationName"])
+        if not exp then 
+            error("On boop 'boopAnimationName' is defined the ".._M.config["boopAnimationName"].." but thats not a valid expression")
+        end
+        if exp.transition then 
+            error("On boop 'boopAnimationName' the animation should have transition=false")
+        end
+    end
+    if _M.config["transictionOnlyOnAnimation"] then
+        if type(_M.config["transictionOnlyOnAnimation"]) ~= "string" then 
+            error("Field 'transictionOnlyOnAnimation' should be an string")
+        end
+        local exp = expressions.GetExpression(_M.config["transictionOnlyOnAnimation"])
+        if not exp then 
+            error("On boop 'transictionOnlyOnAnimation' is defined the ".._M.config["transictionOnlyOnAnimation"].." but thats not a valid expression")
+        end
+        if exp.transition then 
+            error("On boop 'transictionOnlyOnAnimation' the animation should have transition=false")
+        end
+    end
+
+    if _M.config["transictionInOnlyOnSpecificFrame"] then
+        if type(_M.config["transictionInOnlyOnSpecificFrame"]) ~= "number" then 
+            error("Field 'transictionInOnlyOnSpecificFrame' should be an number")
+        end
+    end 
+    
+    if _M.config["transictionOutOnlyOnSpecificFrame"] then
+        if type(_M.config["transictionOutOnlyOnSpecificFrame"]) ~= "number" then 
+            error("Field 'transictionOutOnlyOnSpecificFrame' should be an number")
+        end
+    end
+end
+
 
 function _M.onEnter()
     if not hasLidar() then  
@@ -374,100 +464,6 @@ function _M.isBoopedCheck(reading, ok, dt)
     return false
 end
 
-function _M.Load(filename)
-    _M.gear_sprite = decodePng("/lualib/gear.png")
-    local fp, err = io.open(filename, "r")
-    if not fp then 
-        error("Failed to load "..filename..": "..tostring(err))
-    end
-    local content = fp:read("*a")
-    fp:close()
-    json.filename = filename
-    _M.config = json.decode(content)
-
-    if dictGet("boop_configured") ~= "1" then  
-        print("Boop is not configured yet.")
-        _M.configured = false
-        return
-    end
-    _M.configured = true
-
-    _M.minimumLidar = tonumber(dictGet("boop_min") ) or 0
-    _M.triggerPosition = tonumber(dictGet("boop_trigg"))  or 0
-    _M.boopTimerDuration = tonumber(dictGet("boop_duration")) or 0
-
-    print("Boop configuration loaded min=".._M.minimumLidar.." trigger=".._M.triggerPosition.." timer=".._M.boopTimerDuration)
-
-    if _M.triggerPosition == 0 then 
-        print("Boop is not configured yet!")
-        _M.configured = false
-        return
-    end
-
-    if _M.config["transitionIn"] then
-        if type(_M.config["transitionIn"]) ~= "string" then 
-            error("Field 'triggerStop' should be an string")
-        end
-        local exp = expressions.GetExpression(_M.config["transitionIn"])
-        if not exp then 
-            error("On boop 'transitionIn' is defined the ".._M.config["transitionIn"].." but thats not a valid expression")
-        end
-        if not exp.transition then 
-            error("On boop 'transitionIn' the animation should have transition=true")
-        end
-    end
-
-    if _M.config["transitionOut"] then
-        if type(_M.config["transitionOut"]) ~= "string" then 
-            error("Field 'triggerStop' should be an string")
-        end
-        local exp = expressions.GetExpression(_M.config["transitionOut"])
-        if not exp then 
-            error("On boop 'transitionOut' is defined the ".._M.config["transitionOut"].." but thats not a valid expression")
-        end
-        if not exp.transition then 
-            error("On boop 'transitionOut' the animation should have transition=true")
-        end
-    end
-
-    if _M.config["boopAnimation"] then
-        if type(_M.config["boopAnimation"]) ~= "string" then 
-            error("Field 'boopAnimation' should be an string")
-        end
-        local exp = expressions.GetExpression(_M.config["boopAnimation"])
-        if not exp then 
-            error("On boop 'boopAnimation' is defined the ".._M.config["boopAnimation"].." but thats not a valid expression")
-        end
-        if exp.transition then 
-            error("On boop 'boopAnimation' the animation should have transition=false")
-        end
-    end
-    if _M.config["transictionOnlyOnAnimation"] then
-        if type(_M.config["transictionOnlyOnAnimation"]) ~= "string" then 
-            error("Field 'transictionOnlyOnAnimation' should be an string")
-        end
-        local exp = expressions.GetExpression(_M.config["transictionOnlyOnAnimation"])
-        if not exp then 
-            error("On boop 'transictionOnlyOnAnimation' is defined the ".._M.config["transictionOnlyOnAnimation"].." but thats not a valid expression")
-        end
-        if exp.transition then 
-            error("On boop 'transictionOnlyOnAnimation' the animation should have transition=false")
-        end
-    end
-
-    if _M.config["transictionInOnlyOnSpecificFrame"] then
-        if type(_M.config["transictionInOnlyOnSpecificFrame"]) ~= "number" then 
-            error("Field 'transictionInOnlyOnSpecificFrame' should be an number")
-        end
-    end 
-    
-    if _M.config["transictionOutOnlyOnSpecificFrame"] then
-        if type(_M.config["transictionOutOnlyOnSpecificFrame"]) ~= "number" then 
-            error("Field 'transictionOutOnlyOnSpecificFrame' should be an number")
-        end
-    end
-end
-
 function _M.reset()
     _M.boopIsOn = false
 end
@@ -486,7 +482,7 @@ function _M.manageBoop(dt)
             if not _M.boopIsOn then
                 local isOnCorrectFrame = true
                 if config.transictionOnlyOnAnimation then  
-                    if not IsFrameFromAnimation(getPanelCurrentFace(), config.transictionOnlyOnAnimation)  then  
+                    if not IsFrameFromAnimation(getPanelCurrentFace(), config.transictionOnlyOnAnimation) then  
                         isOnCorrectFrame = false
                     end
                 end

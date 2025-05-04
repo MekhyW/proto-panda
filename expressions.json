@@ -1,8 +1,0 @@
-[
-  {"name": "normal", "use_alias": "normal", "frames": [1,2,1,2,1,2,3,4,3], "duration": 250},
-  {"name": "sus", "use_alias": "amogus", "frames": [1,2], "duration": 200},
-  {"name": "noise", "use_alias": "noise", "frames": [1,2,3], "duration": 5, "onEnter": "ledsStackCurrentBehavior()  ledsSegmentBehavior(0, BEHAVIOR_NOISE) ledsSegmentBehavior(1, BEHAVIOR_NOISE)", "onLeave": "ledsPopBehavior()"},
-  {"name": "boop", "use_alias": "boop", "frames": [1,2,3,2], "duration": 250},
-  {"name": "boop_begin", "use_alias": "boop_transiction", "frames": [1,2,3], "duration": 250, "transition": true},
-  {"name": "boop_end", "use_alias": "boop_transiction", "frames": [3,2,1], "duration": 250, "transition": true}
-]

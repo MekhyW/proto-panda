@@ -4,7 +4,7 @@ local _M = {
 }
 
 
-local json = require("json")
+local configloader = require("configloader")
 local generic = require("generic")
 
 function _M.parseVersion(version)
@@ -54,16 +54,9 @@ function _M.canRun(version)
 end
 
 function _M.Load(filepath)
-    local fp, err = io.open(filepath, "r")
-    if not fp then 
-        error("Failed to load "..filename..": "..tostring(err))
-    end
-    local content = fp:read("*a")
-    fp:close()
-    json.filename = filename
-    _M.scripts = json.decode(content)
+	local conf = configloader.Get()
     local auxScripts = {}
-    for a,c in pairs(_M.scripts) do  
+    for a,c in pairs(conf.scripts) do  
     	local success, data = pcall(dofile, c.file)
     	if not success then 
     		generic.displayWarning("On script: "..c.file, data)

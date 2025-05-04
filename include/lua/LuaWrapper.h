@@ -897,7 +897,7 @@ class LuaWrapper {
 
     void FuncRegisterRaw(const char* name, int readSdFile(lua_State *L));
 
-    void SetErrorCallback(void Func(const char*)){
+    void SetErrorCallback(void Func(const char*, lua_State *)){
         _errorCallback = Func;
     }
 
@@ -935,7 +935,7 @@ class LuaWrapper {
         if (!lua_isfunction(_state, -1) || lua_isnil(_state, -1)) {
             lua_pop(_state, 1);
             if (_errorCallback != nullptr){
-                _errorCallback("Called function is nil or not a function");
+                _errorCallback("Called function is nil or not a function", _state);
             }
             return false;
         }
@@ -948,7 +948,7 @@ class LuaWrapper {
             const char* errorMessage = lua_tostring(_state, -1);
             lua_pop(_state, 1);
             if (_errorCallback != nullptr){
-                _errorCallback(errorMessage);
+                _errorCallback(errorMessage, _state);
             }
             return false;
         }
@@ -963,7 +963,7 @@ class LuaWrapper {
         return _state;
     }
   private:
-    void (*_errorCallback)(const char*);
+    void (*_errorCallback)(const char*,lua_State *L);
     lua_State *_state;
 
         void pushParam(std::string parameter){

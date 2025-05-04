@@ -5,7 +5,7 @@ Protopanda é uma plataforma open source (firmware e hardware) para controlar pr
 1. [Features](#features)   
 2. [Alimentação](#alimentação)  
 3. [Painéis](#painéis)  
-4. [Rosto e Expressões](#rosto-e-expressões)  
+4. [Tela e Expressões](#tela-e-expressões)  
 5. [Tiras de LED](#tiras-de-led)  
 6. [Bluetooth](#bluetooth)  
 7. [Hardware](#hardware)   
@@ -50,102 +50,103 @@ A resolução é de 64 pixels de largura e 32 pixels de altura. Com dois painéi
 
 Para evitar outro tipo de tearing, quando um quadro está sendo desenhado enquanto o quadro está sendo alterado, habilitamos o uso de buffer duplo. Isso significa que desenhamos os pixels na memória, mas eles não aparecem imediatamente na tela. Quando chamamos `flipPanelBuffer()`, a memória em que desenhamos é enviada para o DMA para ser constantemente exibida no painel. Então, o buffer que usamos para desenhar muda. Isso aumenta o uso de memória, mas é um preço necessário a pagar.  
 
-# Rosto e Expressões  
+# Tela e Expressões  
 
 O Protopanda usa imagens do cartão SD e alguns arquivos JSON para construir as sequências de animação. Todas as imagens devem ser `PNG`; posteriormente, são decodificadas para um formato bruto e armazenadas no [arquivo bulk de quadros](#arquivo-bulk).  
 
-- [Carregando Quadros](#carregando-quadros)  
+- [Carregando Frames](#carregando-frames)  
 - [Expressões](#expressões)  
 - [Pilha de Expressões](#pilha-de-expressões)  
 - [Arquivo Bulk](#arquivo-bulk)  
 - [Modo managed](#modo-managed)  
 
-## Carregando Quadros  
+## Carregando Frames
+Para carregar os quadros (frames), você precisa adicioná-los ao cartão SD e especificar suas localizações no arquivo `config.json`:
+```json
+{
+  "frames": [
+    {"pattern": "/expressions/normal_by_maremar (%d).png", "flip_left": true, "from": 1, "to": 4, "name": "frames_normal"},
+    {"pattern": "/expressions/noise (%d).png", "flip_left": false, "from": 1, "to": 3, "name": "frames_noise"},
+    {"pattern": "/expressions/amogus (%d).png", "flip_left": true, "from": 1, "to": 2, "name": "frames_amogus"},
+    {"pattern": "/expressions/boop_cycle_%d.png", "flip_left": true, "from": 1, "to": 3, "name": "frames_boop"},
+    {"pattern": "/expressions/boop_transiction_%d.png", "flip_left": true, "from": 1, "to": 3, "name": "frames_boop_transition"}
+  ],
+  "expressions": [],
+  "scripts": [],
+  "boop": {}
+}
+```
 
-Para carregar quadros, você precisa adicioná-los ao cartão SD e especificar seus locais no arquivo `config.json`:  
-```json  
-{  
-  "frames": [  
-    {"pattern": "/bolinha/input-onlinegiftools-%d.png", "from": 1, "to": 155, "flip_left": false, "alias": "bolinha"},  
-    {"pattern": "/atlas/Atlas comissão expressão padrao frame %d Azul.png", "flip_left": true, "from": 1, "to": 4, "color_scheme_left": "rbg", "alias": "atlas"},  
-    {"pattern": "/atlas/Atlas comissão expressão Vergonha e boop frame %d.png", "flip_left": true, "from": 1, "to": 4, "color_scheme_left": "rbg", "alias": "vergonha"},  
-    {"pattern": "/atlas/trans%d.png", "flip_left": true, "from": 1, "to": 4, "color_scheme_left": "rbg", "alias": "vergonha_trans"},  
-    {"pattern": "/atlas/Atlas comissão expressão OWO frame %d.png", "flip_left": true, "from": 1, "to": 4, "color_scheme_left": "rbg", "alias": "owo"},  
-    {"pattern": "/atlas/Atlas comissão expressão cute pidao frame %d.png", "flip_left": true, "from": 1, "to": 3, "color_scheme_left": "rbg", "alias": "cute"},  
-    {"pattern": "/atlas/Atlas comissão expressão raiva frame %d.png", "flip_left": true, "from": 1, "to": 5, "color_scheme_left": "rbg", "alias": "anger"},  
-    {"pattern": "/atlas/Atlas comissão expressão apaixonado %d.png", "flip_left": true, "from": 1, "to": 2, "color_scheme_left": "rbg", "alias": "apaixonado"},  
-    {"pattern": "/atlas/Atlas comissão expressão surpreso frame %d.png", "flip_left": true, "from": 1, "to": 5, "color_scheme_left": "rbg", "alias": "surpreso"},  
-    {"pattern": "/atlas/Atlas comissão expressão feliz frame %d.png", "flip_left": true, "from": 1, "to": 4, "color_scheme_left": "rbg", "alias": "feliz"},  
-    {"pattern": "/atlas/Atlas comissão expressão morte frame %d.png", "flip_left": true, "from": 1, "to": 2, "color_scheme_left": "rbg", "alias": "morto"},  
-    {"file": "/atlas/Atlas comissão expressão tela azul.png", "flip_left": true, "alias": "tela_azul"}  
-  ]  
-}  
-```  
+> Modificar o arquivo `config.json` adicionando ou removendo arquivos forçará o sistema a reconstruir o [arquivo de bulk de frames](#bulk-file).
 
-> Modificar o arquivo `config.json` adicionando ou removendo arquivos forçará o sistema a reconstruir o [arquivo bulk de quadros](#arquivo-bulk).  
-
-Cada elemento no array `frames` pode ser o caminho do arquivo ou um objeto que descreve múltiplos arquivos.  
+Cada elemento no array `frames` pode ser tanto o caminho do arquivo quanto um objeto que descreve múltiplos arquivos. [Você pode usar esta página para ajudar.](https://onlinetexttools.com/printf-text)
 
 * **pattern** (string)  
-  Semelhante ao `printf`, que usa `%d` para especificar um número. Ao usar `pattern`, é necessário ter os campos `from` e `to`. Por exemplo:  
-  ```json  
-  {"pattern": "/bolinha/input-onlinegiftools-%d.png", "from": 1, "to": 155},  
-  ```  
-  Isso carregará `/bolinha/input-onlinegiftools-1.png` até `/bolinha/input-onlinegiftools-155.png`.  
+  Assim como no `printf`, que usa `%d` para especificar um número, ao usar `pattern`, é necessário ter os campos `from` e `to`. Por exemplo:  
+  Dado o exemplo:
+  ```json
+  {"pattern": "/bolinha/input-onlinegiftools-%d.png", "from": 1, "to": 155},
+  ```
+  Isso carregará `/bolinha/input-onlinegiftools-1.png` até `/bolinha/input-onlinegiftools-155.png`.
 
 * **flip_left** (bool)  
-  Devido à orientação dos painéis, pode ser necessário inverter horizontalmente o lado esquerdo.  
-
-* **alias** (string)  
-  As animações são basicamente como:  
-  ```  
-  Desenhar quadro 1  
-  esperar algum tempo  
-  Desenhar quadro 2  
-  ```  
-  Isso pode ser um problema se você codificar as animações e precisar adicionar um quadro no meio. Para resolver isso, você pode criar um alias para uma imagem ou um grupo de imagens. O alias é apenas um nome dado ao primeiro quadro do `pattern`. Funciona como um deslocamento.  
-
-* **color_scheme_left** (string)  
-  Se você precisar inverter um ou mais canais, use isso para fazê-lo.  
-
-## Expressões  
-
-Uma vez que os quadros são carregados e a execução começa, é trabalho dos [scripts Lua](#programação-em-lua) lidar com as expressões. As expressões são armazenadas em `expressions.json` na raiz do cartão SD.  
-```json  
-[  
-  {"name": "atlas", "use_alias": "atlas", "frames": [1,1,1,1,1,2,3,4,3,2,1], "duration": 150},  
-  {"name": "vergonha", "use_alias": "vergonha", "frames": [1,2,3,4], "duration": 100},  
-  {"name": "owo", "use_alias": "owo", "frames": [1,2,3,4,3,2,1], "duration": 250},  
-  {"name": "vergonha_transicao_in", "use_alias": "vergonha_trans", "frames":  [4,3,2,1], "duration": 100, "single": true},  
-  {"name": "vergonha_transicao_out", "use_alias": "vergonha_trans", "frames": [1,2,3,4], "duration": 100, "single": true},  
-  {"name": "cute", "use_alias": "cute", "frames": [1,2,3], "duration": 100},  
-  {"name": "anger", "use_alias": "anger", "frames": [1,1,1,2,3,4,5,4,3,2,1,1], "duration": 100},  
-  {"name": "apaixonado", "use_alias": "apaixonado", "frames": [1,2], "duration": 100},  
-  {"name": "surpreso", "use_alias": "surpreso", "frames":  [1,1,1,1,1,2,3,4,5,4,3,2,1], "duration": 100},  
-  {"name": "feliz", "use_alias": "feliz", "frames": [1,1,1,1,1,2,3,4,3,2,1], "duration": 150},  
-  {"name": "morto", "use_alias": "morto", "frames": [1,2], "duration": 100},  
-  {"name": "tela_azul", "use_alias": "tela_azul", "frames": [1], "duration": 100}  
-]  
-```  
-
-Cada elemento do array é uma expressão.  
+  Devido à orientação dos painéis, pode ser necessário inverter o lado esquerdo horizontalmente.
 
 * **name** (string)  
-  Não é obrigatório ter um nome, mas é uma forma de facilitar a chamada de uma animação e visualizar seu nome no menu.  
+  As animações são basicamente como:
+  ```
+  Desenhar frame 1
+  esperar um tempo
+  Desenhar frame 2
+  ```
+  Isso pode ser um problema se você codificar as animações diretamente e precisar adicionar um frame no meio. Para resolver isso, você pode criar um nome para uma imagem ou um grupo de imagens. O nome é apenas um identificador dado ao primeiro frame do `pattern`. Funciona como um offset.
 
-* **use_alias** (string)  
-  Imagine um cenário onde você tem 200 quadros e quer criar uma expressão com os quadros 50 a 55. Para isso, você preenche o objeto `frames` com 50 a 55. Mas se você adicionar um novo quadro no ID 40, isso bagunçará sua expressão existente. Para evitar isso, você define aliases na seção `frames` e depois usa o alias para adicionar um deslocamento.  
+* **color_scheme_left** (string)  
+  Se você precisar inverter um ou mais canais de cor, use isso para fazê-lo.
 
-  Por exemplo, digamos que seu alias é "angry". Usar `"use_alias": "angry"` e os quadros `[0, 1, 2, 3, 4, 5]` na verdade chamará os quadros 50 a 55 porque o alias "angry" começa no 50.  
+## Expressões
 
-* **frames** (array de int)  
-  O ID de cada quadro a ser exibido.  
+Uma vez que os frames são carregados e a execução começa, é trabalho dos [scripts Lua](#programming-in-lua) gerenciar as expressões.  
+As expressões são armazenadas em `expressions.json` na raiz do cartão SD.
+```json
+// Início do JSON //
+{
+  "frames": [],
+  "expressions": [
+    {"name": "normal", "frames": "frames_normal", "animation": [1,2,1,2,1,2,3,4,3], "duration": 250},
+    {"name": "sus", "frames": "frames_amogus", "animation": "auto", "duration": 200},
+    {"name": "noise", "frames": "frames_noise", "animation": "auto", "duration": 5, "onEnter": "ledsStackCurrentBehavior()  ledsSegmentBehavior(0, BEHAVIOR_NOISE) ledsSegmentBehavior(1, BEHAVIOR_NOISE)", "onLeave": "ledsPopBehavior()"},
+    {"name": "boop", "frames": "frames_boop", "animation": [1,2,3,2], "duration": 250},
+    {"name": "boop_begin", "frames": "frames_boop_transition", "animation": [1,2,3], "duration": 250, "transition": true},
+    {"name": "boop_end", "frames": "frames_boop_transition", "animation": [3,2,1], "duration": 250, "transition": true}
+  ],
+  "scripts": [],
+  "boop": {}
+}
+```
+
+Cada elemento do array é uma expressão.
+
+* **name** (string)  
+  Não é obrigatório ter um nome, mas é uma forma de facilitar a chamada de uma animação e visualizar seu nome no menu.
+
+* **frames** (string)  
+  O nome do grupo de frames que contém os frames desejados.
+
+* **animation** (array de int ou string="auto")  
+  O ID de cada frame a ser exibido. Quando definido como "auto", os frames serão adicionados automaticamente em sequência.
 
 * **duration** (int)  
-  A duração de cada quadro em milissegundos.  
+  A duração de cada frame.
 
-* **single** (bool)  
-  Isso força a animação a não se repetir. Uma vez que termina, ela volta para a animação anterior.  
+* **transition** (bool)  
+  Isso força a animação a não se repetir. Uma vez concluída, ela retorna à animação anterior se esta animação estava empilhada.
+
+* **onEnter** (string Lua)  
+  Quando a animação assume o controle da tela, executa um código Lua.
+
+* **onLeave** (string Lua)  
+  Quando a animação para de executar (por estar marcada como `transition=true` ou porque outra animação assumiu o controle), executa um código Lua.
 
 ## Pilha de Expressões  
 

@@ -219,7 +219,7 @@ bool LuaWrapper::Lua_dostring(const char *script) {
   error = luaL_loadstring(_state, script);
   if (error) {
       if (_errorCallback != nullptr){
-        _errorCallback(lua_tostring(_state, -1));
+        _errorCallback(lua_tostring(_state, -1), _state);
       }
       lua_pop(_state, 1);
       return false;
@@ -227,7 +227,7 @@ bool LuaWrapper::Lua_dostring(const char *script) {
 
   if (lua_pcall(_state, 0, 0, 0)) {
     if (_errorCallback != nullptr){
-        _errorCallback(lua_tostring(_state, -1));
+        _errorCallback(lua_tostring(_state, -1), _state);
       }
     lua_pop(_state, 1); 
     return false;

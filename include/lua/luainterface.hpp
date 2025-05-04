@@ -16,7 +16,7 @@ class LuaInterface{
         }
         bool DoString(const char *script);
         bool LoadFile(const char *functionName);
-        static void luaCallbackError(const char *errMsg);
+        static void luaCallbackError(const char *errMsg, lua_State *L);
         static bool HaltIfError;
     private:
         static std::string lastError;

@@ -86,12 +86,12 @@ bool FrameRepository::loadCachedData(){
         return false;
     }
 
-    if ( !json_doc.containsKey("frame_count") || !json_doc["frame_count"].is<int>() ) {
+    if ( !json_doc.containsKey("total_frame_count") || !json_doc["total_frame_count"].is<int>() ) {
         json_doc.clear();   
         Logger::Error("Cache structure is corrupted");
         return false;
     }
-    int frame_count = json_doc["frame_count"];
+    int frame_count = json_doc["total_frame_count"];
     if ( (bulkFile.size() % FILE_SIZE) != 0 || (bulkFile.size() / FILE_SIZE) != frame_count){
         json_doc.clear();   
         Logger::Error("Mismatched file bulk size and expected frame count: %d %d %d", (bulkFile.size() % FILE_SIZE), (bulkFile.size() / FILE_SIZE), frame_count);
@@ -128,9 +128,14 @@ bool FrameRepository::loadCachedData(){
         return false;
     }
 
-    JsonObject frame_alias = json_doc["frame_alias"];
-    for (JsonPair alias : frame_alias) {
-        m_offsets[alias.key().c_str()] = alias.value().as<int>();
+    JsonObject frame_name_obj = json_doc["frame_name"];
+    for (JsonPair name : frame_name_obj) {
+        m_offsets[name.key().c_str()] = name.value().as<int>();
+    }
+    
+    JsonObject frame_count_obj = json_doc["frame_count"];
+    for (JsonPair name : frame_count_obj) {
+        m_frameCountByAlias[name.key().c_str()] = name.value().as<int>();
     }
 
     return true;
@@ -211,13 +216,13 @@ void FrameRepository::composeBulkFile(){
     int fileIdx = 1;
     int jsonElement = 0;
 
-    std::string currentAlias;
+    std::string currentName;
     
     for (JsonVariant element : framesJson) {
         if (element.is<JsonObject>()) {
-            if ( element.containsKey("alias") &&  element["alias"].is<const char*>() ) {
-                const char *content = element["alias"];
-                currentAlias = std::string(content);
+            if ( element.containsKey("name") &&  element["name"].is<const char*>() ) {
+                const char *content = element["name"];
+                currentName = std::string(content);
                 m_offsets[content] = fileIdx-1;
             }
             if ( element.containsKey("file") &&  element["file"].is<const char*>() ) {
@@ -234,7 +239,7 @@ void FrameRepository::composeBulkFile(){
                 if (!decodeFile(filePath, flipe_left, color_scheme_left)){
                     FrameBufferCriticalError(&bulkFile, "Failed to decode %s at element %d", filePath, jsonElement);
                 }
-                m_frameCountByAlias[currentAlias]++;
+                m_frameCountByAlias[currentName]++;
                 fdesc.printf("%d = %s\n", fileIdx, filePath);
                 fileIdx++;
             }else{
@@ -257,7 +262,7 @@ void FrameRepository::composeBulkFile(){
                         FrameBufferCriticalError(&bulkFile, "Failed decode %s at element %d", headerFileName, jsonElement);
                     }
                     fdesc.printf("%d = %s\n", fileIdx, headerFileName);
-                    m_frameCountByAlias[currentAlias]++;
+                    m_frameCountByAlias[currentName]++;
                     fileIdx++;
                 }
             }
@@ -300,12 +305,18 @@ void FrameRepository::generateCacheFile() {
     SpiRamAllocator allocator;
     JsonDocument  json_doc(&allocator);
 
-    json_doc["frame_count"] = m_frameCount;
+    json_doc["total_frame_count"] = m_frameCount;
 
-    JsonObject frames = json_doc["frame_alias"].to<JsonObject>();
+    JsonObject frames_naming = json_doc["frame_name"].to<JsonObject>();
 
     for (const auto& pair : m_offsets) {
-        frames[pair.first.c_str()] = pair.second;
+        frames_naming[pair.first.c_str()] = pair.second;
+    }
+
+    JsonObject frames_counting = json_doc["frame_count"].to<JsonObject>();
+
+    for (const auto& pair : m_frameCountByAlias) {
+        frames_counting[pair.first.c_str()] = pair.second;
     }
 
     // Serialize JSON to file
