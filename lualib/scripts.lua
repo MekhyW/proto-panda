@@ -38,11 +38,17 @@ function _M.canRun(version)
 		return false, "Failed to parse script version"
 	end
 
-	if scriptRelease > pandaRelease then 
+
+	if pandaRelease > scriptRelease then 
+		return true
+	elseif scriptRelease > pandaRelease then 
 		return false, "Require firmware release to be "..scriptRelease..", but got "..pandaRelease..". Required version "..version
 	end
 
-	if scriptMajor > pandaMajor then 
+
+	if pandaMajor > scriptMajor then  
+		return true  
+	elseif scriptMajor > pandaMajor then 
 		return false, "Require firmware major to be "..scriptMajor..", but got "..pandaMajor..". Required version "..version
 	end
 

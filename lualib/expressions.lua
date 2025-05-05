@@ -179,6 +179,7 @@ function _M.SetExpression(id)
 		if _M.previousExpression and _M.previousExpression.onLeave then 
 			_M.previousExpression.onLeave()
 		end
+		setPanelManaged(false) --To avoid frame flicket
 		local current_id = aux.id 
 		setPanelAnimation(aux.animation, aux.duration, repeats, allDrop, current_id)
 		
@@ -189,6 +190,7 @@ function _M.SetExpression(id)
 		if _M.previousExpression and _M.previousExpression.outro then  
 			_M.StackExpression(_M.previousExpression.outro)
 		end
+		setPanelManaged(true)
 
 		if aux.onEnter then 
 			aux.onEnter()
