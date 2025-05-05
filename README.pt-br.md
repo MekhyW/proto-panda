@@ -185,14 +185,13 @@ O Protopanda suporta o protocolo de LED endereçável WS2812B e fornece um siste
 
 # Bluetooth  
 
-O Protopanda usa BLE. Até agora, está configurado para lidar com a pata de fursuit. Todas as informações, código-fonte e hardware podem ser encontrados aqui: [https://github.com/mockthebear/ble-fursuit-paw](https://github.com/mockthebear/ble-fursuit-paw)  
+O Protopanda usa BLE. No momento, toda interface com BLE esgtá hard coded para usar a [BLE fursuit paw](https://github.com/mockthebear/ble-fursuit-paw)  
+Existem planos para atualizar para um modo mais genérico no futuro. 
 ![Integração BLE](doc/integration.png)  
 
-Consiste em um dispositivo BLE com um acelerômetro/giroscópio LSM6DS3 de 3 eixos e 5 botões. Ele continua enviando as leituras dos sensores e botões a cada 50~100 ms.  
+Em resumo, é um controlador nrf52832 com um aceleromêtro LSM6DS3 de 3 eixos e adicional de 5 botões. Enquanto conectrado ele envia atualizações a cada 50~100ms do estado do acelerometro e dos botões.
 
-O UUID padrão da pata de fursuit BLE é `d4d31337-c4c3-c2c3-b4b3-b2b1a4a3a2a1`, e o serviço para o acelerômetro/giroscópio/botões é `d4d3afaf-c4c3-c2c3-b4b3-b2b1a4a3a2a1`.  
-
-Se você quiser mais de um controle remoto, é recomendado reprogramar o firmware de outro controlador e definir a parte `c4c3` do UUID para `c4c4` ou algo parecido.  
+O UUID padrão da pata de fursuit BLE é `d4d31337-c4c1-c2c3-b4b3-b2b1a4a3a2a1`, e o serviço para o acelerômetro/giroscópio/botões é `afaf` e `fafb`.  Os controles são padronizados, e funcionam em qualquer sistema protopanda, contanto que tenham os mesmos UUIDs
 
 Para definir ambos os dispositivos como aceitos, adicione no seu `onSetup`:  
 ```lua  
@@ -201,8 +200,6 @@ function onSetup()
     acceptBLETypes("d4d31337-c4c1-c2c3-b4b3-b2b1a4a3a2a1", "afaf", "fafb")
     beginBleScanning()  
 ```  
-
-Eu sei, eu sei... é estático e não tem flexibilidade para aceitar qualquer tipo de dispositivo BLE/serviços... Talvez no futuro~
 
 # Hardware  
 
