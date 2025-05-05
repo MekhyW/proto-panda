@@ -17,7 +17,7 @@ BleSensorHandlerData BleManager::remoteData[MAX_BLE_CLIENTS];
 
 void ClientCallbacks::onConnect(NimBLEClient* pClient) {
   Logger::Info("[BLE] Device Connected");
-};
+}
 
 
 void ClientCallbacks::onDisconnect(NimBLEClient* pClient) {
@@ -32,7 +32,7 @@ void ClientCallbacks::onDisconnect(NimBLEClient* pClient) {
     aux->connected = false;
   }
   xSemaphoreGive(g_remoteControls.m_mutex);
-};
+}
 
 bool ClientCallbacks::onConnParamsUpdateRequest(NimBLEClient* pClient, const ble_gap_upd_params* params) {
     if(params->itvl_min < 24) { /** 1.25ms units */
@@ -45,22 +45,22 @@ bool ClientCallbacks::onConnParamsUpdateRequest(NimBLEClient* pClient, const ble
         return false;
     }
     return true;
-};
+}
 
 uint32_t ClientCallbacks::onPassKeyRequest(){
     return 123456;
-};
+}
 
 bool ClientCallbacks::onConfirmPIN(uint32_t pass_key){
     return true;
-};
+}
 
 void ClientCallbacks::onAuthenticationComplete(ble_gap_conn_desc* desc){
     if(!desc->sec_state.encrypted) {
         NimBLEDevice::getClientByID(desc->conn_handle)->disconnect();
         return;
     }
-};
+}
 
 void AdvertisedDeviceCallbacks::onResult(NimBLEAdvertisedDevice* advertisedDevice) {
   if (bleObj->canLogDiscoveredClients()){
@@ -77,7 +77,7 @@ void AdvertisedDeviceCallbacks::onResult(NimBLEAdvertisedDevice* advertisedDevic
       return;
     }
   }
-};
+}
 
 
 

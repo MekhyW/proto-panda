@@ -10,8 +10,10 @@ local _M = {
 function _M.Load()
 	content = nil
 	local conf = configloader.Get()
+	local unHiddenExpresions = {}
 	for id ,b in pairs(conf.expressions) do 
 		local offset = nil 
+		b.id = id
 		if b.frame_offset and type(b.frames) == "number" then 
 			offset = b.frame_offset
 		elseif b.frames and type(b.frames) == "string" then 
@@ -69,6 +71,14 @@ function _M.Load()
 		end
 	end
 	_M.animations = conf.expressions
+
+	local res = {}
+	for __, data in pairs(_M.animations) do 
+		if not data.transition and not data.hidden then
+			res[#res+1] = data.name
+		end
+	end
+	_M.avaliableAnimations = res
 	return true
 end
 
@@ -131,7 +141,7 @@ function _M.Next(id)
 	if id > #_M.animations then 
 		id = 1
 	end
-	if _M.animations[id] and _M.animations[id].transition then 
+	if _M.animations[id] and (_M.animations[id].transition or _M.animations[id].hidden) then 
 		return _M.Next(id)
 	end
 	return _M.SetExpression(id)
@@ -148,7 +158,7 @@ function _M.Previous(id)
 	if id <= 0 then 
 		id = #_M.animations
 	end
-	if _M.animations[id] and _M.animations[id].transition then 
+	if _M.animations[id] and (_M.animations[id].transition  or _M.animations[id].hidden) then 
 		return _M.Previous(id)
 	end
 	return _M.SetExpression(id)
@@ -161,26 +171,29 @@ function _M.SetExpression(id)
 		local repeats = aux.repeats or -1
 		local allDrop = true
 		if aux.transition then 
-			repeats = 1
+			if repeats == -1 then  
+				repeats = 1
+			end
 			allDrop = false
 		end
 		if _M.previousExpression and _M.previousExpression.onLeave then 
 			_M.previousExpression.onLeave()
 		end
-		if tonumber(id) then
-			setPanelAnimation(aux.animation, aux.duration, repeats, allDrop, tonumber(id))
-		else 
-			setPanelAnimation(aux.animation, aux.duration, repeats, false)
-		end
-		if aux.onEnter then 
-			aux.onEnter()
-		end
+		local current_id = aux.id 
+		setPanelAnimation(aux.animation, aux.duration, repeats, allDrop, current_id)
+		
 		if aux.intro then
 			_M.StackExpression(aux.intro)
 		end
+
 		if _M.previousExpression and _M.previousExpression.outro then  
 			_M.StackExpression(_M.previousExpression.outro)
 		end
+
+		if aux.onEnter then 
+			aux.onEnter()
+		end
+
 		_M.previousExpression = aux
 	end
 end
@@ -202,26 +215,19 @@ function _M.StackExpression(id)
 	if aux then 
 		local repeats = aux.repeats or -1
 		if aux.transition then 
-			repeats = 1
+			if repeats == -1 then  
+				repeats = 1
+			end
 		end
-		if tonumber(id) then
-			setPanelAnimation(aux.animation, aux.duration, repeats, false, tonumber(id))
-		else 
-			setPanelAnimation(aux.animation, aux.duration, repeats, false)
-		end
+		local current_id = aux.id 
+		setPanelAnimation(aux.animation, aux.duration, repeats, false, current_id)
 	else
 		print("Unknown ID: "..tostring(id))
 	end
 end
 
 function _M.GetExpressions()
-	local res = {}
-	for __, data in pairs(_M.animations) do 
-		if not data.transition then
-			res[#res+1] = data.name
-		end
-	end
-	return res
+	return _M.avaliableAnimations
 end
 
 function _M.GetExpressionCount()

@@ -16,13 +16,13 @@ class BleManager;
 
 class BleSensorData{
   public:
-    BleSensorData():x(0),y(0),z(0),ax(0),ay(0),az(0),temp(0),controllerId(0){
+    BleSensorData():z(0),x(0),y(0),az(0),ax(0),ay(0),temp(0),controllerId(0){
       for (int i=0;i<MAX_BLE_BUTTONS;i++){
         buttons[i] = 0;
       }
     }
-    int16_t x,y,z;
-    int16_t ax,ay,az;
+    int16_t z,x,y;
+    int16_t az,ax,ay;
     int16_t temp;
     uint8_t buttons[MAX_BLE_BUTTONS+2];
     uint8_t controllerId;

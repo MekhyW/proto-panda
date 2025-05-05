@@ -178,8 +178,20 @@ After loading frames, [Lua scripts](#programming-in-lua) manage expressions. The
 - **`duration`** (int)  
   Frame display time (in milliseconds).  
 
+- **`hidden`** (string)  
+  Hide from menu selection 
+
+- **`intro`** (string)  
+  This parameter is a name of another animation that MUST be a `tranistion=true`. A animação será tocada sempre que essa expressão entrar
+
+- **`outro`** (string)  
+  This parameter is a name of another animation that MUST be a transition. This transition will play whenever the current animation stops running
+
 - **`transition`** (boolean)  
-  If `true`, the animation plays once and reverts to the previous state.  
+  If `true`, the animation plays once and reverts to the previous state.  This will force the animation to stack and not remove the previous one
+
+- **`repeats`** (int, default 1)
+  If the animation is the type of a `transition`, you can set this to force it to repeat N times
 
 - **`onEnter`** (string, Lua code)  
   Executes when the animation starts.  

@@ -26,7 +26,7 @@ class Logger{
         static bool writingLog;
         static bool started;
         static std::string m_filename;
-        static SemaphoreHandle_t mutex;;
+        static SemaphoreHandle_t mutex;
         static char buffer[1024];
 };
 

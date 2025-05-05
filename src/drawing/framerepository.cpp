@@ -368,8 +368,8 @@ bool FrameRepository::decodeFile(const char *pathName, bool flip, int color_mode
 File *FrameRepository::takeFile(){
     xSemaphoreTake(m_mutex, portMAX_DELAY);
     return &bulkFile;
-};
+}
 
 void FrameRepository::freeFile(){
     xSemaphoreGive(m_mutex);
-};
+}

@@ -124,28 +124,40 @@ As expressões são armazenadas em `expressions.json` na raiz do cartão SD.
   "boop": {}
 }
 ```
+#### Expression Properties  
 
-Cada elemento do array é uma expressão.
-
-* **name** (string)  
+- **`name`** (string, *optional*)  
   Não é obrigatório ter um nome, mas é uma forma de facilitar a chamada de uma animação e visualizar seu nome no menu.
 
-* **frames** (string)  
+- **`frames`** (string)  
   O nome do grupo de frames que contém os frames desejados.
 
-* **animation** (array de int ou string="auto")  
-  O ID de cada frame a ser exibido. Quando definido como "auto", os frames serão adicionados automaticamente em sequência.
+- **`animation`** (int[] or `"auto"`)  
+  - `int[]`: O ID de cada frame a ser exibido (e.g., `[1, 2, 3]`).  
+  - `"auto"`: Quando definido como "auto", os frames serão adicionados automaticamente em sequência. (e.g., `1, 2, 3...`).  
 
-* **duration** (int)  
+- **`duration`** (int)  
   A duração de cada frame.
 
-* **transition** (bool)  
-  Isso força a animação a não se repetir. Uma vez concluída, ela retorna à animação anterior se esta animação estava empilhada.
+- **`hidden`** (string)  
+  Hide from menu selection 
 
-* **onEnter** (string Lua)  
+- **`intro`** (string)  
+  Esse parâmetro deve ser o nom e de uma outra animação que DEVE ser uma `tranistion=true`. Essa animação de introdução irá tocar sempre que essa expressão entrar
+
+- **`outro`** (string)  
+  Esse parâmetro deve ser o nom e de uma outra animação que DEVE ser uma `tranistion=true`. Essa animação de encerramento irá tocar sempre que essa expressão sair de cena
+
+- **`transition`** (boolean)  
+  Transforma no tipo `transition`. Isso fará com que essa animação só toque uma vez e quando chamada, seja inserida na pilha de animações sem subistituir a atual. Apenas tocar uma vez e voltar para a anterior
+
+- **`repeats`** (int, default 1)
+  Se a expressão é do tipo `transition`, você pdoe fazer com que ela se repita N vezes
+
+- **`onEnter`** (string, Lua code)  
   Quando a animação assume o controle da tela, executa um código Lua.
 
-* **onLeave** (string Lua)  
+- **`onLeave`** (string, Lua code)  
   Quando a animação para de executar (por estar marcada como `transition=true` ou porque outra animação assumiu o controle), executa um código Lua.
 
 ## Pilha de Expressões  

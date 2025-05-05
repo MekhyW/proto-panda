@@ -25,15 +25,15 @@ void ToneESP32::noTone() {
 }
 
 s3servo::s3servo() {
-};
+}
 
 s3servo::~s3servo() {
     detach();
-};
+}
 
 void s3servo::detach() {
     ledcDetachPin(_pin);
-};
+}
 
 
 void s3servo::reattach(){
@@ -43,11 +43,12 @@ void s3servo::reattach(){
 void s3servo::_setAngleRange(int min, int max){
     _minAngle=min;
     _maxAngle=max;
-    };
+}
+
 void s3servo::_setPulseRange(int min, int max){
     _minPulseWidth=min;
     _maxPulseWidth=max;
-};
+}
 
 int8_t s3servo::attach(int pin, int channel , int min_angle, int max_angle, int min_pulse, int max_pulse)
 {
@@ -61,7 +62,7 @@ int8_t s3servo::attach(int pin, int channel , int min_angle, int max_angle, int 
     ledcSetup(channel, 50, MAX_BIT_NUM);
     ledcAttachPin(_pin, _channel);
     return 0;
-};
+}
 
 float s3servo::mapf(float x, float in_min, float in_max, float out_min, float out_max)
 {
@@ -78,8 +79,8 @@ void s3servo::write(float angle) {
         duty = _maxPulseWidth;
     }
     ledcWrite(_channel, duty);
-};
+}
 
 void s3servo::writeDuty(int duty) {
     ledcWrite(_channel, duty);
-};
+}
