@@ -12,7 +12,8 @@ uint16_t* Storage::tmpBuffer;
 
 
 bool Storage::Begin(){
-    if(!SD.begin(SPI_CS, SPI)){
+  SPI.setFrequency(80 * 1000 * 1000);
+    if(!SD.begin(SPI_CS, SPI, SPI_MAX_CLOCK)){
         return false;
     }   
     return true;

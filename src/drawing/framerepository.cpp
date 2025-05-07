@@ -70,6 +70,15 @@ void FrameRepository::extractModes(JsonVariant &element, bool &flip_left, int &c
 }
 
 bool FrameRepository::loadCachedData(){
+    File filerb = SD.open( "/rebuildfile", "r" );
+    if( filerb ) {
+        filerb.close();
+        Logger::Error("rebuildfile is found, forcing rebuild.");
+        SD.remove("/cache/cache.json");
+        SD.remove("/rebuildfile");
+        return false;
+    }
+
     File file = SD.open( "/cache/cache.json", "r" );
     if( !file ) {
         Logger::Error("There is no cache build");
@@ -144,12 +153,13 @@ bool FrameRepository::loadCachedData(){
 int FrameRepository::calculateMaxFrames(JsonArray &framesJson){
     
     int frameCount = 0;
-    int jsonElement;
+    int jsonElement = 0;
+    char miniHBuffer[1100];
     for (JsonVariant element : framesJson) {
         if (element.is<JsonObject>()) {
             if ( element.containsKey("file")){
                 frameCount++;
-            }else{
+            }else if (element.containsKey("pattern")){
                 if (!element.containsKey("pattern") || !element["pattern"].is<const char*>() ) {
                     FrameBufferCriticalError(&bulkFile, "Missing 'pattern' on element %d", jsonElement);
                 }
@@ -161,7 +171,31 @@ int FrameRepository::calculateMaxFrames(JsonArray &framesJson){
                 }
                 int from = element["from"];
                 int to = element["to"];
+                if (from > to){
+                    sprintf(miniHBuffer, "On frames, element %d from is 'bigger' than 'to'", jsonElement);
+                    OledScreen::CriticalFail(miniHBuffer);
+                    for(;;){}
+                }
                 frameCount += (to-from+1);
+            }else if (element.containsKey("files")){
+                if (!element["files"].is<JsonArray>()) {
+                    sprintf(miniHBuffer, "On frames, element %d 'files' is not an array", jsonElement);
+                    OledScreen::CriticalFail(miniHBuffer);
+                    for(;;){}
+                }
+                JsonArray filesArray = element["files"];
+                for (JsonVariant file : filesArray) {
+                    if (!file.is<const char*>()) {
+                        sprintf(miniHBuffer, "On frames, element %d contains non-string file in 'files' array", jsonElement);
+                        OledScreen::CriticalFail(miniHBuffer);
+                        for(;;){}
+                    }
+                    frameCount++;
+                }
+            }else{
+                sprintf(miniHBuffer, "On frames, element %d has no file loading defined", jsonElement);
+                OledScreen::CriticalFail(miniHBuffer);
+                for(;;){}
             }
         }else{
             frameCount++;
@@ -242,8 +276,7 @@ void FrameRepository::composeBulkFile(){
                 m_frameCountByAlias[currentName]++;
                 fdesc.printf("%d = %s\n", fileIdx, filePath);
                 fileIdx++;
-            }else{
-               
+            }else if ( element.containsKey("pattern") &&  element["pattern"].is<const char*>() ) {
                 const char* pattern = element["pattern"];
                 if (strlen(pattern) >= 800){
                     FrameBufferCriticalError(&bulkFile, "Pattern name too big on element %d", jsonElement);
@@ -265,19 +298,24 @@ void FrameRepository::composeBulkFile(){
                     m_frameCountByAlias[currentName]++;
                     fileIdx++;
                 }
+            }else if (element.containsKey("files")){
+                bool flipe_left = false; 
+                int color_scheme_left = 0;
+                extractModes(element, flipe_left, color_scheme_left);
+                
+                JsonArray filesArray = element["files"];
+                for (JsonVariant file : filesArray) {
+                    const char *filename = file;
+                    sprintf(miniHBuffer, "Copy frame %d\n%s", fileIdx+1, filename);
+                    OledScreen::DrawProgressBar(fileIdx+1, maxFrames+1, miniHBuffer);
+                    if (!decodeFile(filename, flipe_left, color_scheme_left)){
+                        FrameBufferCriticalError(&bulkFile, "Failed decode %s at element %d", filename, jsonElement);
+                    }
+                    fdesc.printf("%d = %s\n", fileIdx, filename);
+                    m_frameCountByAlias[currentName]++;
+                    fileIdx++;
+                }
             }
-        } else if (element.is<const char*>()) {
-            const char *filePath = element.as<const char*>();
-            if (strlen(filePath) >= 1024){
-                FrameBufferCriticalError(&bulkFile, "Path name is too big at element %d", filePath, jsonElement);
-            }
-            sprintf(miniHBuffer, "Copy frame %d\n%s", fileIdx+1, filePath);
-            OledScreen::DrawProgressBar(fileIdx+1, maxFrames, miniHBuffer);
-            if (!decodeFile(filePath, false, 0)){
-                FrameBufferCriticalError(&bulkFile, "Failed to decode %s at element %d", filePath, jsonElement);
-            }
-            fdesc.printf("%d = %s\n", fileIdx, filePath);
-            fileIdx++;
         }else{
             OledScreen::CriticalFail("Error on config.json. Expected in folders the element be an object or string.");
         }

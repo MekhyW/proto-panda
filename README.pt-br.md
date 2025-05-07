@@ -1,4 +1,7 @@
 # Protopanda  
+<p align="center">
+  <img src="doc/logoprotopanda.png" alt="Protopanda">
+</p>
 
 Protopanda é uma plataforma open source (firmware e hardware) para controlar protogens. A ideia é ser simples o suficiente para que você só precise de um pouco de conhecimento técnico para fazê-lo funcionar, mas ao mesmo tempo flexível para que uma pessoa com o mínimo conhecimento de Lua possa fazer quase de tudo.
 

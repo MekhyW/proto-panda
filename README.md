@@ -2,6 +2,10 @@
 
 __[Versão em portugues: 🇧🇷](README.pt-br.md)__
 
+<p align="center">
+  <img src="doc/logoprotopanda.png" alt="Protopanda">
+</p>
+
 Protopanda is a open source patform (firmware and hardware), for controling protogens. The idea is to be simple enough so all you need is just a bit of tech savy to make it work. But at the same time, flexible enough so an person with the minimum knowledge of lua can make amazing things.
 
 1. [Features](#features)
