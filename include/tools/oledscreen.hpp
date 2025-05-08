@@ -29,6 +29,7 @@ typedef enum InfoTypeShown_{
 class OledScreen{
     public:
         static bool Start();
+        static void DrawCircularProgress(int val, int max, const char *title);
         static void DrawProgressBar(int val, int max, const char *title);
         static void DrawWaitForPower(float volts);
         static void CriticalFail(const char *str);

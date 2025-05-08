@@ -212,6 +212,50 @@ void OledScreen::CriticalFail(const char *str){
     }
 }
 
+void OledScreen::DrawCircularProgress(int val, int max, const char *title) {
+    display.clearDisplay();
+    display.setTextColor(WHITE);
+    display.setTextSize(1);
+
+    display.setCursor(0, 0);
+    display.printf("%s", title);
+    
+    float percent = val/(float)max;
+    display.setCursor(0, 32);
+    display.printf("%2.2f %%", percent * 100.0f);
+
+    display.setCursor(0, 48);
+    char unitused[] = "K";
+    char unittotal[] = "K";
+    if (val > 1024*1024){
+        val = val / 1024;
+        unitused[0] = 'M';
+    }
+    if (max > 1024*1024){
+        max = max / 1024;
+        unittotal[0] = 'M';
+    }
+    display.printf("Used: %2.2f %sb\nTotal: %2.2f %sb", val/1024.0f, unitused, max/1024.0f, unittotal);
+    
+    const int radius = 20;
+    const int centerX = OLED_SCREEN_WIDTH-(radius*2)-1;
+    const int centerY = OLED_SCREEN_HEIGHT/2-4; 
+    
+
+    display.drawCircle(centerX, centerY, radius, WHITE);
+    if (percent > 0) {
+        int angle = 360 * percent;
+        
+        for (int i = 0; i < angle; i += 1) {
+            float rad = (i - 90) * PI / 180.0f; 
+            int x = centerX + radius * cos(rad);
+            int y = centerY + radius * sin(rad);
+            display.drawLine(centerX, centerY, x, y, WHITE);
+        }
+    }
+    display.display();
+}
+
 void OledScreen::DrawProgressBar(int val, int max, const char *title){
     display.clearDisplay();
     display.setTextColor(WHITE);

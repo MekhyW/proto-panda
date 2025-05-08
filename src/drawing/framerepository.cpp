@@ -40,6 +40,9 @@ bool FrameRepository::Begin(){
         composeBulkFile();
     }
 
+    OledScreen::DrawCircularProgress(FFat.usedBytes(), FFat.totalBytes(), "Flash usage");
+    delay(1000);
+
     return true;
 }
 // 1mb = 125000bytes
@@ -70,6 +73,7 @@ void FrameRepository::extractModes(JsonVariant &element, bool &flip_left, int &c
 }
 
 bool FrameRepository::loadCachedData(){
+
     File filerb = SD.open( "/rebuildfile", "r" );
     if( filerb ) {
         filerb.close();
@@ -328,6 +332,7 @@ void FrameRepository::composeBulkFile(){
     bulkFile = FFat.open("/frames.bulk", FILE_READ);
     generateCacheFile();
     Logger::Info("Finished writing data to internal storage. in %d uS", micros()-start);
+
 
     xSemaphoreGive(m_mutex);    
 }

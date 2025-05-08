@@ -2,7 +2,7 @@
 /*
     Avoid changing this vile, change the config.hpp instead if you need custom configuration
 */
-#define PANDA_VERSION "1.1.1"
+#define PANDA_VERSION "1.1.2"
 /*
     Pin to enable the buck converter.
     With this pin on HIGH the buck converter will start regulating the USB/Battery input
@@ -102,6 +102,7 @@
 #define EDIT_MODE_FTP_PASSWORD "wah"
 #define EDIT_MODE_FTP_PORT 21
 #define EDIT_MODE_LUA_PORT 7171
+#define EDIT_MODE_HTTP_PORT 80
 
 /* 
 Servos

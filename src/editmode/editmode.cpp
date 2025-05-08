@@ -15,8 +15,12 @@
 
 #include "editmode/ftp/FtpServer.h"
 
-FtpServer ftpSrv(EDIT_MODE_FTP_PORT);
-WiFiServer luaServer(EDIT_MODE_LUA_PORT);
+FtpServer *ftpSrv;
+WiFiServer *luaServer;
+
+
+
+
 extern LuaInterface g_lua;
 
 void _callback(FtpOperation ftpOperation, unsigned int freeSpace, unsigned int totalSpace)
@@ -147,6 +151,7 @@ void EditMode::DoBegin(bool useSSID)
       Logger::Info("Trying...");
     }
     Logger::Info("Connected!");
+    Logger::Info("http://%s:%d", WiFi.localIP().toString().c_str(), EDIT_MODE_HTTP_PORT);
     Logger::Info("FTP: %s:%d", WiFi.localIP().toString().c_str(), EDIT_MODE_FTP_PORT);
   }
   else
@@ -157,12 +162,16 @@ void EditMode::DoBegin(bool useSSID)
     Logger::Info("FTP: %s:%d", WiFi.softAPIP().toString().c_str(), EDIT_MODE_FTP_PORT);
   }
 
-  ftpSrv.setCallback(_callback);
-  ftpSrv.setTransferCallback(_transferCallback);
+  ftpSrv = new FtpServer(EDIT_MODE_FTP_PORT);
+  luaServer = new WiFiServer(EDIT_MODE_LUA_PORT);
+  
+
+  ftpSrv->setCallback(_callback);
+  ftpSrv->setTransferCallback(_transferCallback);
 
   Logger::Info("User: %s", EDIT_MODE_FTP_USER);
   Logger::Info("Password: %s",  EDIT_MODE_FTP_PASSWORD);
-  ftpSrv.begin(EDIT_MODE_FTP_USER, EDIT_MODE_FTP_PASSWORD);
+  ftpSrv->begin(EDIT_MODE_FTP_USER, EDIT_MODE_FTP_PASSWORD);
   m_running = true;
 
   if (!g_lua.Start()){
@@ -171,7 +180,8 @@ void EditMode::DoBegin(bool useSSID)
   }
   Logger::Info("Lua on port %d", EDIT_MODE_LUA_PORT);
   LuaInterface::HaltIfError = false;
-  luaServer.begin();
+  luaServer->begin();  
+  startWifiServer();
 }
 
 bool EditMode::IsOnEditMode(){
@@ -197,15 +207,16 @@ void handleClient(WiFiClient &client){
       }
 
     }
-    ftpSrv.handleFTP();
+    ftpSrv->handleFTP();
     delay(1);
   }
 }
 
-void EditMode::LoopEditMode(){
-  ftpSrv.handleFTP();
 
-  WiFiClient client = luaServer.available();
+void EditMode::LoopEditMode(){
+  ftpSrv->handleFTP();
+
+  WiFiClient client = luaServer->available();
   if (client){
     handleClient(client);
   }

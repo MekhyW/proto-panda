@@ -1,0 +1,427 @@
+#include "editmode/editmode.hpp"
+#include "tools/config_default.hpp"
+#include "SD.h"
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+
+AsyncWebServer *server;
+
+void serveDirectoryListing(AsyncWebServerRequest *request)
+{
+    String path = request->url();
+    if (!SD.exists(path))
+    {
+        path = "/";
+    }
+
+    String output = R"(
+  <html>
+  <head>
+    <title>Directory Listing</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+      h1 {
+        color: #333;
+        margin-bottom: 20px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      }
+      th, td {
+        border: 1px solid #ddd;
+        padding: 12px;
+        text-align: left;
+      }
+      th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+      }
+      tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+      tr:hover {
+        background-color: #f1f1f1;
+      }
+      .action-buttons {
+        display: flex;
+        gap: 20px;
+        margin-top: auto;
+      }
+      .action-box {
+        flex: 1;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      }
+      .action-box h3 {
+        margin-top: 0;
+        color: #333;
+      }
+      .form-row {
+        margin-bottom: 15px;
+      }
+      footer {
+        margin-top: 40px;
+        padding: 20px 0;
+        text-align: center;
+        color: #777;
+        font-size: 0.9em;
+        border-top: 1px solid #eee;
+        }
+      .form-row label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+      }
+      input[type="text"],
+      input[type="file"] {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+      .btn {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.2s;
+      }
+      .btn-primary {
+        background-color: #4CAF50;
+        color: white;
+      }
+      .btn-primary:hover {
+        background-color: #45a049;
+      }
+      .btn-danger {
+        background-color: #ff4444;
+        color: white;
+      }
+      .btn-danger:hover {
+        background-color: #cc0000;
+      }
+      .status {
+        margin-top: 10px;
+        padding: 8px;
+        border-radius: 4px;
+      }
+      .status-success {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .status-error {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      a {
+        color: #007bff;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Directory Listing: )";
+    output += path;
+    output += R"(</h1>
+    
+    <table>
+      <tr>
+        <th>Name</th>
+        <th>Size</th>
+        <th>Type</th>
+        <th>Action</th>
+      </tr>)";
+
+    File root = SD.open(path);
+    File file = root.openNextFile();
+    if (path == "/")
+    {
+        path = "";
+    }
+
+    while (file)
+    {
+        String filePath = path + "/" + String(file.name());
+        output += "<tr>";
+        output += "<td><a href='" + filePath + "'>" + String(file.name()) + "</a></td>";
+        output += "<td>" + String(file.size()) + "</td>";
+        output += "<td>" + String(file.isDirectory() ? "DIR" : "FILE") + "</td>";
+
+        if (String(file.name()) != "")
+        {
+            output += "<td><button class='btn btn-danger' onclick=\"deleteFile('" + filePath + "')\">Delete</button></td>";
+        }
+        else
+        {
+            output += "<td></td>";
+        }
+
+        output += "</tr>";
+        file = root.openNextFile();
+    }
+
+    output += R"(
+    </table>
+    
+    <div class="action-buttons">
+      <div class="action-box">
+        <h3>Upload File</h3>
+        <form id="uploadForm" method="post" action="/upload" enctype="multipart/form-data">
+          <input type="hidden" name="path" value=")";
+    output += path;
+    output += R"(">
+          <div class="form-row">
+            <label for="fileInput">Select file:</label>
+            <input type="file" name="file" id="fileInput" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Upload</button>
+        </form>
+        <div id="uploadStatus" class="status"></div>
+      </div>
+      
+      <div class="action-box">
+        <h3>Create Directory</h3>
+        <form id="createDirForm">
+          <input type="hidden" name="path" value=")";
+    output += path;
+    output += R"(">
+          <div class="form-row">
+            <label for="dirName">Directory name:</label>
+            <input type="text" name="dirName" id="dirName" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Create</button>
+        </form>
+        <div id="createDirStatus" class="status"></div>
+      </div>
+    </div>
+    
+    <script>
+      function deleteFile(path) {
+        if (confirm('Are you sure you want to delete ' + path + '?')) {
+          fetch('/delete?path=' + encodeURIComponent(path), { method: 'DELETE' })
+            .then(response => { 
+              if (response.ok) location.reload(); 
+              else response.text().then(text => alert('Error: ' + text));
+            })
+            .catch(error => console.error('Error:', error));
+        }
+      }
+      
+      function setStatus(element, message, isError) {
+        element.innerHTML = message;
+        element.className = isError ? 'status status-error' : 'status status-success';
+      }
+      
+      document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const statusDiv = document.getElementById('uploadStatus');
+        setStatus(statusDiv, 'Uploading...', false);
+        
+        fetch('/upload', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => {
+          if (response.ok) {
+            setStatus(statusDiv, 'Upload completed!', false);
+            setTimeout(() => location.reload(), 500);
+          } else {
+            response.text().then(text => setStatus(statusDiv, 'Error: ' + text, true));
+          }
+        })
+        .catch(error => {
+          setStatus(statusDiv, 'Error: ' + error, true);
+        });
+      });
+      
+      document.getElementById('createDirForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const statusDiv = document.getElementById('createDirStatus');
+        setStatus(statusDiv, 'Creating directory...', false);
+        
+        fetch('/mkdir', {
+          method: 'POST',
+          body: new URLSearchParams(formData)
+        })
+        .then(response => {
+          if (response.ok) {
+            setStatus(statusDiv, 'Directory created successfully!', false);
+            setTimeout(() => location.reload(), 500);
+          } else {
+            response.text().then(text => setStatus(statusDiv, 'Error: ' + text, true));
+          }
+        })
+        .catch(error => {
+          setStatus(statusDiv, 'Error: ' + error, true);
+        });
+      });
+    </script>
+    <footer>Protopanda v)";
+
+    output += PANDA_VERSION;
+
+    output += R"(</footer>
+  </body>
+  </html>)";
+
+    request->send(200, "text/html", output);
+}
+
+void createDirectories(String path)
+{
+    String currentPath = "";
+    int startIdx = 0;
+    int slashIdx;
+
+    while ((slashIdx = path.indexOf('/', startIdx)) != -1)
+    {
+        currentPath = path.substring(0, slashIdx);
+        if (!SD.exists(currentPath))
+        {
+            SD.mkdir(currentPath);
+        }
+        startIdx = slashIdx + 1;
+    }
+
+    if (!SD.exists(path))
+    {
+        SD.mkdir(path);
+    }
+}
+
+void startWifiServer()
+{
+    server = new AsyncWebServer(EDIT_MODE_HTTP_PORT);
+
+    server->on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+               { serveDirectoryListing(request); });
+
+    server->serveStatic("/", SD, "/", "no-cache").setCacheControl("max-age=0");
+
+    server->on("/mkdir", HTTP_POST, [](AsyncWebServerRequest *request)
+               {
+        if (request->hasParam("path", true) && request->hasParam("dirName", true)) {
+          String basePath = request->getParam("path", true)->value();
+          String dirName = request->getParam("dirName", true)->value();
+          String fullPath = basePath + "/" + dirName;
+          
+          fullPath.replace("//", "/");
+          
+          if (SD.exists(fullPath)) {
+            request->send(400, "text/plain", "Directory already exists");
+          } else if (SD.mkdir(fullPath)) {
+            request->send(200, "text/plain", "Directory created successfully");
+          } else {
+            request->send(500, "text/plain", "Failed to create directory");
+          }
+        } else {
+          request->send(400, "text/plain", "Missing parameters");
+        } });
+
+    server->on("/upload", HTTP_POST, [](AsyncWebServerRequest *request)
+               { request->send(200); }, [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
+               {
+        static File uploadFile;
+        static String filePath;
+        
+        if (!index) {
+          String path = "/";
+          if (request->hasParam("path", true)) {
+            path = request->getParam("path", true)->value();
+          }
+          filePath = path + "/" + filename;
+          
+          String dirPath = filePath.substring(0, filePath.lastIndexOf('/'));
+          if (dirPath.length() > 0 && !SD.exists(dirPath)) {
+            createDirectories(dirPath);
+          }
+          
+          uploadFile = SD.open(filePath, FILE_WRITE);
+          if (!uploadFile) {
+            Serial.println("Failed to open file for writing");
+            return;
+          }
+        }
+        
+        if (uploadFile && len) {
+          uploadFile.write(data, len);
+        }
+        
+        if (final && uploadFile) {
+          uploadFile.close();
+          request->send(200, "text/plain", "File uploaded successfully");
+        } });
+    server->on("/delete", HTTP_DELETE, [](AsyncWebServerRequest *request)
+               {
+        if (!request->hasParam("path")) {
+            request->send(400, "text/plain", "Missing path parameter");
+            return;
+        }
+    
+        String path = request->getParam("path")->value();
+        
+        if (!SD.exists(path)) {
+            request->send(404, "text/plain", "Path not found");
+            return;
+        }
+    
+        File file = SD.open(path);
+        
+        if (file.isDirectory()) {
+            // Check if directory is empty
+            bool isEmpty = true;
+            File entry = file.openNextFile();
+            while (entry) {
+                // Skip special "." and ".." entries if they exist
+                if (String(entry.name()) != "." && String(entry.name()) != "..") {
+                    isEmpty = false;
+                    break;
+                }
+                entry = file.openNextFile();
+            }
+            entry.close();
+    
+            if (!isEmpty) {
+                file.close();
+                request->send(400, "text/plain", "Directory is not empty");
+                return;
+            }
+    
+            file.close();
+            if (!SD.rmdir(path)) {
+                request->send(500, "text/plain", "Failed to delete directory");
+                return;
+            }
+        } else {
+            file.close();
+            if (!SD.remove(path)) {
+                request->send(500, "text/plain", "Failed to delete file");
+                return;
+            }
+        }
+    
+        request->send(200, "text/plain", "Deleted successfully"); });
+
+    server->onNotFound([](AsyncWebServerRequest *request)
+                       { serveDirectoryListing(request); });
+
+    server->begin();
+}

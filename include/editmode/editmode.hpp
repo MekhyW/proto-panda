@@ -1,6 +1,7 @@
 #pragma once 
 #include "config.hpp"
 
+void startWifiServer();
 
 class EditMode{
     public:
