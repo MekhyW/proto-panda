@@ -1,0 +1,1689 @@
+<!doctypehtml><html lang=en><meta charset=UTF-8><meta content="width=device-width,initial-scale=1"name=viewport><meta content="no-cache, no-store, must-revalidate"http-equiv=Cache-Control><meta content=no-cache http-equiv=Pragma><meta content=0 http-equiv=Expires><title>Protopanda expression editor</title><style>:root{--primary-color:#4a6fa5;--secondary-color:#f0f2f5;--button-color:#5a8fd3;--button-hover:#4a7bbf}body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;margin:0;padding:20px;box-sizing:border-box;background-color:var(--secondary-color);color:#333}header{text-align:center;margin-bottom:30px}h1{color:var(--primary-color);margin-bottom:10px}#image-container{margin:20px 0;border:2px solid var(--primary-color);border-radius:8px;overflow:hidden;align-items:center;box-shadow:0 4px 8px rgba(0,0,0,.1)}#image-display{width:256px;height:128px;display:block;align-items:center;image-rendering:pixelated}.top-panels{display:flex;justify-content:center;gap:20px;width:100%;max-width:1200px;margin-top:20px}.bottom-panel{width:100%;max-width:1200px;margin-top:20px}.panel{flex:1;min-height:300px;background:#fff;border-radius:8px;padding:20px;box-shadow:0 4px 8px rgba(0,0,0,.1);border:1px solid #ddd}.panel h2{color:var(--primary-color);margin-top:0;border-bottom:1px solid #eee;padding-bottom:10px}.button-container{display:flex;flex-direction:column;gap:12px;margin-top:20px}button{background-color:var(--button-color);color:#fff;border:none;padding:12px 20px;border-radius:6px;cursor:pointer;font-size:16px;transition:background-color .2s}button:hover{background-color:var(--button-hover)}button.secondary{background-color:#6c757d}button.secondary:hover{background-color:#5a6268}button.danger{background-color:#dc3545}button.danger:hover{background-color:#c82333}.expression-item{display:flex;justify-content:space-between;align-items:center;padding:10px;margin:10px 0;border:1px solid #eee;border-radius:4px;cursor:pointer;transition:background-color .2s}.expression-item:hover{background-color:#f8f9fa}.expression-item.active{background-color:#e7f1ff;border-color:#cfe2ff}.add-expression-btn{background-color:#28a745!important;margin-top:10px;width:100%}.add-expression-btn:hover{background-color:#218838!important}.expression-name{font-weight:700;margin-right:10px}.expression-details{font-size:.9em;color:#666}.expression-controls{display:flex;gap:5px}.expression-controls button{padding:2px 8px;font-size:12px;background-color:#6c757d;margin:0;border-radius:3px}.expression-controls button:hover{background-color:#5a6268}.expression-controls button.danger{background-color:#dc3545}.expression-controls button.danger:hover{background-color:#c82333}.expression-controls button:disabled{opacity:.5;cursor:not-allowed}.frame-editor{margin-top:20px;border:1px solid #ddd;border-radius:4px;padding:10px}.frames-container{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;min-height:50px;padding:10px;border:1px dashed #ccc;border-radius:4px}.frame-item{padding:5px;background-color:#e9ecef;border-radius:4px;cursor:grab;user-select:none;transition:transform .1s,background-color .2s;display:flex;flex-direction:column;align-items:center;width:80px;position:relative}.frame-item:hover{background-color:#d1e7ff}.frame-item.dragging{opacity:.5;transform:scale(1.1)}.frame-item.invalid{background-color:#ffe3e3;color:#dc3545}.frame-item img{width:64px;height:32px;image-rendering:pixelated;margin-bottom:5px}.remove-btn{position:absolute;top:-5px;right:2px;background-color:#dc3545;color:#fff;border:none;border-radius:0;width:1px;height:1px;font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .2s}.frame-item:hover .remove-btn{opacity:1}.available-frames{margin-top:20px}.edit-controls{margin-top:15px;display:flex;gap:10px}.edit-controls button{padding:5px 10px;font-size:14px}select{padding:5px;border-radius:4px;border:1px solid #ced4da}.animation-type-selector{margin-top:10px}.duration-control{margin-top:10px;display:flex;align-items:center;gap:10px}.duration-control input{width:80px;padding:5px;border-radius:4px;border:1px solid #ced4da}.full-edit-mode .panel:not(.editor-panel){display:none}.editor-panel{display:none;width:100%;max-width:1200px}.full-edit-mode .editor-panel{display:block}.drop-indicator{height:2px;background-color:var(--primary-color);margin:5px 0;position:relative}.drop-indicator::before{content:'';position:absolute;top:-4px;left:-4px;right:-4px;bottom:-4px;background-color:rgba(74,111,165,.1)}.frames-type-selector{margin-top:5px;border:1px solid #ddd;border-radius:4px;padding:10px}.frames-type-container{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}.frames-type-item{padding:10px;background-color:#e9ecef;border-radius:4px;cursor:pointer;transition:background-color .2s}.frames-type-item:hover{background-color:#d1e7ff}.frames-type-item.active{background-color:var(--button-color);color:#fff}.expression-name-input{margin-top:10px;width:100%;padding:8px;border:1px solid #ced4da;border-radius:4px}.transition-checkbox{margin-top:10px;display:flex;align-items:center;gap:10px}.transition-checkbox input{width:16px;height:16px}.frame-definition{margin-top:15px;padding:10px;border:1px solid #ddd;border-radius:4px}.frame-definition-item{padding:10px;margin:5px 0;background-color:#f8f9fa;border-radius:4px;display:flex;align-items:center;gap:15px;transition:background-color .2s}.frame-preview{width:64px;height:32px;image-rendering:pixelated;border:1px solid #ddd;background-color:#fff;object-fit:contain;flex-shrink:0}.frame-info{flex-grow:1}.frame-name{font-weight:700;margin-bottom:3px}.frame-count{font-size:.85em;color:#666}.frame-definition-form{display:flex;flex-direction:column;gap:10px;margin-top:10px}.frame-definition-form input{padding:8px;border:1px solid #ced4da;border-radius:4px}.frame-definition-form button{margin-top:5px}.right-panel-container{display:flex;flex-direction:column;gap:20px;height:20%}.right-panel-container .panel{flex:1;min-height:0;overflow:auto}.right-panel-container .panel:first-child{height:250px;flex:0 0 auto;overflow:auto}.right-panel-container .panel:last-child{flex:1;min-height:0;overflow:auto}.frame-editor-panel{display:none;margin-top:15px;padding:15px;border:1px solid #ddd;border-radius:4px;background-color:#f8f9fa}.frame-edit-mode .panel:not(.frame-editor-panel){display:none}.frame-editor-panel{display:none;width:100%;max-width:1200px;margin-top:20px}.frame-edit-mode .frame-editor-panel{display:block}.frame-definition-item button.danger{background-color:#dc3545;color:#fff;border:none;border-radius:4px;cursor:pointer;transition:background-color .2s;align-self:center}.frame-definition-item button.danger:hover{background-color:#c82333}.loader{border:5px solid #f3f3f3;border-top:5px solid #3498db;border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite;margin:0 auto}@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background-color:rgba(0,0,0,.5);display:flex;justify-content:center;align-items:center;z-index:1000;display:none;pointer-events:auto}.modal-content{background-color:#fff;padding:20px;border-radius:8px;width:80%;max-width:600px;max-height:80vh;overflow-y:auto;box-shadow:0 4px 8px rgba(0,0,0,.2)}progress{width:100%;height:20px;border-radius:10px;overflow:hidden}progress::-webkit-progress-bar{background-color:#f0f0f0;border-radius:10px}progress::-webkit-progress-value{background-color:var(--button-color);border-radius:10px;transition:width .5s ease}progress::-moz-progress-bar{background-color:var(--button-color);border-radius:10px}#deletion-progress-container{padding:15px;background-color:#f8f9fa;border-radius:4px;border:1px solid #ddd}#deletion-details{max-height:100px;overflow-y:auto;background-color:#fff;padding:5px;border-radius:3px;border:1px solid #eee}#json-viewer-modal .modal-content{background:#f8f8f8;border:1px solid #ddd}#json-display{background:#2d2d2d;color:#e0e0e0;padding:15px;border-radius:5px;font-family:'Courier New',monospace;font-size:14px;line-height:1.5;tab-size:2;overflow-x:auto;border:1px solid #444}#json-display .string{color:#7ec699}#json-display .number{color:#f08d49}#json-display .boolean{color:#cc99cd}#json-display .null{color:#f8c555}#json-display .key{color:#f44747}.selector-header{display:flex;align-items:center;gap:10px}.add-frame-class-btn{background-color:var(--button-color);color:#fff;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:14px;transition:background-color .2s;white-space:nowrap;margin-left:auto}.add-frame-class-btn:hover{background-color:var(--button-hover)}#full-animation-type{padding:5px;border-radius:4px;border:1px solid #ced4da;width:auto}.file-buttons-container{display:flex;justify-content:space-between;margin-top:10px}.file-buttons-container button{width:48%;margin:0}#preview-lua{margin-left:10px;background-color:#4caf50;color:#fff}#preview-lua:disabled{background-color:#ccc;cursor:not-allowed}</style><header><h1>Protopanda expression editor</h1><div id=image-container><center><img alt="Placeholder Image"id=image-display loading=lazy src=""></center></div></header><div class=top-panels><div class=panel><h2>Expressions</h2><div id=expressions-container><p>No config loaded. Expressions will appear here.</div></div><div class=right-panel-container><div class=panel><h2>Configuration Details</h2><div id=config-details><p>Select an expression to view details</div><div style=display:none id=frame-editor-container></div></div><div class=panel><h2>Frame groups <button id=add-frame-btn class=add-expression-btn style=float:right>+ Add frame class</button></h2><div id=frames-list><p>No frame definitions loaded</div></div></div></div><div class="panel frame-editor-panel"><h2>Frame group creator</h2><div class=frame-definition-form><div><label for=frame-class-name><b>Frame group Name:</b></label> <input id=frame-class-name placeholder="e.g. frames_normal"required></div><div style=margin-top:15px><label for=frame-files><b>Upload Frame Files (64×32 PNG only):</b></label> <input id=frame-files type=file accept=image/png,.png multiple style=display:none><div style=display:flex;justify-content:space-between;margin-top:10px><button onclick='document.getElementById("frame-files").click()'>Add frames</button> <button onclick=clearSelectedFiles()>Clear All Files</button></div><div style=margin-top:10px id=selected-files-list></div></div><div style=margin-top:15px><label><input id=flip-left-checkbox type=checkbox checked>Mirror image on second screen</label></div><div class=edit-controls style=margin-top:20px><button id=upload-frames-btn>Upload & Save</button> <button id=cancel-frame-btn class=secondary>Cancel</button></div><div style=margin-top:15px;display:none id=upload-progress><div style=display:flex;justify-content:space-between><span>Uploading files...</span> <span id=upload-count>0/0</span></div><progress id=upload-progress-bar max=100 style=width:100% value=0></progress><div style=margin-top:5px;font-size:.9em id=upload-status></div></div></div></div><div class="panel editor-panel"><h2>Expressions Editor</h2><div><b>Options:</b></div><div class=frames-type-selector><div><b>Name:</b></div><input id=expression-name-input class=expression-name-input placeholder="Expression name"><div class=transition-checkbox><input id=transition-checkbox type=checkbox> <label for=transition-checkbox><b>This animation a transition</b></label></div><div class=transition-checkbox><input id=hidden-checkbox type=checkbox> <label for=hidden-checkbox><b>Hide this expression from menu</b></label></div><div class=duration-control><label>Speed (ms):</label> <input id=full-animation-duration type=number min=50 step=50></div></div><div><b>Frames:</b></div><div class=frames-type-selector><div class=frames-type-selector><div><b>Frame groups:</b></div><div class=frames-type-container id=frames-type-container></div></div><div class=animation-type-selector><div class=selector-header><b>Frame ordering:</b> <select id=full-animation-type><option value=auto>Auto<option value=custom>Custom sequence</select> <button id=add-frame-btn-2 class=add-frame-class-btn>+ Add frame group</button></div></div><div class=frame-editor><div><b>Current Animation Frames:</b></div><div class=frames-container id=full-current-frames></div><div class=edit-controls><button id=full-apply-changes>Preview</button> <button id=full-clear-frames class=secondary>Clear</button></div></div><div class=available-frames><div><b>Available Frames (click to add):</b></div><div class=frames-container id=full-available-frames></div></div></div><div class=edit-controls><button id=full-apply-changes>Preview</button> <button id=full-save-changes>Save & Close</button> <button id=full-cancel-changes class=secondary>Cancel</button></div></div><div class="panel bottom-panel"><h2>Actions</h2><div class=button-container><button id=save-btn class=secondary>Save Config</button> <button id=view-json-btn class=secondary>View config.json</button></div></div><div class=modal-overlay id=deletion-modal><div class=modal-content><h2>Saving Configuration</h2><div id=deletion-progress-container><div style=display:flex;justify-content:space-between><span id=deletion-status>Preparing to save...</span> <span id=deletion-count></span></div><progress id=deletion-progress-bar max=0 style=width:100% value=0></progress><div id=deletion-details></div></div><div style=display:flex;justify-content:flex-end;margin-top:15px><button id=close-deletion-modal class=secondary style=display:none disabled>Close</button></div></div></div><div class=modal-overlay id=json-viewer-modal style=display:none><div class=modal-content style=width:90%;max-width:800px;position:relative><button id=copy-json-btn style=top:10px>Copy to Clipboard</button> <button id=edit-json-btn>Edit JSON</button> <button id=close-json-viewer style=top:10px;right:10px;height:45px;background-color:red>×</button><pre id=json-display style=margin:45></pre><div style=display:flex;justify-content:flex-end;margin-top:15px></div></div></div><div class=modal-overlay id=json-editor-modal style=display:none><div class=modal-content style=width:95vw;max-width:800px;height:90vh;display:flex;flex-direction:column;overflow:hidden;padding:20px><div style=display:flex;justify-content:space-between;margin-bottom:15px;align-items:center;flex-shrink:0><h2 style=margin:0>Edit JSON</h2><div><button id=cancel-json-btn class=secondary style=margin-right:10px>Cancel</button> <button id=save-json-btn>Save</button></div></div><textarea id=json-editor style="flex-grow:1;min-height:0;background:#2d2d2d;color:#e0e0e0;font-family:'Courier New',monospace;padding:15px;border:1px solid #444;border-radius:5px;resize:none;overflow-y:auto;margin:0"></textarea></div></div><div class=modal-overlay id=processing-modal style=display:none;background-color:rgba(0,0,0,.7)><div class=modal-content style=background-color:#fff;padding:20px;border-radius:8px;text-align:center><h2>Running preview</h2><div id=processing-status>Sending proot...</div><div style=margin-top:20px><div class=loader></div></div></div></div><script>let managedStarted = false;
+        let isProcessing = false;
+        let frameClassesModified = false;
+        let currentAnimation = null;
+        let config = null;
+        let activeExpressionIndex = 0;
+        let currentEditing = 0;
+        let currentExpression = null
+        let availableFrames = [];
+        let pendingFileDeletions = [];
+        let originalExpressionState = null;
+        let dropIndicator = null;
+
+
+
+        // Function to set and animate an expressionif
+        function setExpression(expressionIndex) {
+            activeExpressionIndex = expressionIndex;
+            if (currentAnimation) {
+                clearInterval(currentAnimation);
+                currentAnimation = null;
+            }
+
+            const expression = config.expressions[expressionIndex];
+            if (!expression) {
+                console.error('Expression not found at index:', expressionIndex);
+                return;
+            }
+
+            const framesDef = config.frames.find(f => f.name === expression.frames);
+            if (!framesDef) {
+                console.error('Frames not found:', expression.frames);
+                return;
+            }
+
+            let animationSequence = [];
+            if (expression.animation === 'auto') {
+                // Generate auto sequence
+                if (framesDef.files) {
+                    // Use files array length for auto sequence
+                    for (let i = 0; i < framesDef.files.length; i++) {
+                        animationSequence.push(i);
+                    }
+                } else {
+                    // Use from/to for auto sequence
+                    for (let i = framesDef.from; i <= framesDef.to; i++) {
+                        animationSequence.push(i);
+                    }
+                }
+            } else if (Array.isArray(expression.animation)) {
+                animationSequence = expression.animation;
+            } else {
+                console.error('Invalid animation format:', expression.animation);
+                return;
+            }
+
+            let currentFrameIndex = 0;
+            const imgDisplay = document.getElementById('image-display');
+            let isImageLoaded = true;
+
+            const animateFrame = () => {
+                if (!isImageLoaded) return;
+
+                const frameNumber = animationSequence[currentFrameIndex];
+                let imagePath;
+
+                if (framesDef.files) {
+                    // Use direct file path from array
+                    if (frameNumber >= 0 && frameNumber < framesDef.files.length) {
+                        imagePath = framesDef.files[frameNumber];
+                    } else {
+                        console.error('Invalid frame number:', frameNumber);
+                        currentFrameIndex = (currentFrameIndex + 1) % animationSequence.length;
+                        return;
+                    }
+                } else {
+                    // Use pattern-based path
+                    imagePath = sprintf(framesDef.pattern, frameNumber);
+                }
+
+                const result = imagePath.startsWith("/") ? imagePath.slice(1) : imagePath;
+
+                isImageLoaded = false;
+
+                imgDisplay.onload = () => {
+                    isImageLoaded = true;
+                };
+
+                imgDisplay.onerror = () => {
+                    isImageLoaded = true;
+                    console.error('Failed to load image:', result);
+                };
+
+                imgDisplay.src = result;
+                currentFrameIndex = (currentFrameIndex + 1) % animationSequence.length;
+            };
+
+            animateFrame();
+
+            if (expression.duration && expression.duration > 0) {
+                currentAnimation = setInterval(animateFrame, expression.duration);
+            }
+        }
+
+        function updateActiveExpression() {
+            document.querySelectorAll('.expression-item').forEach((item, index) => {
+                if (index === activeExpressionIndex) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+
+        function updateExpressionDetails(expressionIndex) {
+            const expression = config.expressions[expressionIndex];
+
+            const detailsContainer = document.getElementById('config-details');
+            const editorContainer = document.getElementById('frame-editor-container');
+
+            let detailsHTML = `
+        <div class="expression-detail">
+            <div><strong>Name:</strong> ${expression.name || 'Unnamed'}</div>
+            <div><strong>Frames:</strong> ${expression.frames}</div>
+            <div><strong>Duration:</strong> ${expression.duration || 'Default'} ms</div>
+            <div><strong>Transition:</strong> ${expression.transition ? 'Yes' : 'No'}</div>
+            <div><strong>Hidden:</strong> ${expression.hidden ? 'Yes' : 'No'}</div>
+    `;
+
+            if (Array.isArray(expression.animation)) {
+                detailsHTML += `<div><strong>Animation Sequence:</strong> [${expression.animation.join(', ')}]</div>`;
+            } else {
+                detailsHTML += `<div><strong>Animation Type:</strong> ${expression.animation}</div>`;
+            }
+
+            detailsHTML += `<button id="edit-frames" style="margin-top: 10px;">Edit Frames</button></div>`; //<button id="preview-lua" onclick="sendPreviewLua(` + expressionIndex + `)">Preview on Proto</button>
+            detailsContainer.innerHTML = detailsHTML;
+
+            // Set up edit button
+            document.getElementById('edit-frames').addEventListener('click', () => {
+                document.body.classList.add('full-edit-mode');
+                showFullFrameEditor(expressionIndex);
+            });
+        }
+
+        function createFrameElement(frameNumber, framesDef, isFullEditor = false, addRmButton = false) {
+            const frameElement = document.createElement('div');
+            frameElement.className = 'frame-item';
+            frameElement.draggable = true;
+            frameElement.dataset.frame = frameNumber;
+
+            let imagePath;
+            if (framesDef.files) {
+                // Use direct files array if available
+                if (frameNumber >= 0 && frameNumber < framesDef.files.length) {
+                    imagePath = framesDef.files[frameNumber];
+                } else {
+                    // Invalid frame number
+                    frameElement.classList.add('invalid');
+                    imagePath = '';
+                }
+            } else if (framesDef.pattern) {
+                // Fall back to pattern-based approach
+                imagePath = sprintf(framesDef.pattern, frameNumber);
+            } else {
+                // No valid frame source
+                frameElement.classList.add('invalid');
+                imagePath = '';
+            }
+
+            // Rest of the function remains the same...
+            const result = imagePath.startsWith("/") ? imagePath.slice(1) : imagePath;
+
+            var str = `
+        <img src="${result}" alt="Frame ${frameNumber}" loading="lazy" onerror="this.style.display='none'">
+        <span>${frameNumber}</span>`;
+
+            if (addRmButton) {
+                str = str + `<button class="remove-btn">×</button>`
+            }
+            frameElement.innerHTML = str;
+
+            if (addRmButton) {
+                frameElement.querySelector('.remove-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    frameElement.remove();
+                });
+            } else {
+                frameElement.addEventListener('click', (e) => {
+                    e.currentTarget = frameElement;
+                    e.frameNumber = frameNumber;
+                    handlePressAddFrame(e);
+                });
+            }
+
+            return frameElement;
+        }
+
+        function showFullFrameEditor(expressionIndex) {
+            currentEditing = expressionIndex
+            const expression = config.expressions[expressionIndex];
+            currentExpression = expression
+            const currentFramesContainer = document.getElementById('full-current-frames');
+            const availableFramesContainer = document.getElementById('full-available-frames');
+            const animationTypeSelect = document.getElementById('full-animation-type');
+            const durationInput = document.getElementById('full-animation-duration');
+            const framesTypeContainer = document.getElementById('frames-type-container');
+            const expressionNameInput = document.getElementById('expression-name-input');
+            const transitionCheckbox = document.getElementById('transition-checkbox');
+            const hiddenCheckbox = document.getElementById('hidden-checkbox');
+
+            // Save original state for cancel
+            originalExpressionState = JSON.parse(JSON.stringify(expression));
+
+            // Set initial values
+            expressionNameInput.value = expression.name || '';
+            transitionCheckbox.checked = expression.transition || false;
+            hiddenCheckbox.checked = expression.hidden || false;
+
+            // Get frame definition
+            const framesDef = config.frames.find(f => f.name === expression.frames);
+            if (!framesDef) return;
+
+            // Set animation type
+            animationTypeSelect.value = Array.isArray(expression.animation) ? 'custom' : 'auto';
+            durationInput.value = expression.duration || '';
+
+            // Populate frames type selector
+            framesTypeContainer.innerHTML = '';
+            config.frames.forEach(frameType => {
+                const typeElement = document.createElement('div');
+                typeElement.className = `frames-type-item ${frameType.name === expression.frames ? 'active' : ''}`;
+                typeElement.textContent = frameType.name;
+                typeElement.dataset.framesType = frameType.name;
+
+                typeElement.addEventListener('click', () => {
+                    // Update active frames type
+                    document.querySelectorAll('.frames-type-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    typeElement.classList.add('active');
+
+                    // Update expression frames type
+                    expression.frames = frameType.name;
+
+
+
+                    // If auto mode, regenerate current frames
+                    if (animationTypeSelect.value === 'auto') {
+                        generateAutoFrames(expression, true);
+                    } else {
+                        // Clear current frames when changing frame type in custom mode
+                        currentFramesContainer.innerHTML = '';
+                    }
+                    // Regenerate available frames
+                    generateAvailableFrames(expression, true);
+                });
+
+                // Make draggable for reordering
+                typeElement.draggable = true;
+                typeElement.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', frameType.name);
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+
+                framesTypeContainer.appendChild(typeElement);
+            });
+            // Generate frames
+            generateAvailableFrames(expression, true);
+
+            if (animationTypeSelect.value === 'auto') {
+                generateAutoFrames(expression, true);
+            } else {
+                generateCustomFrames(expression, true);
+            }
+
+
+            // Set up controls
+            document.getElementById('full-clear-frames').addEventListener('click', () => {
+                currentFramesContainer.innerHTML = '';
+            });
+
+            // Handle animation type change
+            animationTypeSelect.addEventListener('change', (e) => {
+                if (e.target.value === 'auto') {
+                    generateAutoFrames(expression, true);
+                } else {
+                    generateCustomFrames(expression, true);
+                }
+            });
+
+            document.getElementById('full-apply-changes').addEventListener('click', () => {
+                saveExpressionChanges(expression, true, false);
+            });
+
+            document.getElementById('full-save-changes').addEventListener('click', () => {
+                saveExpressionChanges(expression, true, true);
+            });
+
+            document.getElementById('full-cancel-changes').addEventListener('click', () => {
+                closeFullEditor(true);
+            });
+        }
+
+        function generateAvailableFrames(expression, isFullEditor = false) {
+            const container = isFullEditor ?
+                document.getElementById('full-available-frames') :
+                document.getElementById('available-frames');
+            const framesDef = config.frames.find(f => f.name === expression.frames);
+
+            if (!framesDef) return;
+
+            container.innerHTML = '';
+
+            if (framesDef.files) {
+                // Use files array directly
+                for (let i = 0; i < framesDef.files.length; i++) {
+                    const frameElement = createFrameElement(i, framesDef, isFullEditor, false);
+                    container.appendChild(frameElement);
+                }
+            } else {
+                // Fall back to from/to pattern
+                for (let i = framesDef.from; i <= framesDef.to; i++) {
+                    const frameElement = createFrameElement(i, framesDef, isFullEditor, false);
+                    container.appendChild(frameElement);
+                }
+            }
+        }
+
+        function generateAutoFrames(expression, isFullEditor = false) {
+            const container = isFullEditor ?
+                document.getElementById('full-current-frames') :
+                document.getElementById('current-frames');
+            const framesDef = config.frames.find(f => f.name === expression.frames);
+
+            if (!framesDef) return;
+
+            container.innerHTML = '';
+
+            if (framesDef.files) {
+                // Create frames for each file in the array
+                for (let i = 0; i < framesDef.files.length; i++) {
+                    const frameElement = createFrameElement(i, framesDef, isFullEditor, true);
+                    container.appendChild(frameElement);
+                }
+            } else {
+                // Fall back to from/to pattern
+                for (let i = framesDef.from; i <= framesDef.to; i++) {
+                    const frameElement = createFrameElement(i, framesDef, isFullEditor, true);
+                    container.appendChild(frameElement);
+                }
+            }
+        }
+
+        function generateCustomFrames(expression, isFullEditor = false) {
+            const container = isFullEditor ?
+                document.getElementById('full-current-frames') :
+                document.getElementById('current-frames');
+            const framesDef = config.frames.find(f => f.name === expression.frames);
+
+            if (!framesDef) return;
+
+            container.innerHTML = '';
+
+            if (Array.isArray(expression.animation)) {
+                expression.animation.forEach(frame => {
+                    const frameElement = createFrameElement(frame, framesDef, isFullEditor, true);
+
+                    // Mark invalid frames
+                    if (framesDef.files) {
+                        if (frame < 0 || frame >= framesDef.files.length) {
+                            frameElement.classList.add('invalid');
+                        }
+                    } else {
+                        if (frame < framesDef.from || frame > framesDef.to) {
+                            frameElement.classList.add('invalid');
+                        }
+                    }
+
+                    container.appendChild(frameElement);
+                });
+            }
+        }
+
+
+        function closeFullEditor(skipSave = false) {
+            if (skipSave) {
+                const expression = config.expressions[currentEditing];
+                // If this was a new expression and still has default name, remove it
+                if (expression.isNew) {
+                    config.expressions.splice(currentEditing, 1);
+                    // Reset active expression to the first one if available
+                    activeExpressionIndex = 0;
+                } else {
+                    // Otherwise restore original state
+                    config.expressions[currentEditing] = originalExpressionState;
+                }
+            }
+            renderExpressions();
+            document.body.classList.remove('full-edit-mode');
+        }
+
+        function saveExpressionChanges(expression, isFullEditor = false, shouldClose = false) {
+            const currentFramesContainer = isFullEditor ?
+                document.getElementById('full-current-frames') :
+                document.getElementById('current-frames');
+            const animationTypeSelect = isFullEditor ?
+                document.getElementById('full-animation-type') :
+                document.getElementById('animation-type');
+            const durationInput = isFullEditor ?
+                document.getElementById('full-animation-duration') :
+                document.getElementById('animation-duration');
+            const expressionNameInput = isFullEditor ?
+                document.getElementById('expression-name-input') :
+                null;
+            const transitionCheckbox = isFullEditor ?
+                document.getElementById('transition-checkbox') :
+                null;
+            const hiddenCheckbox = isFullEditor ?
+                document.getElementById('hidden-checkbox') :
+                null;
+
+            const activeItem = document.querySelector('.frames-type-item.active');
+            if (!activeItem) {
+                alert('Please select a frame group');
+                return;
+            }
+            const activeFramesType = activeItem.dataset.framesType;
+
+            // Get frame definition
+            const framesDef = config.frames.find(f => f.name === activeFramesType);
+            if (!framesDef) {
+                alert('Selected frame group not found');
+                return;
+            }
+
+            if (isFullEditor && hiddenCheckbox) {
+                expression.hidden = hiddenCheckbox.checked;
+            }
+
+            // Save name if in full editor
+            if (isFullEditor && expressionNameInput) {
+                expression.name = expressionNameInput.value || '';
+            }
+
+            // Save transition if in full editor
+            if (isFullEditor && transitionCheckbox) {
+                expression.transition = transitionCheckbox.checked;
+            }
+
+            expression.frames = activeFramesType;
+
+            // Save animation type
+            if (animationTypeSelect.value === 'auto') {
+                expression.animation = 'auto';
+            } else {
+                // Get custom sequence
+                const frames = Array.from(currentFramesContainer.children).map(el => {
+                    return parseInt(el.dataset.frame);
+                });
+
+                // Validate frames
+                const invalidFrames = frames.filter(frame => {
+                    if (framesDef.files) {
+                        return frame < 0 || frame >= framesDef.files.length;
+                    } else {
+                        return frame < framesDef.from || frame > framesDef.to;
+                    }
+                });
+
+                if (invalidFrames.length > 0) {
+                    let rangeText;
+                    if (framesDef.files) {
+                        rangeText = `0-${framesDef.files.length - 1}`;
+                    } else {
+                        rangeText = `${framesDef.from}-${framesDef.to}`;
+                    }
+
+                    alert(`Invalid frames detected: ${invalidFrames.join(', ')}\nThese frames are outside the valid range (${rangeText}).`);
+                    return;
+                }
+
+                expression.animation = frames;
+            }
+
+            expression.duration = durationInput.value ? parseInt(durationInput.value) : undefined;
+            config.expressions[currentEditing] = JSON.parse(JSON.stringify(expression));
+
+            // Update display and restart animation
+            if (!isFullEditor) {
+                updateExpressionDetails(currentEditing);
+            }
+            setExpression(currentEditing);
+
+            // Close editor if requested
+            if (shouldClose) {
+                closeFullEditor();
+                renderExpressions();
+            }
+        }
+
+        function handlePressAddFrame(e) {
+            preventDefault(e);
+            console.log(e)
+
+            const container = document.getElementById('full-current-frames')
+
+            container.appendChild(e.currentTarget.cloneNode(true));
+
+            const animationTypeSelect = document.getElementById('full-animation-type');
+
+
+            if (animationTypeSelect.value === 'auto') {
+                animationTypeSelect.value = 'custom';
+
+                //currentExpression.animation = originalExpressionState.animation
+
+                animationTypeSelect.dispatchEvent(new Event('change'));
+                generateAutoFrames(currentExpression, true);
+                container.appendChild(e.currentTarget.cloneNode(true));
+            }
+        }
+
+        function preventDefault(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function sprintf(pattern, ...args) {
+            let i = 0;
+            return pattern.replace(/%(\d*)0?([dfsu])/g, (match, width, type) => {
+                if (i >= args.length) return '';
+
+                const value = args[i++];
+                let result = String(value);
+
+                // Handle numeric padding
+                if (width && type === 'd' && !isNaN(value)) {
+                    result = value.toString().padStart(parseInt(width), '0');
+                }
+
+                return result;
+            });
+        }
+
+        function addNewExpression() {
+            if (!config) {
+                console.error('No config loaded');
+                return;
+            }
+
+            const newExpression = {
+                name: 'New Expression',
+                frames: config.frames.length > 0 ? config.frames[0].name : '',
+                animation: 'auto',
+                duration: 500,
+                transition: false,
+                isNew: true
+            };
+
+            // Add to config
+            config.expressions.push(newExpression);
+
+            // Re-render expressions
+            renderExpressions();
+
+            // Set the new expression as active and open editor
+            const newIndex = config.expressions.length - 1;
+            setExpression(newIndex);
+            updateExpressionDetails(newIndex);
+
+            // Open editor
+            document.body.classList.add('full-edit-mode');
+            showFullFrameEditor(newIndex);
+        }
+
+        function renderExpressions() {
+            if (!config || !config.expressions) return;
+
+            const container = document.getElementById('expressions-container');
+            container.innerHTML = '';
+
+            config.expressions.forEach((expression, index) => {
+                const expressionElement = document.createElement('div');
+                expressionElement.className = 'expression-item';
+                expressionElement.innerHTML = `
+            <div class="expression-name">${expression.name || 'Unnamed Expression'}</div>
+            <div class="expression-controls">
+                <button class="move-up-btn" ${index === 0 ? 'disabled' : ''}>↑</button>
+                <button class="move-down-btn" ${index === config.expressions.length - 1 ? 'disabled' : ''}>↓</button>
+                <button class="danger delete-btn">Delete</button>
+            </div>
+        `;
+
+                expressionElement.addEventListener('click', (e) => {
+                    // Don't set expression if clicking on controls
+                    if (!e.target.classList.contains('move-up-btn') &&
+                        !e.target.classList.contains('move-down-btn') &&
+                        !e.target.classList.contains('delete-btn')) {
+                        setExpression(index);
+                        updateExpressionDetails(index);
+                    }
+                });
+
+                // Add control event listeners
+                expressionElement.querySelector('.move-up-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    moveExpression(index, 'up');
+                });
+
+                expressionElement.querySelector('.move-down-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    moveExpression(index, 'down');
+                });
+
+                expressionElement.querySelector('.delete-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteExpression(index);
+                });
+
+                container.appendChild(expressionElement);
+            });
+
+            // Add "Add New Expression" button
+            const addButton = document.createElement('button');
+            addButton.className = 'add-expression-btn';
+            addButton.textContent = '+ Add New Expression';
+            addButton.addEventListener('click', addNewExpression);
+            container.appendChild(addButton);
+
+            // Set the first expression as active by default if available
+            if (config.expressions.length > 0) {
+                setExpression(0);
+            }
+        }
+
+
+
+        function showProcessingModal(show) {
+            const modal = document.getElementById('processing-modal');
+            if (show) {
+                modal.style.display = 'flex';
+                document.body.style.pointerEvents = 'none';
+                modal.style.pointerEvents = 'auto';
+            } else {
+                modal.style.display = 'none';
+                document.body.style.pointerEvents = 'auto';
+            }
+        }
+
+
+        async function sendPreviewLua(expressionIndex) {
+            if (isProcessing) return;
+            isProcessing = true;
+
+            try {
+                showProcessingModal(true);
+
+                const expression = config.expressions[expressionIndex];
+                if (!expression || !expression.frames) {
+                    throw new Error('Invalid expression or missing frames');
+                }
+
+                // Get the target frame duration (default to 50ms if not specified)
+                const targetFrameDuration = expression.duration || 50;
+
+                // Find the frame class definition
+                const frameDef = config.frames.find(f => f.name === expression.frames);
+                if (!frameDef) {
+                    throw new Error('Frame definition not found');
+                }
+
+                // Calculate the offset for this frame class
+                let classOffset = 0;
+                for (const f of config.frames) {
+                    if (f.name === expression.frames) break;
+                    if (f.files) {
+                        classOffset += f.files.length;
+                    } else if (f.pattern && f.from !== undefined && f.to !== undefined) {
+                        classOffset += (f.to - f.from );
+                    }
+                }
+
+                let frameNumbers = [];
+                if (expression.animation === 'auto') {
+                    if (frameDef.files) {
+                        frameNumbers = Array.from({ length: frameDef.files.length }, (_, i) => classOffset + i);
+                    } else if (frameDef.pattern && frameDef.from !== undefined && frameDef.to !== undefined) {
+                        frameNumbers = Array.from(
+                            { length: frameDef.to - frameDef.from },
+                            (_, i) => classOffset + frameDef.from + i
+                        );
+                    }
+                } else if (Array.isArray(expression.animation)) {
+                    frameNumbers = expression.animation.map(n => classOffset + n);
+                }
+
+                if (frameNumbers.length === 0) {
+                    throw new Error('No frames available for animation');
+                }
+
+                if (!managedStarted) {
+                    document.getElementById('processing-status').innerHTML = 'Starting panels';
+                    const startTime = performance.now();
+                    await fetch('/lua', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `body=${encodeURIComponent('startPanels();setPanelBrightness(64);setPanelManaged(true);')}`
+                    });
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    managedStarted = true;
+                }
+
+                // Show initial message
+                document.getElementById('processing-status').innerHTML = '';
+
+                // Create a flag to stop the animation
+                let stopAnimation = false;
+                const stopButton = document.createElement('button');
+                stopButton.textContent = 'Stop';
+                stopButton.style.marginTop = '10px';
+                stopButton.onclick = () => { stopAnimation = true; };
+                document.getElementById('processing-status').appendChild(stopButton);
+
+                // Display each frame in sequence with precise timing
+                let currentFrameIndex = 0;
+                const displayNextFrame = async () => {
+                    if (stopAnimation || currentFrameIndex >= frameNumbers.length) {
+                        // Clean up
+                        await fetch('/lua', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `body=${encodeURIComponent('clearPanelBuffer();flipPanelBuffer()')}`
+                        });
+                        showProcessingModal(false);
+                        isProcessing = false;
+                        return;
+                    }
+
+                    const frameStartTime = performance.now();
+                    const frameId = frameNumbers[currentFrameIndex];
+
+                    try {
+                        await fetch('/lua', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `body=${encodeURIComponent(`drawPanelFace(${frameId});flipPanelBuffer();`)}`
+                        });
+                    } catch (e) {
+                        console.error('Frame send error:', e);
+                    }
+
+                    const frameEndTime = performance.now();
+                    const frameElapsed = frameEndTime - frameStartTime;
+                    const delay = Math.max(5, targetFrameDuration - frameElapsed);
+
+                    currentFrameIndex = (currentFrameIndex + 1) % frameNumbers.length;
+                    setTimeout(displayNextFrame, delay);
+                };
+
+                // Start the animation
+                displayNextFrame();
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('processing-status').textContent = 'Error: ' + error.message;
+                setTimeout(() => {
+                    showProcessingModal(false);
+                    isProcessing = false;
+                }, 3000);
+            }
+        }
+
+        function moveExpression(index, direction) {
+            if (direction === 'up' && index > 0) {
+                // Swap with previous expression
+                [config.expressions[index - 1], config.expressions[index]] =
+                    [config.expressions[index], config.expressions[index - 1]];
+                renderExpressions();
+                setExpression(index - 1);
+                updateExpressionDetails(index - 1);
+            } else if (direction === 'down' && index < config.expressions.length - 1) {
+                // Swap with next expression
+                [config.expressions[index], config.expressions[index + 1]] =
+                    [config.expressions[index + 1], config.expressions[index]];
+                renderExpressions();
+                setExpression(index + 1);
+                updateExpressionDetails(index + 1);
+            }
+        }
+
+        function deleteExpression(index) {
+            if (!confirm('Are you sure you want to delete this expression?')) {
+                return;
+            }
+            if (config.expressions.length === 1) {
+                alert("You need at least ONE expression.")
+                return
+            }
+
+            config.expressions.splice(index, 1);
+            renderExpressions();
+
+            // If we deleted the last expression, clear the details panel
+            if (config.expressions.length === 0) {
+                document.getElementById('config-details').innerHTML = '<p>No expressions available</p>';
+                document.getElementById('image-display').src = '';
+            } else {
+                // Set the new expression at this position (or previous if at end)
+                const newIndex = Math.min(index, config.expressions.length - 1);
+                setExpression(newIndex);
+                updateExpressionDetails(newIndex);
+            }
+        }
+
+        function renderFrameClassesDefinitions() {
+            if (!config || !config.frames) return;
+
+            const container = document.getElementById('frames-list');
+            container.innerHTML = '';
+
+            if (config.frames.length === 0) {
+                container.innerHTML = '<p>No frame definitions available</p>';
+                return;
+            }
+
+            config.frames.forEach((frameDef) => {
+                const frameElement = document.createElement('div');
+                frameElement.className = 'frame-definition-item';
+
+                // Create preview image container
+                const previewContainer = document.createElement('div');
+                previewContainer.className = 'frame-preview-container';
+
+                const previewImg = document.createElement('img');
+                previewImg.className = 'frame-preview';
+
+                // Set preview source if available
+                if (frameDef.files && frameDef.files.length > 0) {
+                    previewImg.src = frameDef.files[0].startsWith('/') ?
+                        frameDef.files[0].substring(1) : frameDef.files[0];
+                    previewImg.alt = `Preview of ${frameDef.name}`;
+                    previewImg.onerror = function () {
+                        // Show placeholder if image fails to load
+                        this.src = '';
+                        this.style.backgroundColor = '#f0f0f0';
+                        this.style.display = 'flex';
+                        this.style.alignItems = 'center';
+                        this.style.justifyContent = 'center';
+                        this.innerHTML = '<span style="color:#999;font-size:0.7em;">No preview</span>';
+                    };
+                } else if (frameDef.pattern) {
+                    const firstFrame = sprintf(frameDef.pattern, frameDef.from);
+                    previewImg.src = firstFrame.startsWith('/') ?
+                        firstFrame.substring(1) : firstFrame;
+                } else {
+                    // Show placeholder if no frames
+                    previewImg.style.backgroundColor = '#f0f0f0';
+                    previewImg.style.display = 'flex';
+                    previewImg.style.alignItems = 'center';
+                    previewImg.style.justifyContent = 'center';
+                    previewImg.innerHTML = '<span style="color:#999;font-size:0.7em;">No frames</span>';
+                }
+
+                // Create info container
+                const infoContainer = document.createElement('div');
+                infoContainer.className = 'frame-info';
+
+                const nameElement = document.createElement('div');
+                nameElement.className = 'frame-name';
+                nameElement.textContent = frameDef.name;
+
+                const countElement = document.createElement('div');
+                countElement.className = 'frame-count';
+                countElement.textContent = frameDef.files ?
+                    `${frameDef.files.length} frame${frameDef.files.length !== 1 ? 's' : ''}` :
+                    'No frames';
+
+                // Add delete button
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'danger';
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.style.marginLeft = 'auto';
+                deleteBtn.style.padding = '5px 10px';
+                deleteBtn.style.fontSize = '0.8em';
+
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteFrameGroup(frameDef);
+                });
+
+                // Build the structure
+                previewContainer.appendChild(previewImg);
+                infoContainer.appendChild(nameElement);
+                infoContainer.appendChild(countElement);
+
+                frameElement.appendChild(previewContainer);
+                frameElement.appendChild(infoContainer);
+                frameElement.appendChild(deleteBtn);
+
+                container.appendChild(frameElement);
+            });
+        }
+        function deleteFrameGroup(frameDef) {
+            const usedInExpressions = config.expressions.filter(expr => expr.frames === frameDef.name);
+
+            let warningMessage = `Are you sure you want to delete the frame group "${frameDef.name}"?`;
+
+            if (usedInExpressions.length > 0) {
+                warningMessage += `\n\nWARNING: This will also delete ${usedInExpressions.length} associated expression(s).`;
+            }
+
+            if (!confirm(warningMessage)) {
+                return;
+            }
+
+
+            // Queue files for later physical deletion (handles both formats)
+            if (frameDef.files) {
+                // Case 1: Direct array of files
+                pendingFileDeletions.push(...frameDef.files.map(filePath => ({
+                    path: filePath.startsWith('/') ? filePath : `/${filePath}`,
+                    frameClass: frameDef.name,
+                    type: 'direct'
+                })));
+            } else if (frameDef.pattern && frameDef.from !== undefined && frameDef.to !== undefined) {
+                // Case 2: Pattern-based files
+                for (let i = frameDef.from; i <= frameDef.to; i++) {
+                    const filePath = sprintf(frameDef.pattern, i);
+                    pendingFileDeletions.push({
+                        path: filePath.startsWith('/') ? filePath : `/${filePath}`,
+                        frameClass: frameDef.name,
+                        type: 'pattern',
+                        pattern: frameDef.pattern,
+                        index: i
+                    });
+                }
+            }
+
+            // Immediately remove from config and UI
+            config.frames = config.frames.filter(f => f.name !== frameDef.name);
+            config.expressions = config.expressions.filter(expr => expr.frames !== frameDef.name);
+            frameClassesModified = true;
+
+            renderFrameClassesDefinitions();
+            renderExpressions();
+
+            // Reset display if needed
+            if (usedInExpressions.length > 0 && config.expressions.length > 0) {
+                setExpression(0);
+                updateExpressionDetails(0);
+            }
+
+
+        }
+
+        document.getElementById('close-deletion-modal').addEventListener('click', () => {
+            // Only allow closing if the button is enabled
+            if (!this.disabled) {
+                document.getElementById('deletion-modal').style.display = 'none';
+            }
+        });
+
+
+
+        ////////aaaaaaaaaaaaaaaaaaa
+
+        let selectedFiles = [];
+
+        function showFrameEditorAndCloseOther() {
+            closeFullEditor(false);
+            showFrameEditor()
+        }
+
+        function showFrameEditor() {
+            document.body.classList.add('frame-edit-mode');
+            document.getElementById('selected-files-list').innerHTML = '';
+            document.getElementById('frame-class-name').value = '';
+            document.getElementById('flip-left-checkbox').checked = true;
+            document.getElementById('upload-progress').style.display = 'none';
+            selectedFiles = [];
+
+            document.getElementById('frame-files').addEventListener('change', handleFileSelect);
+        }
+
+        function handleFileSelect(event) {
+            const newFiles = Array.from(event.target.files).filter(file =>
+                file.type === 'image/png' || file.name.toLowerCase().endsWith('.png')
+            );
+
+            // Clear non-PNG files from selection
+            if (newFiles.length !== event.target.files.length) {
+                alert('Only PNG files are allowed. Non-PNG files have been removed from selection.');
+                // Update the files list to only include PNGs
+                const dataTransfer = new DataTransfer();
+                newFiles.forEach(file => dataTransfer.items.add(file));
+                event.target.files = dataTransfer.files;
+            }
+
+            const filesList = document.getElementById('selected-files-list');
+            filesList.innerHTML = '<p>Loading and validating images...</p>';
+
+            if (newFiles.length === 0) {
+                filesList.innerHTML = '<p>No PNG files selected</p>';
+                return;
+            }
+
+            const previewContainer = document.createElement('div');
+            previewContainer.style.display = 'flex';
+            previewContainer.style.flexWrap = 'wrap';
+            previewContainer.style.gap = '10px';
+            previewContainer.style.marginTop = '10px';
+
+            let validFiles = [...selectedFiles]; // Start with existing files
+            let invalidFiles = [];
+
+            // Process each new file sequentially
+            const processFiles = async (index = 0) => {
+                if (index >= newFiles.length) {
+                    // All files processed
+                    selectedFiles = validFiles;
+
+                    if (invalidFiles.length > 0) {
+                        const errorList = invalidFiles.map(f =>
+                            `${f.file.name} (${f.width}×${f.height})`
+                        ).join(', ');
+
+                        alert(`Some files were invalid:\n${errorList}\n\nOnly 64×32 pixel PNG files are allowed. Invalid files were removed from selection.`);
+
+                        // Update the file input to only include valid files
+                        const dataTransfer = new DataTransfer();
+                        validFiles.forEach(file => dataTransfer.items.add(file));
+                        event.target.files = dataTransfer.files;
+                    }
+
+                    if (validFiles.length === 0) {
+                        filesList.innerHTML = '<p>No valid 64×32 PNG files selected</p>';
+                        return;
+                    }
+
+                    // Show final previews
+                    filesList.innerHTML = '';
+                    showFilePreviews(validFiles, previewContainer);
+                    filesList.appendChild(previewContainer);
+
+                    return;
+                }
+
+                const file = newFiles[index];
+                const img = new Image();
+
+                img.onload = function () {
+                    const isValid = this.width === 64 && this.height === 32;
+
+                    if (isValid) {
+                        // Only add if not already in the list
+                        if (!validFiles.some(f => f.name === file.name)) {
+                            validFiles.push(file);
+                        }
+                    } else {
+                        invalidFiles.push({
+                            file: file,
+                            width: this.width,
+                            height: this.height
+                        });
+                    }
+
+                    // Process next file
+                    processFiles(index + 1);
+                };
+
+                img.onerror = function () {
+                    invalidFiles.push({
+                        file: file,
+                        error: "Failed to load image"
+                    });
+                    processFiles(index + 1);
+                };
+
+                img.src = URL.createObjectURL(file);
+            };
+
+            // Start processing
+            processFiles();
+        }
+
+        function showFilePreviews(files, container) {
+            container.innerHTML = '';
+
+            files.forEach((file, index) => {
+                const previewWrapper = document.createElement('div');
+                previewWrapper.style.display = 'flex';
+                previewWrapper.style.flexDirection = 'column';
+                previewWrapper.style.alignItems = 'center';
+                previewWrapper.style.width = '100px';
+                previewWrapper.style.position = 'relative';
+
+                const preview = document.createElement('img');
+                preview.style.width = '64px';
+                preview.style.height = '32px';
+                preview.style.objectFit = 'contain';
+                preview.style.imageRendering = 'pixelated';
+                preview.style.border = '1px solid #ddd';
+                preview.alt = file.name;
+
+                const fileName = document.createElement('div');
+                fileName.textContent = file.name.length > 12 ?
+                    file.name.substring(0, 9) + '...' :
+                    file.name;
+                fileName.style.fontSize = '0.8em';
+                fileName.style.textAlign = 'center';
+                fileName.style.marginTop = '5px';
+                fileName.style.width = '100%';
+                fileName.style.overflow = 'hidden';
+                fileName.style.textOverflow = 'ellipsis';
+
+                // Create remove button
+                const removeBtn = document.createElement('button');
+                removeBtn.textContent = '×';
+                removeBtn.style.position = 'absolute';
+                removeBtn.style.top = '-5px';
+                removeBtn.style.right = '-5px';
+                removeBtn.style.width = '20px';
+                removeBtn.style.height = '20px';
+                removeBtn.style.borderRadius = '50%';
+                removeBtn.style.backgroundColor = '#dc3545';
+                removeBtn.style.color = 'white';
+                removeBtn.style.border = 'none';
+                removeBtn.style.cursor = 'pointer';
+                removeBtn.style.fontSize = '12px';
+                removeBtn.style.padding = '0';
+                removeBtn.style.display = 'flex';
+                removeBtn.style.alignItems = 'center';
+                removeBtn.style.justifyContent = 'center';
+
+                removeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    // Remove file from selectedFiles
+                    selectedFiles = selectedFiles.filter((_, i) => i !== index);
+
+                    // Update file input
+                    const dataTransfer = new DataTransfer();
+                    selectedFiles.forEach(file => dataTransfer.items.add(file));
+                    document.getElementById('frame-files').files = dataTransfer.files;
+
+                    // Refresh previews
+                    showFilePreviews(selectedFiles, container);
+                });
+
+                // Create preview
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+
+                previewWrapper.appendChild(preview);
+                previewWrapper.appendChild(fileName);
+                previewWrapper.appendChild(removeBtn);
+                container.appendChild(previewWrapper);
+            });
+        }
+
+        function clearSelectedFiles() {
+            selectedFiles = [];
+            document.getElementById('frame-files').value = '';
+            document.getElementById('selected-files-list').innerHTML = '<p>No files selected</p>';
+        }
+        async function uploadFrameFiles() {
+            const className = document.getElementById('frame-class-name').value.trim();
+            const flipLeft = document.getElementById('flip-left-checkbox').checked;
+
+            if (!className) {
+                alert('Please enter a frame group name');
+                return;
+            }
+
+            if (selectedFiles.length === 0) {
+                alert('Please select at least one file');
+                return;
+            }
+
+            if (config.frames.some(f => f.name === className)) {
+                alert(`Frame group "${className}" already exists.`);
+                return;
+            }
+
+            const progressDiv = document.getElementById('upload-progress');
+            const progressBar = document.getElementById('upload-progress-bar');
+            const uploadCount = document.getElementById('upload-count');
+            const uploadStatus = document.getElementById('upload-status');
+
+            progressDiv.style.display = 'block';
+            progressBar.value = 0;
+            uploadCount.textContent = `0/${selectedFiles.length}`;
+            uploadStatus.textContent = '';
+
+            let successCount = 0;
+            const errors = [];
+            const uploadedFiles = [];
+
+            for (let i = 0; i < selectedFiles.length; i++) {
+                const file = selectedFiles[i];
+                const uploadPath = `/expressions/${className}`;
+
+                uploadCount.textContent = `${i + 1}/${selectedFiles.length}`;
+                progressBar.value = (i / selectedFiles.length) * 100;
+
+                try {
+                    const formData = new FormData();
+                    formData.append('path', uploadPath);
+                    formData.append('file', file, file.name); // Include filename in FormData
+
+                    const response = await fetch('/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    // First check if response is OK (status 200-299)
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(errorText || `HTTP error! status: ${response.status}`);
+                    }
+
+                    // If response is OK but empty, consider it success
+                    const result = await response.text();
+                    if (result === "" || result.includes("OK") || result.includes("success")) {
+                        uploadedFiles.push(`${uploadPath}/${file.name}`);
+                        successCount++;
+                    } else {
+                        throw new Error(result || 'Unknown server response');
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    // Check if the error is actually a success (sometimes servers return 200 with empty response)
+                    if (error.message.includes("200") || error.message === "") {
+                        uploadedFiles.push(`${uploadPath}/${file.name}`);
+                        successCount++;
+                    } else {
+                        errors.push(`Failed to upload ${file.name}: ${error.message}`);
+                    }
+                }
+            }
+
+            progressBar.value = 100;
+
+            // Update UI based on results
+            if (errors.length > 0) {
+                uploadStatus.innerHTML = `<span style="color: red;">${successCount} files uploaded successfully, ${errors.length} failed:</span><br>${errors.join('<br>')}`;
+            } else {
+                uploadStatus.innerHTML = `<span style="color: green;">All ${selectedFiles.length} files uploaded successfully!</span>`;
+            }
+
+            if (successCount > 0) {
+                const frameDef = {
+                    name: className,
+                    files: uploadedFiles,
+                    flip_left: flipLeft
+                };
+                frameClassesModified = true;
+                config.frames = config.frames.filter(f => f.name !== className);
+                config.frames.push(frameDef);
+
+                renderFrameClassesDefinitions();
+                hideFrameEditor();
+                renderExpressions();
+            }
+        }
+
+        // Set up event listeners
+        document.getElementById('add-frame-btn-2').addEventListener('click', showFrameEditorAndCloseOther);
+        document.getElementById('add-frame-btn').addEventListener('click', showFrameEditor);
+        document.getElementById('upload-frames-btn').addEventListener('click', uploadFrameFiles);
+        document.getElementById('cancel-frame-btn').addEventListener('click', hideFrameEditor);
+
+        function hideFrameEditor() {
+            document.body.classList.remove('frame-edit-mode');
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        ////////aaaaaaaaaaaaaaaaaaa
+
+
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('config.json');
+                if (!response.ok) {
+                    throw new Error('Failed to load config.json');
+                }
+                config = await response.json();
+                renderExpressions();
+                renderFrameClassesDefinitions();
+                if (config.expressions.length > 0) {
+                    setExpression(0);
+                    updateExpressionDetails(0);
+                }
+            } catch (e) {
+                console.error('Error loading config:', e);
+                document.getElementById('expressions-container').innerHTML =
+                    '<p>Error loading config.json. Please make sure the file exists.</p>';
+            }
+
+
+        });
+        document.addEventListener('DOMContentLoaded', setupJsonEditor);
+
+        // Save function
+        document.getElementById('save-btn').addEventListener('click', async () => {
+            if (!config) {
+                alert('No config loaded to save');
+                return;
+            }
+
+            if (!confirm('Save configuration and apply directly on the protogen?')) {
+                return;
+            }
+
+            // Get modal elements
+            const modal = document.getElementById('deletion-modal');
+            const statusElement = document.getElementById('deletion-status');
+            const countElement = document.getElementById('deletion-count');
+            const progressBar = document.getElementById('deletion-progress-bar');
+            const detailsElement = document.getElementById('deletion-details');
+            const closeButton = document.getElementById('close-deletion-modal');
+
+            // Set up modal
+            modal.style.display = 'flex';
+            statusElement.textContent = 'Starting save process...';
+            countElement.textContent = pendingFileDeletions.length > 0 ? `0/${pendingFileDeletions.length}` : 'No files to delete';
+            progressBar.value = 0;
+            progressBar.max = pendingFileDeletions.length;
+            detailsElement.innerHTML = '';
+            closeButton.style.display = 'none';
+            closeButton.disabled = true;
+
+            try {
+                // 1. First upload the config file
+                statusElement.textContent = 'Uploading configuration...';
+                detailsElement.innerHTML += '<div>Preparing config file...</div>';
+
+                const configJson = JSON.stringify(config, null, 2);
+                const configBlob = new Blob([configJson], { type: 'application/json' });
+                const configFileName = 'config.json';
+
+                const formData = new FormData();
+                formData.append('path', '/');
+                formData.append('file', configBlob, configFileName);
+
+                const uploadResponse = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!uploadResponse.ok) {
+                    throw new Error(`Failed to upload config: ${await uploadResponse.text()}`);
+                }
+
+                detailsElement.innerHTML += '<div style="color:green;">✓ Configuration uploaded successfully</div>';
+                detailsElement.scrollTop = detailsElement.scrollHeight;
+
+                // 2. Process file deletions if any exist
+                if (pendingFileDeletions.length > 0) {
+                    statusElement.textContent = 'Deleting files...';
+                    let deletedCount = 0;
+                    let errors = [];
+
+                    for (const file of pendingFileDeletions) {
+                        const filename = file.path.split('/').pop();
+                        const displayName = file.type === 'pattern'
+                            ? `${file.pattern} (index ${file.index})`
+                            : filename;
+
+                        detailsElement.innerHTML += `<div style="color:#666;">⌛ Deleting: ${displayName}...</div>`;
+                        detailsElement.scrollTop = detailsElement.scrollHeight;
+
+                        try {
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                            const response = await fetch(`/delete?path=${encodeURIComponent(file.path)}`, {
+                                method: 'DELETE'
+                            });
+
+                            if (!response.ok) {
+                                throw new Error(`Server returned ${response.status}`);
+                            }
+
+                            detailsElement.innerHTML = detailsElement.innerHTML.replace(
+                                `⌛ Deleting: ${displayName}...`,
+                                `<div style="color:green;">✓ Deleted: ${displayName}</div>`
+                            );
+                            deletedCount++;
+                        } catch (error) {
+                            errors.push(file);
+                            detailsElement.innerHTML = detailsElement.innerHTML.replace(
+                                `⌛ Deleting: ${displayName}...`,
+                                `<div style="color:red;">✗ Failed to delete: ${displayName} (${error.message})</div>`
+                            );
+                        }
+
+                        countElement.textContent = `${deletedCount}/${pendingFileDeletions.length}`;
+                        progressBar.value = deletedCount;
+                        detailsElement.scrollTop = detailsElement.scrollHeight;
+                    }
+
+                    pendingFileDeletions = [];
+
+                    if (errors.length === 0) {
+                        statusElement.textContent = 'All files deleted successfully';
+                        detailsElement.innerHTML += `<div style="color:green;font-weight:bold;margin-top:10px;">
+                    ✓ Deleted ${deletedCount} files
+                </div>`;
+                    } else {
+                        statusElement.textContent = `Completed with ${errors.length} error(s)`;
+                        detailsElement.innerHTML += `<div style="color:orange;font-weight:bold;margin-top:10px;">
+                    ⚠ ${deletedCount - errors.length} deleted, ${errors.length} failed
+                </div>`;
+                    }
+                } else {
+                    statusElement.textContent = 'Configuration saved successfully';
+                    detailsElement.innerHTML += '<div>No pending file deletions</div>';
+                }
+
+                // 3. Only start composition if frame classes were modified
+                if (frameClassesModified) {
+                    statusElement.textContent = 'Starting composition process (required due to frame changes)...';
+                    detailsElement.innerHTML += '<div style="color:#666;">⌛ Starting composition...</div>';
+                    detailsElement.scrollTop = detailsElement.scrollHeight;
+
+                    const composeResponse = await fetch('/compose_start', {
+                        method: 'POST'
+                    });
+
+                    if (!composeResponse.ok) {
+                        throw new Error(`Failed to start composition: ${await composeResponse.text()}`);
+                    }
+
+                    detailsElement.innerHTML += '<div style="color:green;">✓ Composition started successfully</div>';
+                    detailsElement.scrollTop = detailsElement.scrollHeight;
+
+                    // 4. Monitor composition progress
+                    statusElement.textContent = 'Composition in progress...';
+                    let progress = 0;
+                    let retryCount = 0;
+                    const maxRetries = 10;
+
+                    const checkProgress = async () => {
+                        try {
+                            const response = await fetch('/compose_progress');
+                            if (!response.ok) {
+                                throw new Error(`Failed to get progress: ${response.status}`);
+                            }
+
+                            progress = await response.json();
+                            retryCount = 0; // Reset retry count on success
+
+                            if (progress >= 1) {
+                                statusElement.textContent = 'Composition completed!';
+                                detailsElement.innerHTML += '<div style="color:green;font-weight:bold;">✓ Composition completed successfully</div>';
+                                closeButton.style.display = 'block';
+                                closeButton.disabled = false;
+                                frameClassesModified = false;
+                                setTimeout(() => {
+                                    window.location.reload(true);
+                                }, 1600);
+                                return;
+                            }
+
+                            statusElement.textContent = `Composition in progress (${Math.round(progress * 100)}%)`;
+                            progressBar.value = progress * 100;
+                            progressBar.max = 100;
+                            setTimeout(checkProgress, 1000); // Check every second
+                        } catch (error) {
+                            retryCount++;
+                            if (retryCount >= maxRetries) {
+                                statusElement.textContent = 'Error monitoring composition progress';
+                                detailsElement.innerHTML += `<div style="color:red;font-weight:bold;">✗ Failed to monitor progress: ${error.message}</div>`;
+                                closeButton.style.display = 'block';
+                                closeButton.disabled = false;
+                                return;
+                            }
+                            setTimeout(checkProgress, 1000); // Retry after delay
+                        }
+                    };
+
+                    // Start progress monitoring
+                    await checkProgress();
+                } else {
+                    statusElement.textContent = 'Save completed';
+                    detailsElement.innerHTML += '<div style="color:green;">✓ Save completed without composition</div>';
+                    closeButton.style.display = 'block';
+                    closeButton.disabled = false;
+                    setTimeout(() => {
+                        window.location.reload(true);
+                    }, 1600);
+
+                }
+
+            } catch (error) {
+                console.error('Error during save:', error);
+                statusElement.textContent = 'Save process failed';
+                detailsElement.innerHTML += `<div style="color:red;font-weight:bold;margin-top:10px;">
+            ✗ Error: ${error.message}
+        </div>`;
+                closeButton.style.display = 'block';
+                closeButton.disabled = false;
+            }
+        });
+
+        function showJsonViewer() {
+            if (!config) {
+                alert('No configuration loaded');
+                return;
+            }
+
+            const modal = document.getElementById('json-viewer-modal');
+            const jsonDisplay = document.getElementById('json-display');
+
+            // Format and syntax highlight the JSON
+            const formattedJson = JSON.stringify(config, null, 2);
+            jsonDisplay.innerHTML = syntaxHighlight(formattedJson);
+
+            modal.style.display = 'flex';
+
+            document.getElementById('close-json-viewer').addEventListener('click', () => {
+                document.getElementById('json-viewer-modal').style.display = 'none';
+            });
+        }
+
+        function syntaxHighlight(json) {
+            // Highlight JSON syntax
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(
+                /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+                function (match) {
+                    let cls = 'number';
+                    if (/^"/.test(match)) {
+                        if (/:$/.test(match)) {
+                            cls = 'key';
+                        } else {
+                            cls = 'string';
+                        }
+                    } else if (/true|false/.test(match)) {
+                        cls = 'boolean';
+                    } else if (/null/.test(match)) {
+                        cls = 'null';
+                    }
+                    return '<span class="' + cls + '">' + match + '</span>';
+                }
+            );
+        }
+
+        function copyJsonToClipboard() {
+            const jsonDisplay = document.getElementById('json-display');
+            const text = config ? JSON.stringify(config, null, 2) : '';
+
+            navigator.clipboard.writeText(text).then(() => {
+                const copyBtn = document.getElementById('copy-json-btn');
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy JSON to clipboard');
+            });
+        }
+
+
+        document.getElementById('view-json-btn').addEventListener('click', showJsonViewer);
+
+        document.getElementById('copy-json-btn').addEventListener('click', copyJsonToClipboard);
+
+
+
+
+        function calculateMaxFrames() {
+            if (!window.config || !Array.isArray(window.config.frames)) {
+                console.error("Invalid or missing frames configuration");
+                return 0;
+            }
+
+            let frameCount = 0;
+            let jsonElement = 0;
+
+            for (const element of window.config.frames) {
+                if (typeof element === 'object' && element !== null) {
+                    if (element.hasOwnProperty('file')) {
+                        // Single file definition
+                        frameCount++;
+                    } else if (element.hasOwnProperty('pattern')) {
+                        // Pattern-based frame range
+                        if (typeof element.pattern !== 'string') {
+                            console.error(`Missing or invalid 'pattern' on element ${jsonElement}`);
+                            continue;
+                        }
+                        if (typeof element.from !== 'number') {
+                            console.error(`Missing or invalid 'from' on element ${jsonElement}`);
+                            continue;
+                        }
+                        if (typeof element.to !== 'number') {
+                            console.error(`Missing or invalid 'to' on element ${jsonElement}`);
+                            continue;
+                        }
+
+                        const from = element.from;
+                        const to = element.to;
+
+                        if (from > to) {
+                            console.error(`On frames, element ${jsonElement} 'from' is bigger than 'to'`);
+                            continue;
+                        }
+
+                        frameCount += (to - from + 1);
+                    } else if (element.hasOwnProperty('files')) {
+                        // Array of files
+                        if (!Array.isArray(element.files)) {
+                            console.error(`On frames, element ${jsonElement} 'files' is not an array`);
+                            continue;
+                        }
+
+                        for (const file of element.files) {
+                            if (typeof file !== 'string') {
+                                console.error(`On frames, element ${jsonElement} contains non-string file in 'files' array`);
+                                continue;
+                            }
+                            frameCount++;
+                        }
+                    } else {
+                        console.error(`On frames, element ${jsonElement} has no file loading defined`);
+                    }
+                } else {
+                    // Simple element (count as one frame)
+                    frameCount++;
+                }
+                jsonElement++;
+            }
+
+            return frameCount;
+        }
+
+        function setupJsonEditor() {
+            const editor = document.getElementById('json-editor');
+            const editorModal = document.getElementById('json-editor-modal');
+            const viewerModal = document.getElementById('json-viewer-modal');
+
+            document.getElementById('edit-json-btn').addEventListener('click', () => {
+                editor.value = JSON.stringify(config, null, 2);
+                if (viewerModal) viewerModal.style.display = 'none';
+                editorModal.style.display = 'flex';
+                editor.focus();
+            });
+
+            document.getElementById('save-json-btn').addEventListener('click', () => {
+                try {
+                    config = JSON.parse(editor.value);
+                    editorModal.style.display = 'none';
+                    renderExpressions();
+                    renderFrameClassesDefinitions();
+                } catch (e) {
+                    alert('Invalid JSON: ' + e.message);
+                }
+            });
+
+            document.getElementById('cancel-json-btn').addEventListener('click', () => {
+                editorModal.style.display = 'none';
+            });
+        }</script>
