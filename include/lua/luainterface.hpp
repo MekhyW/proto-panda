@@ -11,10 +11,11 @@ class LuaInterface{
             return m_lua->callLuaFunction(functionName, args...);
         };            
 
+        String getLastReturnAsString();
         const char *getLastError(){
             return lastError.c_str();
         }
-        bool DoString(const char *script);
+        bool DoString(const char *script, int returns = 0);
         bool LoadFile(const char *functionName);
         static void luaCallbackError(const char *errMsg, lua_State *L);
         static bool HaltIfError;

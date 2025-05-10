@@ -18,6 +18,9 @@ template<typename... arg> void FrameBufferCriticalError(File *bulkFile, const ch
 }
 
 bool FrameRepository::Begin(){
+    if (m_started){
+        return true;
+    }
     m_mutex = xSemaphoreCreateMutex();
     Logger::Info("Starting FFAT");
     if (!FFat.begin(true)) {
@@ -29,7 +32,7 @@ bool FrameRepository::Begin(){
             return false;
         }
     }
-
+    m_started = true;
     displayFFATInfo();
     bulkFile = FFat.open("/frames.bulk", FILE_READ);
     if (!bulkFile) {
@@ -42,6 +45,7 @@ bool FrameRepository::Begin(){
 
     OledScreen::DrawCircularProgress(FFat.usedBytes(), FFat.totalBytes(), "Flash usage");
     delay(1000);
+    Logger::Info("Completed");
 
     return true;
 }
@@ -51,7 +55,6 @@ void FrameRepository::displayFFATInfo(){
     Logger::Info("FFAT usedBytes=%2.2f Mb", FFat.usedBytes()/1000000.0f);
     Logger::Info("FFAT Avaliable=%2.2f%%", (1.0f - (FFat.usedBytes()/(float)FFat.totalBytes()) ) * 100.0f );
 }
-
 
 void FrameRepository::extractModes(JsonVariant &element, bool &flip_left, int &color_scheme_left){
     
@@ -210,6 +213,9 @@ int FrameRepository::calculateMaxFrames(JsonArray &framesJson){
 }
 
 void FrameRepository::composeBulkFile(){
+    if (!m_started){
+        Begin();
+    }
     xSemaphoreTake(m_mutex, portMAX_DELAY);
     uint64_t start = micros();
     
@@ -218,6 +224,7 @@ void FrameRepository::composeBulkFile(){
         OledScreen::CriticalFail("Can't open config.json");
         for(;;){}
     }
+    m_bulkPercentage = 0.0f;
 
     m_offsets.clear();
     m_frameCountByAlias.clear();
@@ -274,6 +281,8 @@ void FrameRepository::composeBulkFile(){
 
                 sprintf(miniHBuffer, "Copy frame %d\n%s", fileIdx+1, filePath);
                 OledScreen::DrawProgressBar(fileIdx+1, maxFrames+1, miniHBuffer);
+
+                m_bulkPercentage = (fileIdx+1)/float(maxFrames+1);
                 if (!decodeFile(filePath, flipe_left, color_scheme_left)){
                     FrameBufferCriticalError(&bulkFile, "Failed to decode %s at element %d", filePath, jsonElement);
                 }
@@ -295,6 +304,7 @@ void FrameRepository::composeBulkFile(){
                     sprintf(headerFileName, pattern, i);
                     sprintf(miniHBuffer, "Copy frame %d\n%s", fileIdx+1, headerFileName);
                     OledScreen::DrawProgressBar(fileIdx+1, maxFrames+1, miniHBuffer);
+                    m_bulkPercentage = (fileIdx+1)/float(maxFrames+1);
                     if (!decodeFile(headerFileName, flipe_left, color_scheme_left)){
                         FrameBufferCriticalError(&bulkFile, "Failed decode %s at element %d", headerFileName, jsonElement);
                     }
@@ -312,6 +322,7 @@ void FrameRepository::composeBulkFile(){
                     const char *filename = file;
                     sprintf(miniHBuffer, "Copy frame %d\n%s", fileIdx+1, filename);
                     OledScreen::DrawProgressBar(fileIdx+1, maxFrames+1, miniHBuffer);
+                    m_bulkPercentage = (fileIdx+1)/float(maxFrames+1);
                     if (!decodeFile(filename, flipe_left, color_scheme_left)){
                         FrameBufferCriticalError(&bulkFile, "Failed decode %s at element %d", filename, jsonElement);
                     }
@@ -326,6 +337,7 @@ void FrameRepository::composeBulkFile(){
         jsonElement++;
     }
     m_frameCount = fileIdx-1;
+    m_bulkPercentage = 1.0f;
     json_doc.clear();
     fdesc.close();
     bulkFile.close();

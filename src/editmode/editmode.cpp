@@ -6,7 +6,7 @@
 #include "tools/oledscreen.hpp"
 #include "tools/storage.hpp"
 #include "lua/luainterface.hpp"
-
+#include "tools/devices.hpp"
 #include <Arduino.h>
 
 #include <WiFi.h>
@@ -219,5 +219,11 @@ void EditMode::LoopEditMode(){
   WiFiClient client = luaServer->available();
   if (client){
     handleClient(client);
+  }
+
+  static uint32_t memes = 0;
+  if (memes < millis()){
+    Devices::CalculateMemmoryUsage();
+    memes = millis() + 2000;
   }
 }

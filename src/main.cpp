@@ -139,6 +139,7 @@ void setup() {
   OledScreen::display.printf("Starting\nLua");
   OledScreen::display.display();
   OledScreen::display.setTextSize(1);
+  Logger::Info("Starting Lua");
   g_lua.CallFunction("onSetup");
   Devices::BuzzerTone(150);
   delay(100);
@@ -156,6 +157,8 @@ void setup() {
   delay(100);
   g_lua.CallFunction("onPreflight");
   Devices::BuzzerNoTone();
+  
+  Devices::CalculateMemmoryUsage();
 }
 
 void second_loop(void*){

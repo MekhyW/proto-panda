@@ -887,12 +887,12 @@ pushLuaValue(lua_State* L, const T& value) {
 class LuaWrapper {
   public:
     LuaWrapper();
-    bool Lua_dostring(const char *script);
-    bool Lua_dostring(const String *script){
-        return Lua_dostring(script->c_str());
+    bool Lua_dostring(const char *script, int returns=0);
+    bool Lua_dostring(const String *script, int returns=0){
+        return Lua_dostring(script->c_str(), returns);
     }
-    bool Lua_dostring(String &script){
-        return Lua_dostring(&script);
+    bool Lua_dostring(String &script, int returns=0){
+        return Lua_dostring(&script, returns);
     }
 
     void FuncRegisterRaw(const char* name, int readSdFile(lua_State *L));

@@ -213,7 +213,7 @@ void LuaWrapper::FuncRegisterRaw(const char* name, int functionPtr(lua_State *L)
   lua_register(_state, name, functionPtr);
 }
 
-bool LuaWrapper::Lua_dostring(const char *script) {
+bool LuaWrapper::Lua_dostring(const char *script, int returns) {
   int error;
     
   error = luaL_loadstring(_state, script);
@@ -225,11 +225,11 @@ bool LuaWrapper::Lua_dostring(const char *script) {
       return false;
   }
 
-  if (lua_pcall(_state, 0, 0, 0)) {
+  if (lua_pcall(_state, 0, returns, 0)) {
     if (_errorCallback != nullptr){
         _errorCallback(lua_tostring(_state, -1), _state);
       }
-    lua_pop(_state, 1); 
+    lua_settop(_state, 0);
     return false;
   }
 

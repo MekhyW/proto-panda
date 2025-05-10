@@ -29,7 +29,7 @@ void FlipScreen()
 
 bool StartPanels()
 {
-  return g_frameRepo.Begin() && DMADisplay::Start();
+  return g_frameRepo.Begin() && DMADisplay::Start(4);
 }
 
 
@@ -501,19 +501,7 @@ void powerOff()
 void LuaInterface::luaCallbackError(const char *errMsg, lua_State *L)
 {
   Logger::Info("Lua error: %s\n", errMsg);
-  
   lastError = errMsg;
-
-  lua_getglobal(L, "debug");
-  lua_getfield(L, -1, "traceback");
-
-  lua_pushstring(L, "Trace");
-  lua_pushinteger(L, 2);
-  lua_call(L, 2, 1);
-  
-  const char* traceback = lua_tostring(L, -1);
-
-  Logger::Info("Lua traceback:\n%s\n", traceback);
 
   if (LuaInterface::HaltIfError)
   {
@@ -1040,9 +1028,61 @@ bool LuaInterface::Start()
   return true;
 }
 
-bool LuaInterface::DoString(const char *content)
+String LuaInterface::getLastReturnAsString(){
+  lua_State* L = m_lua->GetState();
+  int top = lua_gettop(L);
+  
+  if (top == 0) {
+    return "";
+  }
+
+  String response = "";
+  for (int i = 1; i <= top; i++) {
+    if (i > 1) {
+      response += "\t";
+    }
+
+    int type = lua_type(L, i);
+    switch (type) {
+      case LUA_TNIL:
+        response += "nil";
+        break;
+      case LUA_TBOOLEAN:
+        response += lua_toboolean(L, i) ? "true" : "false";
+        break;
+      case LUA_TNUMBER:
+        response += String(lua_tonumber(L, i));
+        break;
+      case LUA_TSTRING:
+        response += String(lua_tostring(L, i));
+        break;
+      case LUA_TTABLE:
+        response += "[table]";
+        break;
+      case LUA_TFUNCTION:
+        response += "[function]";
+        break;
+      case LUA_TUSERDATA:
+        response += "[userdata]";
+        break;
+      case LUA_TTHREAD:
+        response += "[thread]";
+        break;
+      case LUA_TLIGHTUSERDATA:
+        response += "[lightuserdata]";
+        break;
+      default:
+        response += "[unknown]";
+        break;
+    }
+  }
+  lua_settop(L, 0);
+  return response;
+}
+
+bool LuaInterface::DoString(const char *content, int returns)
 {
-  return m_lua->Lua_dostring(content);
+  return m_lua->Lua_dostring(content, returns);
 }
 
 bool LuaInterface::LoadFile(const char *functionName)

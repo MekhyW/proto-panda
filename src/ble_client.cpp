@@ -289,6 +289,7 @@ void BleManager::update(){
     NimBLEDevice::getScan()->clearResults(); // Clear the scan results
     lastScanClearTime = millis(); // Reset the timer
     Logger::Info("[BLE] Scan results cleared");
+    Devices::CalculateMemmoryUsage();
   }
   
   if (toConnect != nullptr) {

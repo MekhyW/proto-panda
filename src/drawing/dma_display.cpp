@@ -1,7 +1,7 @@
 #include "drawing/dma_display.hpp"
 
 
-MatrixPanel_I2S_DMA_2 *DMADisplay::Display;
+MatrixPanel_I2S_DMA_2 *DMADisplay::Display = nullptr;
 
 HUB75_I2S_CFG DMADisplay::mxconfig(
     PANEL_WIDTH,   // module width
@@ -10,7 +10,10 @@ HUB75_I2S_CFG DMADisplay::mxconfig(
   );
 
 
-bool DMADisplay::Start(){
+bool DMADisplay::Start(uint8_t colordepth){
+  if (DMADisplay::Display != nullptr){
+    return false;
+  }
    
   mxconfig.double_buff = true; // Turn of double buffer
   mxconfig.clkphase = false;
@@ -29,7 +32,7 @@ bool DMADisplay::Start(){
   mxconfig.gpio.oe = DMA_GPIO_OE;
   mxconfig.gpio.clk = DMA_GPIO_CLK;
 
-  mxconfig.setPixelColorDepthBits(16);
+  mxconfig.setPixelColorDepthBits(colordepth);
   mxconfig.i2sspeed = HUB75_I2S_CFG::HZ_20M;
   // Display Setup
   DMADisplay::Display = new MatrixPanel_I2S_DMA_2(mxconfig);

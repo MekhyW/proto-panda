@@ -21,7 +21,7 @@ struct SpiRamAllocator : ArduinoJson::Allocator {
 
 class FrameRepository{
     public:
-        FrameRepository(){};
+        FrameRepository(){m_bulkPercentage=0.0f;m_started=false;};
         bool Begin();
 
         File *takeFile();
@@ -35,6 +35,9 @@ class FrameRepository{
         int getFrameCountByName(std::string str){
             return m_frameCountByAlias[str];
         }
+        float getBulkComposingPercentage(){
+          return m_bulkPercentage;
+        }
     private:
         void extractModes(JsonVariant &element, bool &flip, int &scheme);
         bool decodeFile(const char *pathName, bool flip, int scheme);
@@ -42,6 +45,8 @@ class FrameRepository{
         int calculateMaxFrames(JsonArray &franesJson);
         void generateCacheFile();
         int m_frameCount;
+        float m_bulkPercentage;
+        bool m_started;
         std::map<std::string, int> m_offsets;
         std::map<std::string, int> m_frameCountByAlias;
         SemaphoreHandle_t m_mutex;
