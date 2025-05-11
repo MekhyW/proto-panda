@@ -1,4 +1,950 @@
-<!doctypehtml><html lang=en><meta charset=UTF-8><meta content="width=device-width,initial-scale=1"name=viewport><meta content="no-cache, no-store, must-revalidate"http-equiv=Cache-Control><meta content=no-cache http-equiv=Pragma><meta content=0 http-equiv=Expires><title>Protopanda expression editor</title><style>:root{--primary-color:#4a6fa5;--secondary-color:#f0f2f5;--button-color:#5a8fd3;--button-hover:#4a7bbf}body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;margin:0;padding:20px;box-sizing:border-box;background-color:var(--secondary-color);color:#333}header{text-align:center;margin-bottom:30px}h1{color:var(--primary-color);margin-bottom:10px}#image-container{margin:20px 0;border:2px solid var(--primary-color);border-radius:8px;overflow:hidden;align-items:center;box-shadow:0 4px 8px rgba(0,0,0,.1)}#image-display{width:256px;height:128px;display:block;align-items:center;image-rendering:pixelated}.top-panels{display:flex;justify-content:center;gap:20px;width:100%;max-width:1200px;margin-top:20px}.bottom-panel{width:100%;max-width:1200px;margin-top:20px}.panel{flex:1;min-height:300px;background:#fff;border-radius:8px;padding:20px;box-shadow:0 4px 8px rgba(0,0,0,.1);border:1px solid #ddd}.panel h2{color:var(--primary-color);margin-top:0;border-bottom:1px solid #eee;padding-bottom:10px}.button-container{display:flex;flex-direction:column;gap:12px;margin-top:20px}button{background-color:var(--button-color);color:#fff;border:none;padding:12px 20px;border-radius:6px;cursor:pointer;font-size:16px;transition:background-color .2s}button:hover{background-color:var(--button-hover)}button.secondary{background-color:#6c757d}button.secondary:hover{background-color:#5a6268}button.danger{background-color:#dc3545}button.danger:hover{background-color:#c82333}.expression-item{display:flex;justify-content:space-between;align-items:center;padding:10px;margin:10px 0;border:1px solid #eee;border-radius:4px;cursor:pointer;transition:background-color .2s}.expression-item:hover{background-color:#f8f9fa}.expression-item.active{background-color:#e7f1ff;border-color:#cfe2ff}.add-expression-btn{background-color:#28a745!important;margin-top:10px;width:100%}.add-expression-btn:hover{background-color:#218838!important}.expression-name{font-weight:700;margin-right:10px}.expression-details{font-size:.9em;color:#666}.expression-controls{display:flex;gap:5px}.expression-controls button{padding:2px 8px;font-size:12px;background-color:#6c757d;margin:0;border-radius:3px}.expression-controls button:hover{background-color:#5a6268}.expression-controls button.danger{background-color:#dc3545}.expression-controls button.danger:hover{background-color:#c82333}.expression-controls button:disabled{opacity:.5;cursor:not-allowed}.frame-editor{margin-top:20px;border:1px solid #ddd;border-radius:4px;padding:10px}.frames-container{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;min-height:50px;padding:10px;border:1px dashed #ccc;border-radius:4px}.frame-item{padding:5px;background-color:#e9ecef;border-radius:4px;cursor:grab;user-select:none;transition:transform .1s,background-color .2s;display:flex;flex-direction:column;align-items:center;width:80px;position:relative}.frame-item:hover{background-color:#d1e7ff}.frame-item.dragging{opacity:.5;transform:scale(1.1)}.frame-item.invalid{background-color:#ffe3e3;color:#dc3545}.frame-item img{width:64px;height:32px;image-rendering:pixelated;margin-bottom:5px}.remove-btn{position:absolute;top:-5px;right:2px;background-color:#dc3545;color:#fff;border:none;border-radius:0;width:1px;height:1px;font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .2s}.frame-item:hover .remove-btn{opacity:1}.available-frames{margin-top:20px}.edit-controls{margin-top:15px;display:flex;gap:10px}.edit-controls button{padding:5px 10px;font-size:14px}select{padding:5px;border-radius:4px;border:1px solid #ced4da}.animation-type-selector{margin-top:10px}.duration-control{margin-top:10px;display:flex;align-items:center;gap:10px}.duration-control input{width:80px;padding:5px;border-radius:4px;border:1px solid #ced4da}.full-edit-mode .panel:not(.editor-panel){display:none}.editor-panel{display:none;width:100%;max-width:1200px}.full-edit-mode .editor-panel{display:block}.drop-indicator{height:2px;background-color:var(--primary-color);margin:5px 0;position:relative}.drop-indicator::before{content:'';position:absolute;top:-4px;left:-4px;right:-4px;bottom:-4px;background-color:rgba(74,111,165,.1)}.frames-type-selector{margin-top:5px;border:1px solid #ddd;border-radius:4px;padding:10px}.frames-type-container{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}.frames-type-item{padding:10px;background-color:#e9ecef;border-radius:4px;cursor:pointer;transition:background-color .2s}.frames-type-item:hover{background-color:#d1e7ff}.frames-type-item.active{background-color:var(--button-color);color:#fff}.expression-name-input{margin-top:10px;width:100%;padding:8px;border:1px solid #ced4da;border-radius:4px}.transition-checkbox{margin-top:10px;display:flex;align-items:center;gap:10px}.transition-checkbox input{width:16px;height:16px}.frame-definition{margin-top:15px;padding:10px;border:1px solid #ddd;border-radius:4px}.frame-definition-item{padding:10px;margin:5px 0;background-color:#f8f9fa;border-radius:4px;display:flex;align-items:center;gap:15px;transition:background-color .2s}.frame-preview{width:64px;height:32px;image-rendering:pixelated;border:1px solid #ddd;background-color:#fff;object-fit:contain;flex-shrink:0}.frame-info{flex-grow:1}.frame-name{font-weight:700;margin-bottom:3px}.frame-count{font-size:.85em;color:#666}.frame-definition-form{display:flex;flex-direction:column;gap:10px;margin-top:10px}.frame-definition-form input{padding:8px;border:1px solid #ced4da;border-radius:4px}.frame-definition-form button{margin-top:5px}.right-panel-container{display:flex;flex-direction:column;gap:20px;height:20%}.right-panel-container .panel{flex:1;min-height:0;overflow:auto}.right-panel-container .panel:first-child{height:250px;flex:0 0 auto;overflow:auto}.right-panel-container .panel:last-child{flex:1;min-height:0;overflow:auto}.frame-editor-panel{display:none;margin-top:15px;padding:15px;border:1px solid #ddd;border-radius:4px;background-color:#f8f9fa}.frame-edit-mode .panel:not(.frame-editor-panel){display:none}.frame-editor-panel{display:none;width:100%;max-width:1200px;margin-top:20px}.frame-edit-mode .frame-editor-panel{display:block}.frame-definition-item button.danger{background-color:#dc3545;color:#fff;border:none;border-radius:4px;cursor:pointer;transition:background-color .2s;align-self:center}.frame-definition-item button.danger:hover{background-color:#c82333}.loader{border:5px solid #f3f3f3;border-top:5px solid #3498db;border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite;margin:0 auto}@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background-color:rgba(0,0,0,.5);display:flex;justify-content:center;align-items:center;z-index:1000;display:none;pointer-events:auto}.modal-content{background-color:#fff;padding:20px;border-radius:8px;width:80%;max-width:600px;max-height:80vh;overflow-y:auto;box-shadow:0 4px 8px rgba(0,0,0,.2)}progress{width:100%;height:20px;border-radius:10px;overflow:hidden}progress::-webkit-progress-bar{background-color:#f0f0f0;border-radius:10px}progress::-webkit-progress-value{background-color:var(--button-color);border-radius:10px;transition:width .5s ease}progress::-moz-progress-bar{background-color:var(--button-color);border-radius:10px}#deletion-progress-container{padding:15px;background-color:#f8f9fa;border-radius:4px;border:1px solid #ddd}#deletion-details{max-height:100px;overflow-y:auto;background-color:#fff;padding:5px;border-radius:3px;border:1px solid #eee}#json-viewer-modal .modal-content{background:#f8f8f8;border:1px solid #ddd}#json-display{background:#2d2d2d;color:#e0e0e0;padding:15px;border-radius:5px;font-family:'Courier New',monospace;font-size:14px;line-height:1.5;tab-size:2;overflow-x:auto;border:1px solid #444}#json-display .string{color:#7ec699}#json-display .number{color:#f08d49}#json-display .boolean{color:#cc99cd}#json-display .null{color:#f8c555}#json-display .key{color:#f44747}.selector-header{display:flex;align-items:center;gap:10px}.add-frame-class-btn{background-color:var(--button-color);color:#fff;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:14px;transition:background-color .2s;white-space:nowrap;margin-left:auto}.add-frame-class-btn:hover{background-color:var(--button-hover)}#full-animation-type{padding:5px;border-radius:4px;border:1px solid #ced4da;width:auto}.file-buttons-container{display:flex;justify-content:space-between;margin-top:10px}.file-buttons-container button{width:48%;margin:0}#preview-lua{margin-left:10px;background-color:#4caf50;color:#fff}#preview-lua:disabled{background-color:#ccc;cursor:not-allowed}</style><header><h1>Protopanda expression editor</h1><div id=image-container><center><img alt="Placeholder Image"id=image-display loading=lazy src=""></center></div></header><div class=top-panels><div class=panel><h2>Expressions</h2><div id=expressions-container><p>No config loaded. Expressions will appear here.</div></div><div class=right-panel-container><div class=panel><h2>Configuration Details</h2><div id=config-details><p>Select an expression to view details</div><div style=display:none id=frame-editor-container></div></div><div class=panel><h2>Frame groups <button id=add-frame-btn class=add-expression-btn style=float:right>+ Add frame class</button></h2><div id=frames-list><p>No frame definitions loaded</div></div></div></div><div class="panel frame-editor-panel"><h2>Frame group creator</h2><div class=frame-definition-form><div><label for=frame-class-name><b>Frame group Name:</b></label> <input id=frame-class-name placeholder="e.g. frames_normal"required></div><div style=margin-top:15px><label for=frame-files><b>Upload Frame Files (64×32 PNG only):</b></label> <input id=frame-files type=file accept=image/png,.png multiple style=display:none><div style=display:flex;justify-content:space-between;margin-top:10px><button onclick='document.getElementById("frame-files").click()'>Add frames</button> <button onclick=clearSelectedFiles()>Clear All Files</button></div><div style=margin-top:10px id=selected-files-list></div></div><div style=margin-top:15px><label><input id=flip-left-checkbox type=checkbox checked>Mirror image on second screen</label></div><div class=edit-controls style=margin-top:20px><button id=upload-frames-btn>Upload & Save</button> <button id=cancel-frame-btn class=secondary>Cancel</button></div><div style=margin-top:15px;display:none id=upload-progress><div style=display:flex;justify-content:space-between><span>Uploading files...</span> <span id=upload-count>0/0</span></div><progress id=upload-progress-bar max=100 style=width:100% value=0></progress><div style=margin-top:5px;font-size:.9em id=upload-status></div></div></div></div><div class="panel editor-panel"><h2>Expressions Editor</h2><div><b>Options:</b></div><div class=frames-type-selector><div><b>Name:</b></div><input id=expression-name-input class=expression-name-input placeholder="Expression name"><div class=transition-checkbox><input id=transition-checkbox type=checkbox> <label for=transition-checkbox><b>This animation a transition</b></label></div><div class=transition-checkbox><input id=hidden-checkbox type=checkbox> <label for=hidden-checkbox><b>Hide this expression from menu</b></label></div><div class=duration-control><label>Speed (ms):</label> <input id=full-animation-duration type=number min=50 step=50></div></div><div><b>Frames:</b></div><div class=frames-type-selector><div class=frames-type-selector><div><b>Frame groups:</b></div><div class=frames-type-container id=frames-type-container></div></div><div class=animation-type-selector><div class=selector-header><b>Frame ordering:</b> <select id=full-animation-type><option value=auto>Auto<option value=custom>Custom sequence</select> <button id=add-frame-btn-2 class=add-frame-class-btn>+ Add frame group</button></div></div><div class=frame-editor><div><b>Current Animation Frames:</b></div><div class=frames-container id=full-current-frames></div><div class=edit-controls><button id=full-apply-changes>Preview</button> <button id=full-clear-frames class=secondary>Clear</button></div></div><div class=available-frames><div><b>Available Frames (click to add):</b></div><div class=frames-container id=full-available-frames></div></div></div><div class=edit-controls><button id=full-apply-changes>Preview</button> <button id=full-save-changes>Save & Close</button> <button id=full-cancel-changes class=secondary>Cancel</button></div></div><div class="panel bottom-panel"><h2>Actions</h2><div class=button-container><button id=save-btn class=secondary>Save Config</button> <button id=view-json-btn class=secondary>View config.json</button></div></div><div class=modal-overlay id=deletion-modal><div class=modal-content><h2>Saving Configuration</h2><div id=deletion-progress-container><div style=display:flex;justify-content:space-between><span id=deletion-status>Preparing to save...</span> <span id=deletion-count></span></div><progress id=deletion-progress-bar max=0 style=width:100% value=0></progress><div id=deletion-details></div></div><div style=display:flex;justify-content:flex-end;margin-top:15px><button id=close-deletion-modal class=secondary style=display:none disabled>Close</button></div></div></div><div class=modal-overlay id=json-viewer-modal style=display:none><div class=modal-content style=width:90%;max-width:800px;position:relative><button id=copy-json-btn style=top:10px>Copy to Clipboard</button> <button id=edit-json-btn>Edit JSON</button> <button id=close-json-viewer style=top:10px;right:10px;height:45px;background-color:red>×</button><pre id=json-display style=margin:45></pre><div style=display:flex;justify-content:flex-end;margin-top:15px></div></div></div><div class=modal-overlay id=json-editor-modal style=display:none><div class=modal-content style=width:95vw;max-width:800px;height:90vh;display:flex;flex-direction:column;overflow:hidden;padding:20px><div style=display:flex;justify-content:space-between;margin-bottom:15px;align-items:center;flex-shrink:0><h2 style=margin:0>Edit JSON</h2><div><button id=cancel-json-btn class=secondary style=margin-right:10px>Cancel</button> <button id=save-json-btn>Save</button></div></div><textarea id=json-editor style="flex-grow:1;min-height:0;background:#2d2d2d;color:#e0e0e0;font-family:'Courier New',monospace;padding:15px;border:1px solid #444;border-radius:5px;resize:none;overflow-y:auto;margin:0"></textarea></div></div><div class=modal-overlay id=processing-modal style=display:none;background-color:rgba(0,0,0,.7)><div class=modal-content style=background-color:#fff;padding:20px;border-radius:8px;text-align:center><h2>Running preview</h2><div id=processing-status>Sending proot...</div><div style=margin-top:20px><div class=loader></div></div></div></div><script>let managedStarted = false;
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Protopanda expression editor</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #f0f2f5;
+            --button-color: #5a8fd3;
+            --button-hover: #4a7bbf;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            background-color: var(--secondary-color);
+            color: #333;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        #image-container {
+            margin: 20px 0;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            overflow: hidden;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #image-display {
+            width: 256px;
+            height: 128px;
+            display: block;
+            align-items: center;
+            image-rendering: pixelated;
+        }
+
+        .top-panels {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+            margin-top: 20px;
+        }
+
+        .bottom-panel {
+            width: 100%;
+            max-width: 1200px;
+            margin-top: 20px;
+        }
+
+        .panel {
+            flex: 1;
+            min-height: 300px;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ddd;
+        }
+
+        .panel h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        button {
+            background-color: var(--button-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--button-hover);
+        }
+
+        button.secondary {
+            background-color: #6c757d;
+        }
+
+        button.secondary:hover {
+            background-color: #5a6268;
+        }
+
+        button.danger {
+            background-color: #dc3545;
+        }
+
+        button.danger:hover {
+            background-color: #c82333;
+        }
+
+        .expression-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .expression-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .expression-item.active {
+            background-color: #e7f1ff;
+            border-color: #cfe2ff;
+        }
+
+        .add-expression-btn {
+            background-color: #28a745 !important;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .add-expression-btn:hover {
+            background-color: #218838 !important;
+        }
+
+        .expression-name {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .expression-details {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .expression-controls {
+            display: flex;
+            gap: 5px;
+        }
+
+        .expression-controls button {
+            padding: 2px 8px;
+            font-size: 12px;
+            background-color: #6c757d;
+            margin: 0;
+            border-radius: 3px;
+        }
+
+        .expression-controls button:hover {
+            background-color: #5a6268;
+        }
+
+        .expression-controls button.danger {
+            background-color: #dc3545;
+        }
+
+        .expression-controls button.danger:hover {
+            background-color: #c82333;
+        }
+
+        .expression-controls button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Frame editor styles */
+        .frame-editor {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+        }
+
+        .frames-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+            min-height: 50px;
+            padding: 10px;
+            border: 1px dashed #ccc;
+            border-radius: 4px;
+        }
+
+        .frame-item {
+            padding: 5px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            cursor: grab;
+            user-select: none;
+            transition: transform 0.1s, background-color 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 80px;
+            position: relative;
+        }
+
+        .frame-item:hover {
+            background-color: #d1e7ff;
+        }
+
+        .frame-item.dragging {
+            opacity: 0.5;
+            transform: scale(1.1);
+        }
+
+        .frame-item.invalid {
+            background-color: #ffe3e3;
+            color: #dc3545;
+        }
+
+        .frame-item img {
+            width: 64px;
+            height: 32px;
+            image-rendering: pixelated;
+            margin-bottom: 5px;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: -5px;
+            right: 2px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 0%;
+            width: 1px;
+            height: 1px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .frame-item:hover .remove-btn {
+            opacity: 1;
+        }
+
+        .available-frames {
+            margin-top: 20px;
+        }
+
+        .edit-controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .edit-controls button {
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+
+        select {
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ced4da;
+        }
+
+        .animation-type-selector {
+            margin-top: 10px;
+        }
+
+        .duration-control {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .duration-control input {
+            width: 80px;
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ced4da;
+        }
+
+        .full-edit-mode .panel:not(.editor-panel) {
+            display: none;
+        }
+
+        .editor-panel {
+            display: none;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .full-edit-mode .editor-panel {
+            display: block;
+        }
+
+        .drop-indicator {
+            height: 2px;
+            background-color: var(--primary-color);
+            margin: 5px 0;
+            position: relative;
+        }
+
+        .drop-indicator::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            background-color: rgba(74, 111, 165, 0.1);
+        }
+
+        .frames-type-selector {
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+        }
+
+        .frames-type-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .frames-type-item {
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .frames-type-item:hover {
+            background-color: #d1e7ff;
+        }
+
+        .frames-type-item.active {
+            background-color: var(--button-color);
+            color: white;
+        }
+
+        .expression-name-input {
+            margin-top: 10px;
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+
+        .transition-checkbox {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .transition-checkbox input {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* New frame definition styles */
+        .frame-definition {
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .frame-definition-item {
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: background-color 0.2s;
+        }
+
+        .frame-preview {
+            width: 64px;
+            height: 32px;
+            image-rendering: pixelated;
+            border: 1px solid #ddd;
+            background-color: #fff;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
+        .frame-info {
+            flex-grow: 1;
+        }
+
+        .frame-name {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .frame-count {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .frame-definition-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .frame-definition-form input {
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+
+        .frame-definition-form button {
+            margin-top: 5px;
+        }
+
+        .right-panel-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            height: 20%;
+        }
+
+        .right-panel-container .panel {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+        }
+
+        .right-panel-container .panel:first-child {
+            height: 250px;
+            flex: 0 0 auto;
+            /* Don't grow or shrink */
+            overflow: auto;
+        }
+
+        .right-panel-container .panel:last-child {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+        }
+
+        .frame-editor-panel {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
+
+
+        .frame-edit-mode .panel:not(.frame-editor-panel) {
+            display: none;
+        }
+
+        .frame-editor-panel {
+            display: none;
+            width: 100%;
+            max-width: 1200px;
+            margin-top: 20px;
+        }
+
+        .frame-edit-mode .frame-editor-panel {
+            display: block;
+        }
+
+        .frame-definition-item button.danger {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            align-self: center;
+        }
+
+        .frame-definition-item button.danger:hover {
+            background-color: #c82333;
+        }
+
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            display: none;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        progress {
+            width: 100%;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        progress::-webkit-progress-bar {
+            background-color: #f0f0f0;
+            border-radius: 10px;
+        }
+
+        progress::-webkit-progress-value {
+            background-color: var(--button-color);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        progress::-moz-progress-bar {
+            background-color: var(--button-color);
+            border-radius: 10px;
+        }
+
+        #deletion-progress-container {
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        #deletion-details {
+            max-height: 100px;
+            overflow-y: auto;
+            background-color: white;
+            padding: 5px;
+            border-radius: 3px;
+            border: 1px solid #eee;
+        }
+
+        #json-viewer-modal .modal-content {
+            background: #f8f8f8;
+            /* Light gray modal background */
+            border: 1px solid #ddd;
+        }
+
+        #json-display {
+            background: #2d2d2d;
+            /* Dark gray background for code */
+            color: #e0e0e0;
+            /* Light text color */
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            tab-size: 2;
+            overflow-x: auto;
+            border: 1px solid #444;
+        }
+
+        /* Syntax highlighting for dark gray background */
+        #json-display .string {
+            color: #7ec699;
+        }
+
+        /* Greenish for strings */
+        #json-display .number {
+            color: #f08d49;
+        }
+
+        /* Orange for numbers */
+        #json-display .boolean {
+            color: #cc99cd;
+        }
+
+        /* Purple for booleans */
+        #json-display .null {
+            color: #f8c555;
+        }
+
+        /* Yellow for null */
+        #json-display .key {
+            color: #f44747;
+        }
+
+        /* Red for keys */
+
+        .selector-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .add-frame-class-btn {
+            background-color: var(--button-color);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+            white-space: nowrap;
+            margin-left: auto;
+            /* This pushes it to the right */
+        }
+
+        .add-frame-class-btn:hover {
+            background-color: var(--button-hover);
+        }
+
+        #full-animation-type {
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ced4da;
+            width: auto;
+            /* Let it take only needed space */
+        }
+
+        .file-buttons-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        .file-buttons-container button {
+            width: 48%;
+            /* Slightly less than half to account for spacing */
+            margin: 0;
+        }
+
+        #preview-lua {
+            margin-left: 10px;
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        #preview-lua:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Protopanda expression editor</h1>
+        <div id="image-container">
+            <center>
+                <img id="image-display" src="" loading="lazy" alt="Placeholder Image">
+            </center>
+        </div>
+    </header>
+
+    <div class="top-panels">
+        <div class="panel">
+            <h2>Expressions</h2>
+            <div id="expressions-container">
+                <p>No config loaded. Expressions will appear here.</p>
+            </div>
+        </div>
+
+        <div class="right-panel-container">
+            <div class="panel">
+                <h2>Configuration Details</h2>
+                <div id="config-details">
+                    <p>Select an expression to view details</p>
+                </div>
+                <div id="frame-editor-container" style="display: none;">
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Frame groups
+                    <button id="add-frame-btn" class="add-expression-btn" style="float: right;">+ Add frame
+                        class</button>
+                </h2>
+                <div id="frames-list">
+                    <p>No frame definitions loaded</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="frame-editor-panel panel">
+        <h2>Frame group creator</h2>
+        <div class="frame-definition-form">
+            <div>
+                <label for="frame-class-name"><b>Frame group Name:</b></label>
+                <input type="text" id="frame-class-name" placeholder="e.g. frames_normal" required>
+            </div>
+
+            <div style="margin-top: 15px;">
+                <label for="frame-files"><b>Upload Frame Files (64×32 PNG only):</b></label>
+                <input type="file" id="frame-files" multiple accept="image/png,.png" style="display: none;">
+                <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                    <button onclick="document.getElementById('frame-files').click()">Add frames</button>
+                    <button onclick="clearSelectedFiles()">Clear All Files</button>
+                </div>
+                <div id="selected-files-list" style="margin-top: 10px;"></div>
+            </div>
+
+            <div style="margin-top: 15px;">
+                <label><input type="checkbox" id="flip-left-checkbox" checked>Mirror image on second screen</label>
+            </div>
+
+            <div class="edit-controls" style="margin-top: 20px;">
+                <button id="upload-frames-btn">Upload & Save</button>
+                <button id="cancel-frame-btn" class="secondary">Cancel</button>
+            </div>
+
+            <div id="upload-progress" style="margin-top: 15px; display: none;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Uploading files...</span>
+                    <span id="upload-count">0/0</span>
+                </div>
+                <progress id="upload-progress-bar" value="0" max="100" style="width: 100%;"></progress>
+                <div id="upload-status" style="margin-top: 5px; font-size: 0.9em;"></div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div class="editor-panel panel">
+        <h2>Expressions Editor</h2>
+        <div><b>Options:</b></div>
+        <div class="frames-type-selector">
+            <div><b>Name:</b></div>
+            <input type="text" id="expression-name-input" class="expression-name-input" placeholder="Expression name">
+
+            <div class="transition-checkbox">
+                <input type="checkbox" id="transition-checkbox">
+                <label for="transition-checkbox"><b>This animation a transition</b></label>
+            </div>
+            <div class="transition-checkbox">
+                <input type="checkbox" id="hidden-checkbox">
+                <label for="hidden-checkbox"><b>Hide this expression from menu</b></label>
+            </div>
+            <div class="duration-control">
+                <label>Speed (ms):</label>
+                <input type="number" id="full-animation-duration" min="50" step="50">
+            </div>
+        </div>
+        <div><b>Frames:</b></div>
+        <div class="frames-type-selector">
+            <div class="frames-type-selector">
+                <div><b>Frame groups:</b></div>
+                <div class="frames-type-container" id="frames-type-container"></div>
+            </div>
+
+            <div class="animation-type-selector">
+                <div class="selector-header">
+                    <b>Frame ordering:</b>
+                    <select id="full-animation-type">
+                        <option value="auto">Auto</option>
+                        <option value="custom">Custom sequence</option>
+                    </select>
+                    <button id="add-frame-btn-2" class="add-frame-class-btn">+ Add frame group</button>
+                </div>
+            </div>
+
+            <div class="frame-editor">
+                <div><b>Current Animation Frames:</b></div>
+                <div class="frames-container" id="full-current-frames"></div>
+                <div class="edit-controls">
+                    <button id="full-apply-changes">Preview</button>
+                    <button id="full-clear-frames" class="secondary">Clear</button>
+                </div>
+            </div>
+            <div class="available-frames">
+                <div><b>Available Frames (click to add):</b></div>
+                <div class="frames-container" id="full-available-frames"></div>
+            </div>
+        </div>
+
+        <div class="edit-controls">
+            <button id="full-apply-changes">Preview</button>
+            <button id="full-save-changes">Save & Close</button>
+            <button id="full-cancel-changes" class="secondary">Cancel</button>
+        </div>
+    </div>
+
+    <div class="bottom-panel panel">
+        <h2>Actions</h2>
+        <div class="button-container">
+            <button id="save-btn" class="secondary">Save Config</button>
+            <button id="view-json-btn" class="secondary">View config.json</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="deletion-modal">
+        <div class="modal-content">
+            <h2>Saving Configuration</h2>
+            <div id="deletion-progress-container">
+                <div style="display: flex; justify-content: space-between;">
+                    <span id="deletion-status">Preparing to save...</span>
+                    <span id="deletion-count"></span>
+                </div>
+                <progress id="deletion-progress-bar" value="0" max="0" style="width: 100%;"></progress>
+                <div id="deletion-details"></div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
+                <button id="close-deletion-modal" class="secondary" disabled style="display: none;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="json-viewer-modal" style="display: none;">
+        <div class="modal-content" style="width: 90%; max-width: 800px; position: relative;">
+            <!-- Close button (X icon) in top-right corner -->
+            <button id="copy-json-btn" style="top: 10px;">Copy to Clipboard</button>
+            <button id="edit-json-btn">Edit JSON</button>
+            <button id="close-json-viewer" style="
+            top: 10px;
+            right: 10px;
+            height: 45px;
+            background-color: #ff0000;
+        ">×</button>
+
+            <pre id="json-display" style="margin: 45;"></pre>
+            <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="json-editor-modal" style="display: none;">
+        <div class="modal-content" style="
+    width: 95vw;
+    max-width: 800px;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 20px;
+  ">
+            <div style="
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      align-items: center;
+      flex-shrink: 0;
+    ">
+                <h2 style="margin: 0;">Edit JSON</h2>
+                <div>
+                    <button id="cancel-json-btn" class="secondary" style="margin-right: 10px;">Cancel</button>
+                    <button id="save-json-btn">Save</button>
+                </div>
+            </div>
+
+            <textarea id="json-editor" style="
+      flex-grow: 1;
+      min-height: 0;
+      background: #2d2d2d;
+      color: #e0e0e0;
+      font-family: 'Courier New', monospace;
+      padding: 15px;
+      border: 1px solid #444;
+      border-radius: 5px;
+      resize: none;
+      overflow-y: auto;
+      margin: 0;
+    "></textarea>
+        </div>
+    </div>
+    <div class="modal-overlay" id="processing-modal" style="display: none; background-color: rgba(0,0,0,0.7);">
+        <div class="modal-content"
+            style="background-color: white; padding: 20px; border-radius: 8px; text-align: center;">
+            <h2>Running preview</h2>
+            <div id="processing-status">Sending proot...</div>
+            <div style="margin-top: 20px;">
+                <div class="loader"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let managedStarted = false;
         let isProcessing = false;
         let frameClassesModified = false;
         let currentAnimation = null;
@@ -35,14 +981,11 @@
 
             let animationSequence = [];
             if (expression.animation === 'auto') {
-                // Generate auto sequence
                 if (framesDef.files) {
-                    // Use files array length for auto sequence
-                    for (let i = 0; i < framesDef.files.length; i++) {
+                    for (let i = 1; i < framesDef.files.length+1; i++) {
                         animationSequence.push(i);
                     }
                 } else {
-                    // Use from/to for auto sequence
                     for (let i = framesDef.from; i <= framesDef.to; i++) {
                         animationSequence.push(i);
                     }
@@ -65,34 +1008,35 @@
                 let imagePath;
 
                 if (framesDef.files) {
-                    // Use direct file path from array
-                    if (frameNumber >= 0 && frameNumber < framesDef.files.length) {
-                        imagePath = framesDef.files[frameNumber];
+                    if (frameNumber >= 0 && frameNumber < (framesDef.files.length+1)) {
+                        imagePath = framesDef.files[frameNumber-1];
+                        console.log("Looking for ", frameNumber, "at ", framesDef.files)
                     } else {
                         console.error('Invalid frame number:', frameNumber);
                         currentFrameIndex = (currentFrameIndex + 1) % animationSequence.length;
                         return;
                     }
                 } else {
-                    // Use pattern-based path
                     imagePath = sprintf(framesDef.pattern, frameNumber);
                 }
+                if (imagePath){
 
-                const result = imagePath.startsWith("/") ? imagePath.slice(1) : imagePath;
+                    const result = imagePath.startsWith("/") ? imagePath.slice(1) : imagePath;
 
-                isImageLoaded = false;
+                    isImageLoaded = false;
 
-                imgDisplay.onload = () => {
-                    isImageLoaded = true;
-                };
+                    imgDisplay.onload = () => {
+                        isImageLoaded = true;
+                    };
 
-                imgDisplay.onerror = () => {
-                    isImageLoaded = true;
-                    console.error('Failed to load image:', result);
-                };
+                    imgDisplay.onerror = () => {
+                        isImageLoaded = true;
+                        console.error('Failed to load image:', result);
+                    };
 
-                imgDisplay.src = result;
-                currentFrameIndex = (currentFrameIndex + 1) % animationSequence.length;
+                    imgDisplay.src = result;
+                    currentFrameIndex = (currentFrameIndex + 1) % animationSequence.length;
+                }
             };
 
             animateFrame();
@@ -143,11 +1087,11 @@
             });
         }
 
-        function createFrameElement(frameNumber, framesDef, isFullEditor = false, addRmButton = false) {
+        function createFrameElement(idxFrame, frameNumber, framesDef, isFullEditor = false, addRmButton = false) {
             const frameElement = document.createElement('div');
             frameElement.className = 'frame-item';
             frameElement.draggable = true;
-            frameElement.dataset.frame = frameNumber;
+            frameElement.dataset.frame = idxFrame;
 
             let imagePath;
             if (framesDef.files) {
@@ -172,8 +1116,8 @@
             const result = imagePath.startsWith("/") ? imagePath.slice(1) : imagePath;
 
             var str = `
-        <img src="${result}" alt="Frame ${frameNumber}" loading="lazy" onerror="this.style.display='none'">
-        <span>${frameNumber}</span>`;
+        <img src="${result}" alt="Frame ${idxFrame}" loading="lazy" onerror="this.style.display='none'">
+        <span>${idxFrame}</span>`;
 
             if (addRmButton) {
                 str = str + `<button class="remove-btn">×</button>`
@@ -188,7 +1132,7 @@
             } else {
                 frameElement.addEventListener('click', (e) => {
                     e.currentTarget = frameElement;
-                    e.frameNumber = frameNumber;
+                    e.frameNumber = idxFrame;
                     handlePressAddFrame(e);
                 });
             }
@@ -280,7 +1224,6 @@
                 currentFramesContainer.innerHTML = '';
             });
 
-            // Handle animation type change
             animationTypeSelect.addEventListener('change', (e) => {
                 if (e.target.value === 'auto') {
                     generateAutoFrames(expression, true);
@@ -291,10 +1234,12 @@
 
             document.getElementById('full-apply-changes').addEventListener('click', () => {
                 saveExpressionChanges(expression, true, false);
+                updateExpressionDetails(expressionIndex)
             });
 
             document.getElementById('full-save-changes').addEventListener('click', () => {
                 saveExpressionChanges(expression, true, true);
+                updateExpressionDetails(expressionIndex)
             });
 
             document.getElementById('full-cancel-changes').addEventListener('click', () => {
@@ -314,15 +1259,19 @@
 
             if (framesDef.files) {
                 // Use files array directly
+                let frameId = 1;
                 for (let i = 0; i < framesDef.files.length; i++) {
-                    const frameElement = createFrameElement(i, framesDef, isFullEditor, false);
+                    const frameElement = createFrameElement(frameId, i, framesDef, isFullEditor, false);
                     container.appendChild(frameElement);
+                    frameId++;
                 }
             } else {
+                let frameId = 1;
                 // Fall back to from/to pattern
                 for (let i = framesDef.from; i <= framesDef.to; i++) {
-                    const frameElement = createFrameElement(i, framesDef, isFullEditor, false);
+                    const frameElement = createFrameElement(frameId, i, framesDef, isFullEditor, false);
                     container.appendChild(frameElement);
+                    frameId++;
                 }
             }
         }
@@ -337,17 +1286,20 @@
 
             container.innerHTML = '';
 
+            let frameId = 1
             if (framesDef.files) {
                 // Create frames for each file in the array
                 for (let i = 0; i < framesDef.files.length; i++) {
-                    const frameElement = createFrameElement(i, framesDef, isFullEditor, true);
+                    const frameElement = createFrameElement(frameId, i, framesDef, isFullEditor, true);
                     container.appendChild(frameElement);
+                    frameId++;
                 }
             } else {
                 // Fall back to from/to pattern
                 for (let i = framesDef.from; i <= framesDef.to; i++) {
-                    const frameElement = createFrameElement(i, framesDef, isFullEditor, true);
+                    const frameElement = createFrameElement(frameId, i, framesDef, isFullEditor, true);
                     container.appendChild(frameElement);
+                    frameId++;
                 }
             }
         }
@@ -363,21 +1315,24 @@
             container.innerHTML = '';
 
             if (Array.isArray(expression.animation)) {
-                expression.animation.forEach(frame => {
-                    const frameElement = createFrameElement(frame, framesDef, isFullEditor, true);
 
+                expression.animation.forEach(frame => {
                     // Mark invalid frames
                     if (framesDef.files) {
-                        if (frame < 0 || frame >= framesDef.files.length) {
+                        const frameElement = createFrameElement(frame, frame-1, framesDef, isFullEditor, true);
+                        if (frame < 0 || frame > framesDef.files.length) {
                             frameElement.classList.add('invalid');
                         }
+                        container.appendChild(frameElement);
                     } else {
+                        const frameElement = createFrameElement(frame, frame, framesDef, isFullEditor, true);
                         if (frame < framesDef.from || frame > framesDef.to) {
                             frameElement.classList.add('invalid');
                         }
+                        container.appendChild(frameElement);
                     }
 
-                    container.appendChild(frameElement);
+                    
                 });
             }
         }
@@ -462,7 +1417,8 @@
                 // Validate frames
                 const invalidFrames = frames.filter(frame => {
                     if (framesDef.files) {
-                        return frame < 0 || frame >= framesDef.files.length;
+                        frame++;
+                        return frame < 1 || frame > (framesDef.files.length+1);
                     } else {
                         return frame < framesDef.from || frame > framesDef.to;
                     }
@@ -471,7 +1427,7 @@
                 if (invalidFrames.length > 0) {
                     let rangeText;
                     if (framesDef.files) {
-                        rangeText = `0-${framesDef.files.length - 1}`;
+                        rangeText = `1-${framesDef.files.length - 1}`;
                     } else {
                         rangeText = `${framesDef.from}-${framesDef.to}`;
                     }
@@ -484,7 +1440,9 @@
             }
 
             expression.duration = durationInput.value ? parseInt(durationInput.value) : undefined;
+            delete expression.isNew;
             config.expressions[currentEditing] = JSON.parse(JSON.stringify(expression));
+            
 
             // Update display and restart animation
             if (!isFullEditor) {
@@ -505,7 +1463,12 @@
 
             const container = document.getElementById('full-current-frames')
 
-            container.appendChild(e.currentTarget.cloneNode(true));
+            let cloned = e.currentTarget.cloneNode(true)
+            var str =  cloned.innerHTML
+            str = str + `<button class="remove-btn">×</button>`
+            cloned.innerHTML = str;
+
+            container.appendChild(cloned);
 
             const animationTypeSelect = document.getElementById('full-animation-type');
 
@@ -513,11 +1476,11 @@
             if (animationTypeSelect.value === 'auto') {
                 animationTypeSelect.value = 'custom';
 
-                //currentExpression.animation = originalExpressionState.animation
+                currentExpression.animation = originalExpressionState.animation
 
                 animationTypeSelect.dispatchEvent(new Event('change'));
                 generateAutoFrames(currentExpression, true);
-                container.appendChild(e.currentTarget.cloneNode(true));
+                container.appendChild(cloned);
             }
         }
 
@@ -1310,6 +2273,11 @@
                     throw new Error('Failed to load config.json');
                 }
                 config = await response.json();
+                config.frames.forEach(frame => {
+                    if ('isNew' in frame) {
+                        delete frame.isNew;
+                    }
+                });
                 renderExpressions();
                 renderFrameClassesDefinitions();
                 if (config.expressions.length > 0) {
@@ -1686,4 +2654,8 @@
             document.getElementById('cancel-json-btn').addEventListener('click', () => {
                 editorModal.style.display = 'none';
             });
-        }</script>
+        }
+    </script>
+</body>
+
+</html>

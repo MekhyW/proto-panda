@@ -525,12 +525,17 @@ TaskHandle_t managedFramesHandle = NULL;
 bool compositionComplete = false;
 static bool isManaged = false;
 static uint32_t managedDuration = 0;
-void composeBulkFileTask(void *parameter)
-{
+static uint32_t lastCompose = 0;
+void composeBulkFileTask(void *parameter){
+  if (lastCompose > millis()){
+    return;
+  }
+  lastCompose = millis() + 10*1000;
   g_frameRepo.composeBulkFile();
   compositionComplete = true;
   vTaskDelay(pdMS_TO_TICKS(1000)); // Short delay before cleanup
   composeTaskHandle = NULL;
+  lastCompose = millis() + 10*1000;
   vTaskDelete(NULL);
 }
 
@@ -539,14 +544,11 @@ void handleComposeStart(AsyncWebServerRequest *request)
   // Check if task is already running
   if (composeTaskHandle != NULL)
   {
-    if (compositionComplete)
-    {
-      request->send(200, "text/plain", "Status: Previous composition completed");
-    }
-    else
-    {
-      request->send(200, "text/plain", "Status: Composition already in progress");
-    }
+    request->send(200, "text/plain", "Status: Composition already in progress");
+    return;
+  }
+  if (lastCompose > millis()){
+    request->send(200, "text/plain", "Status: Composition already in progress");
     return;
   }
 

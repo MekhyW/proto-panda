@@ -220,10 +220,4 @@ void EditMode::LoopEditMode(){
   if (client){
     handleClient(client);
   }
-
-  static uint32_t memes = 0;
-  if (memes < millis()){
-    Devices::CalculateMemmoryUsage();
-    memes = millis() + 2000;
-  }
 }
