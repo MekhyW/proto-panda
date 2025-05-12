@@ -151,7 +151,11 @@ void EditMode::DoBegin(bool useSSID)
       Logger::Info("Trying...");
     }
     Logger::Info("Connected!");
-    Logger::Info("http://%s:%d", WiFi.localIP().toString().c_str(), EDIT_MODE_HTTP_PORT);
+    if (EDIT_MODE_HTTP_PORT == 80){
+      Logger::Info("http://%s", WiFi.localIP().toString().c_str());
+    }else{
+      Logger::Info("http://%s:%d", WiFi.localIP().toString().c_str(), EDIT_MODE_HTTP_PORT);
+    }
     Logger::Info("FTP: %s:%d", WiFi.localIP().toString().c_str(), EDIT_MODE_FTP_PORT);
   }
   else

@@ -1010,7 +1010,6 @@
                 if (framesDef.files) {
                     if (frameNumber >= 0 && frameNumber < (framesDef.files.length+1)) {
                         imagePath = framesDef.files[frameNumber-1];
-                        console.log("Looking for ", frameNumber, "at ", framesDef.files)
                     } else {
                         console.error('Invalid frame number:', frameNumber);
                         currentFrameIndex = (currentFrameIndex + 1) % animationSequence.length;
@@ -2193,7 +2192,7 @@
 
                     // If response is OK but empty, consider it success
                     const result = await response.text();
-                    if (result === "" || result.includes("OK") || result.includes("success")) {
+                    if (result === "" || result.includes("success\": true") || result.includes("success")) {
                         uploadedFiles.push(`${uploadPath}/${file.name}`);
                         successCount++;
                     } else {
