@@ -12,7 +12,7 @@
 
 #define PIN_LED_1 2
 #define PIN_LED_2 3
-#define PIN_LED_3 4
+#define PIN_POWER_ACC 4
 
 const uint8_t button_pins[] = {
   30,
@@ -203,8 +203,8 @@ static void nrf_qwr_error_handler(uint32_t nrf_error) {
 
 static void sleep_mode_enter(void) {
 
-  nrf_gpio_pin_set(PIN_LED_3);
-  nrf_gpio_pin_clear(PIN_LED_2);
+  nrf_gpio_pin_clear(PIN_POWER_ACC);
+  nrf_gpio_pin_set(PIN_LED_2);
   nrf_gpio_pin_clear(PIN_LED_1);
 
   uint32_t err_code;
@@ -223,9 +223,9 @@ static void sleep_mode_enter(void) {
       nrf_gpio_cfg_input(button_pins[i], NRF_GPIO_PIN_PULLDOWN);
   }
 
-  nrf_gpio_pin_clear(PIN_LED_1);
   nrf_gpio_pin_clear(PIN_LED_2);
-  nrf_gpio_pin_clear(PIN_LED_3);
+  nrf_gpio_pin_clear(PIN_LED_2);
+  nrf_gpio_pin_clear(PIN_POWER_ACC);
 
   sd_power_system_off();
 }
@@ -455,9 +455,9 @@ static void app_timer_handler(void * p_context) {
   if (m_our_service.conn_handle != BLE_CONN_HANDLE_INVALID) {
     if (received_config_integer) {
       if (advCountToSleep % 50 == 0) {
-        nrf_gpio_pin_set(config_integer == 0 ? PIN_LED_1 : (config_integer == 1 ? PIN_LED_2 : (config_integer == 2 ? PIN_LED_3 : PIN_LED_1)));
+        nrf_gpio_pin_set(config_integer == 0 ? PIN_LED_1 : PIN_LED_2 );
       } else {
-        nrf_gpio_pin_clear(config_integer == 0 ? PIN_LED_1 : (config_integer == 1 ? PIN_LED_2 : (config_integer == 2 ? PIN_LED_3 : PIN_LED_1)));
+        nrf_gpio_pin_clear(config_integer == 0 ? PIN_LED_1 : PIN_LED_2);
       }
     } else {
       if (advCountToSleep % 10 == 0) {
@@ -468,7 +468,7 @@ static void app_timer_handler(void * p_context) {
         if (canCycle) {
           canCycle = false;
           cycleTimer++;
-          if (cycleTimer > PIN_LED_3) {
+          if (cycleTimer > PIN_LED_2) {
             cycleTimer = PIN_LED_1;
           }
         }
@@ -601,7 +601,9 @@ static bool isOn(int pin) {
 
 
 int main(void) {
+  nrf_gpio_cfg_output(PIN_POWER_ACC);
 
+  nrf_gpio_pin_set(PIN_POWER_ACC);
   started_everything = false;
   started_timer = 100;
 
@@ -616,9 +618,7 @@ int main(void) {
 
   nrf_gpio_cfg_output(PIN_LED_1);
   nrf_gpio_cfg_output(PIN_LED_2);
-  nrf_gpio_cfg_output(PIN_LED_3);
 
-  nrf_gpio_pin_clear(PIN_LED_3);
   nrf_gpio_pin_clear(PIN_LED_2);
   nrf_gpio_pin_clear(PIN_LED_1);
 
@@ -626,25 +626,21 @@ int main(void) {
       nrf_gpio_cfg_input(button_pins[i], NRF_GPIO_PIN_PULLUP);
    }
 
-
-  nrf_delay_ms(50);
-  nrf_gpio_pin_set(PIN_LED_3);
-  nrf_delay_ms(50);
+  
   nrf_gpio_pin_set(PIN_LED_2);
   nrf_delay_ms(50);
   nrf_gpio_pin_set(PIN_LED_1);
   nrf_delay_ms(50);
 
-  nrf_gpio_pin_clear(PIN_LED_3);
-  nrf_delay_ms(50);
+
   nrf_gpio_pin_clear(PIN_LED_2);
   nrf_delay_ms(50);
   nrf_gpio_pin_clear(PIN_LED_1);
-  nrf_delay_ms(50);
+  nrf_delay_ms(500);
 
   nrf_gpio_cfg_input(button_wakeup_pins[0], NRF_GPIO_PIN_PULLDOWN);
 
-  adv_led = PIN_LED_3;
+  adv_led = PIN_LED_1;
   gmode = 0;
 
   loud_led = false;
@@ -655,7 +651,7 @@ int main(void) {
  
   power_management_init();
 
-  nrf_gpio_pin_set(PIN_LED_3);
+  
   nrf_gpio_pin_set(PIN_LED_2);
   nrf_gpio_pin_clear(PIN_LED_1);
   if (LSM6_init() == false) {
@@ -663,11 +659,11 @@ int main(void) {
     NRF_LOG_FLUSH();
 
     for (int i = 0; i < 4; i++) {
-      nrf_gpio_pin_clear(PIN_LED_3);
+      
       nrf_gpio_pin_clear(PIN_LED_2);
       nrf_gpio_pin_clear(PIN_LED_1);
       nrf_delay_ms(250);
-      nrf_gpio_pin_set(PIN_LED_3);
+    
       nrf_gpio_pin_set(PIN_LED_2);
       nrf_gpio_pin_set(PIN_LED_1);
       nrf_delay_ms(250);
@@ -682,7 +678,6 @@ int main(void) {
     LSM6_configure();
   }
   nrf_gpio_pin_clear(PIN_LED_2);
-  nrf_gpio_pin_clear(PIN_LED_3);
 
   ble_stack_init();
   gap_params_init();
