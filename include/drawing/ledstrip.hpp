@@ -30,6 +30,7 @@ class BaseLedGroup{
     public:
     BaseLedGroup():from(0),to(0),behavior(BEHAVIOR_NONE),parameter(0),parameter2(0),parameter3(0),parameter4(0),time(0),time2(2),val(0),sum(5){};
 
+    
     uint32_t from;
     uint32_t to;
     LedBehavior behavior;
@@ -66,6 +67,7 @@ class BaseLedGroup{
 
 class LedGroup : public BaseLedGroup{
     public:
+        static LedGroup* PsramAllocateLedGroup(size_t len);
         LedGroup():BaseLedGroup(),m_onTween(false),m_tweenCycle(0.0f),m_tweenRate(0.001f),m_tweening(),m_tweenBuffer(nullptr),m_tweenBufferSize(0){};
 
         void preallocate();
@@ -86,6 +88,7 @@ class LedStrip {
         bool Begin(uint16_t ledCount, uint16_t maxbrightness){
             return BeginDual(ledCount, 0, maxbrightness);
         }
+        static CRGB* allocateCRGB(size_t len);
         bool BeginDual(uint16_t ledCount, uint16_t secondLedCount, uint8_t maxbrightness);
         void Update();
         

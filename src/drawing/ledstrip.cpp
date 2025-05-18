@@ -9,7 +9,7 @@ bool LedStrip::BeginDual(uint16_t ledCount, uint16_t secondLedCount, uint8_t max
         Logger::Info("Starting total of %d leds", ledCount+secondLedCount);
         m_ledAmount = ledCount+secondLedCount;
         m_maxBrightness = maxbrightness;
-        m_leds = new CRGB[m_ledAmount+secondLedCount+1];
+        m_leds = (CRGB*)ps_malloc(sizeof(CRGB) * (m_ledAmount+secondLedCount+1));
         if (m_leds == nullptr){
             return false;
         }
@@ -34,6 +34,12 @@ bool LedStrip::BeginDual(uint16_t ledCount, uint16_t secondLedCount, uint8_t max
         FastLED.show(); 
     }
     return true;
+}
+
+CRGB* LedStrip::allocateCRGB(size_t len){
+    CRGB* pixels = (CRGB*)ps_malloc(sizeof(CRGB) * len);
+    memset(pixels, 0, sizeof(CRGB) * len);
+    return pixels;
 }
 
 void LedStrip::setAllColor(CRGB col){
@@ -169,11 +175,11 @@ void LedStrip::setSegmentTweenBehavior(int id, LedBehavior bh, int parameter, in
 
 int LedStrip::StackBehavior(){
     xSemaphoreTake(m_mutex, portMAX_DELAY);
-    LedGroup *groups = new LedGroup[MAX_LED_GROUPS];
+    LedGroup *groups = LedGroup::PsramAllocateLedGroup(MAX_LED_GROUPS);
     for (int i=0;i<MAX_LED_GROUPS;i++){
         groups[i] = m_groups[i];
         if (groups[i].m_tweenBuffer != nullptr){
-            groups[i].m_tweenBuffer = new CRGB[groups[i].to-groups[i].from+1];
+            groups[i].m_tweenBuffer = LedStrip::allocateCRGB(groups[i].to-groups[i].from+1);
             for (int a=0;a<groups[i].m_tweenBufferSize;a++){
                 groups[i].m_tweenBuffer[a] = m_groups[i].m_tweenBuffer[a];
             }
@@ -197,11 +203,11 @@ int LedStrip::PopBehavior(){
         CRGB * oldBuffer = m_groups[i].m_tweenBuffer;
         m_groups[i] = groups[i];
         if (oldBuffer != nullptr){
-            delete [] oldBuffer;
+            heap_caps_free(oldBuffer);
         }
     }
 
-    delete [] groups;
+    heap_caps_free(groups);
     xSemaphoreGive(m_mutex);
     return 0;
 }
@@ -215,13 +221,21 @@ void LedStrip::Display(){
     }
 }
 
+LedGroup* LedGroup::PsramAllocateLedGroup(size_t len){
+    LedGroup* group = (LedGroup*)ps_malloc(sizeof(LedGroup) * len);
+    for (size_t l=0;l<len;l++){
+        group[l] = LedGroup();
+    }
+    return group;
+}
+
 void LedGroup::preallocate(){
     if (m_tweenBufferSize != to-from+1){
         m_tweenBufferSize = to-from+1;
         if (m_tweenBuffer != nullptr){
-           delete [] m_tweenBuffer;
+           heap_caps_free(m_tweenBuffer);
         }
-        m_tweenBuffer = new CRGB[to-from+1];
+        m_tweenBuffer = LedStrip::allocateCRGB(to-from+1);
         for (int i=0;i<m_tweenBufferSize;i++){
             m_tweenBuffer[i].setRGB(0,0,0);
         }

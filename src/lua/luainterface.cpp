@@ -893,6 +893,7 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("BUTTON_PRESSED", BUTTON_PRESSED);
   m_lua->setConstant("BUTTON_JUST_RELEASED", BUTTON_JUST_RELEASED);
 
+  m_lua->setConstant("BEHAVIOR_NONE", (int)BEHAVIOR_NONE);
   m_lua->setConstant("BEHAVIOR_PRIDE", (int)BEHAVIOR_PRIDE);
   m_lua->setConstant("BEHAVIOR_ROTATE", (int)BEHAVIOR_ROTATE);
   m_lua->setConstant("BEHAVIOR_RANDOM_COLOR", (int)BEHAVIOR_RANDOM_COLOR);
