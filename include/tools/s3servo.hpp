@@ -19,7 +19,7 @@
 #define MAX_BIT_NUM  16
 #endif
 
-#define PWM_Res   8
+#define PWM_Res   10
 
 class ToneESP32 { 
   private:

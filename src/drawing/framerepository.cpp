@@ -76,10 +76,8 @@ void FrameRepository::extractModes(JsonVariant &element, bool &flip_left, int &c
 }
 
 bool FrameRepository::loadCachedData(){
-
-    File filerb = SD.open( "/rebuildfile", "r" );
-    if( filerb ) {
-        filerb.close();
+    
+    if( SD.exists("/rebuildfile") ) {
         Logger::Error("rebuildfile is found, forcing rebuild.");
         SD.remove("/cache/cache.json");
         SD.remove("/rebuildfile");

@@ -203,7 +203,7 @@ static void nrf_qwr_error_handler(uint32_t nrf_error) {
 
 static void sleep_mode_enter(void) {
 
-  nrf_gpio_pin_clear(PIN_POWER_ACC);
+  
   nrf_gpio_pin_set(PIN_LED_2);
   nrf_gpio_pin_clear(PIN_LED_1);
 
@@ -216,8 +216,9 @@ static void sleep_mode_enter(void) {
     LSM6_set_power_mode(false);
   }
   // NRF_LOG_PROCESS();
-
+  
   nrf_delay_ms(2000);
+
 
   for (int i = 0; i < 5; i++) {
       nrf_gpio_cfg_input(button_pins[i], NRF_GPIO_PIN_PULLDOWN);
@@ -225,7 +226,7 @@ static void sleep_mode_enter(void) {
 
   nrf_gpio_pin_clear(PIN_LED_2);
   nrf_gpio_pin_clear(PIN_LED_2);
-  nrf_gpio_pin_clear(PIN_POWER_ACC);
+  //nrf_gpio_pin_clear(PIN_POWER_ACC);
 
   sd_power_system_off();
 }

@@ -102,14 +102,14 @@ std::vector<int> Devices::I2CScan(){
     error = Wire.endTransmission();
     if (error == 0)
     {
-        Logger::Print("I2C device found at address ");
+        
         if (address<16)
             Serial.print("0");
 
         foundDevicesAddr.emplace_back(address);
         
         Devices::foundDevices[address] = true;
-        Logger::Println("%d", address);
+        Logger::Print("I2C device found at address %d", address);
         nDevices++;
     }
     else if (error==4)

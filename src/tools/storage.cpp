@@ -12,7 +12,7 @@ uint16_t* Storage::tmpBuffer;
 
 
 bool Storage::Begin(){
-  SPI.setFrequency(80 * 1000 * 1000);
+  SPI.setFrequency(SPI_MAX_CLOCK);
     if(!SD.begin(SPI_CS, SPI, SPI_MAX_CLOCK, "/sd", 10)){
         return false;
     }   
@@ -25,7 +25,7 @@ File Storage::getFile(const char *name){
 }  
 
 String Storage::GetFileText(const char *name){
-  File myFile = getFile(name); // Open the file
+  File myFile = getFile(name);
   if (!myFile) {
     return "";
   }

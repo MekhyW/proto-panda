@@ -41,10 +41,7 @@ void Logger::Begin(){
 
     started = true;
 
-    Serial.print("Log file is: ");
-    Serial.println(m_filename.c_str());
 }
-
 
 void Logger::WriteLogHead(char mode){
     int now = millis();
@@ -53,7 +50,6 @@ void Logger::WriteLogHead(char mode){
     Serial.printf("][%c] ", mode);
 
 }
-
 
 void Logger::log(const char *c){
   Serial.print(c);
