@@ -488,6 +488,10 @@ void deleteBulkFile(){
   FFat.remove("/frames.bulk");
 }
 
+bool formatFFAT(bool full){
+  return FFat.format(full);
+}
+
 void composeBulkFile()
 {
   g_frameRepo.composeBulkFile();
@@ -887,6 +891,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("createDir", createDir);
   m_lua->FuncRegister("fileExists", fileExists);
   m_lua->FuncRegister("composeBulkFile", composeBulkFile);
+  m_lua->FuncRegister("formatFFAT", formatFFAT);
   m_lua->FuncRegister("deleteBulkFile", deleteBulkFile);
 }
 

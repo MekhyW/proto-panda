@@ -244,10 +244,10 @@ void OledScreen::DrawCircularProgress(int val, int max, const char *title) {
 
     display.drawCircle(centerX, centerY, radius, WHITE);
     if (percent > 0) {
-        int angle = 360 * percent;
+        float angle = 360 * percent;
         
-        for (int i = 0; i < angle; i += 1) {
-            float rad = (i - 90) * PI / 180.0f; 
+        for (float i = 0.0f; i < angle; i += 0.5f) {
+            float rad = (i - 90.0f) * PI / 180.0f; 
             int x = centerX + radius * cos(rad);
             int y = centerY + radius * sin(rad);
             display.drawLine(centerX, centerY, x, y, WHITE);

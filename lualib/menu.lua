@@ -92,6 +92,8 @@ function _M.setup(expressions)
         setPanelBrightness(0)
         panelPowerOff()
         noTone() --Since the beep is managed by the same core thats running the composing, the beep wouldn't stop. So we kill it right now
+        generic.displayWarning("Formatting", "Formatting", 1000)
+        formatFFAT(true)
         composeBulkFile()
         generic.displayWarning("Restart", "System will reboot", 2000)
         restart()

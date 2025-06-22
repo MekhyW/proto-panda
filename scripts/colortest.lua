@@ -68,15 +68,6 @@ function _M.onLoop(dt)
 		end
 	end
 
-	_M.rainbowShiftTimer = _M.rainbowShiftTimer - dt 
-	if _M.rainbowShiftTimer < 0 then 
-		_M.rainbowShiftTimer = 90
-		_M.rainbowShift = _M.rainbowShift + 1
-	end
-	
-
-
-
 	drawPanelFillCircle(10, 10, 9, color565(_M.red, _M.green, _M.blue))
 	drawPanelCircle(10, 10, 10, color565(255,255,255))
 	

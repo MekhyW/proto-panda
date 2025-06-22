@@ -17,10 +17,13 @@ template<typename... arg> void FrameBufferCriticalError(File *bulkFile, const ch
     for(;;){}
 }
 
+ 
+
 bool FrameRepository::Begin(){
     if (m_started){
         return true;
     }
+
     m_mutex = xSemaphoreCreateMutex();
     Logger::Info("Starting FFAT");
     if (!FFat.begin(true)) {
@@ -34,6 +37,7 @@ bool FrameRepository::Begin(){
     }
     m_started = true;
     displayFFATInfo();
+    
     bulkFile = FFat.open("/frames.bulk", FILE_READ);
     if (!bulkFile) {
         composeBulkFile();
