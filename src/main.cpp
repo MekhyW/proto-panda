@@ -55,10 +55,12 @@ void setup() {
 
   Devices::BuzzerTone(2220);
   delay(200);
+  Devices::BuzzerNoTone();
+  Devices::I2CScan();
   Devices::BuzzerTone(1220);
   delay(200);
   Devices::BuzzerNoTone();
-  
+ 
   OledScreen::Start();
   Sensors::Start();
   
@@ -73,14 +75,13 @@ void setup() {
     return;
   }
 
-  if (!Storage::Begin()){
+  while (!Storage::Begin()){
     OledScreen::display.clearDisplay();
     OledScreen::display.drawBitmap(0,0, icon_sd, 128, 64, 1);
     OledScreen::display.display();
-    Devices::BuzzerTone(300);
-    delay(1500);
-    Devices::BuzzerNoTone();
-    for (;;){}
+    delay(500);
+    OledScreen::display.clearDisplay();
+    OledScreen::display.display();
   }
 
   Logger::Begin();
