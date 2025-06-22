@@ -709,9 +709,14 @@ void dictFormat(){
   dict.Format();
 }
 
+void logMessage(const char *msg){
+  Logger::Info("[LOG-LUA] %s", msg);
+}
+
 
 void LuaInterface::RegisterMethods()
 {
+  m_lua->FuncRegister("log", logMessage);
   //Dict
   m_lua->FuncRegister("dictGet", dictget);
   m_lua->FuncRegister("dictSet", dictset);
