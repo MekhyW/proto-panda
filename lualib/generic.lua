@@ -26,7 +26,7 @@ end
 
 function _M.displayWarning(headMessage, message, duration)
 	duration = duration or 2000
-	log(headMessage)
+	log(headMessage..": "..message)
 	local stop = millis()+duration
 	local scroll = _M.scrollingText(message, 20, 250)
 	while scroll.cycles <= 0 or stop > millis() do

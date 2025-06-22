@@ -6,6 +6,8 @@ local _M = {
 	blue = 150,
 	selected=1,
 	colors = {"red", "green", "blue"},
+	uiTimer = 0,
+	rainbowShiftTimer = 0,
 
 }
 
