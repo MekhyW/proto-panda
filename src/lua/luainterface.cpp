@@ -423,7 +423,9 @@ void setHaltOnError(bool halt)
 
 void powerOn()
 {
+  #ifdef PIN_ENABLE_REGULATOR
   digitalWrite(PIN_ENABLE_REGULATOR, HIGH);
+  #endif
 }
 
 void setPoweringMode(int mode)
@@ -499,7 +501,9 @@ void composeBulkFile()
 
 void powerOff()
 {
+  #ifdef PIN_ENABLE_REGULATOR
   digitalWrite(PIN_ENABLE_REGULATOR, LOW);
+  #endif
 }
 
 void LuaInterface::luaCallbackError(const char *errMsg, lua_State *L)
@@ -953,6 +957,7 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("POWER_MODE_USB_5V", (int)POWER_MODE_USB_5V);
   m_lua->setConstant("POWER_MODE_USB_9V", (int)POWER_MODE_USB_9V);
   m_lua->setConstant("POWER_MODE_BATTERY", (int)POWER_MODE_BATTERY);
+  m_lua->setConstant("POWER_MODE_REGULATOR_PD", (int)POWER_MODE_REGULATOR_PD);
 
   m_lua->setConstant("BLACK", (int)BLACK);
   m_lua->setConstant("WHITE", (int)WHITE);
@@ -986,7 +991,11 @@ void LuaInterface::RegisterConstants()
 
   m_lua->setConstant("PANDA_VERSION", PANDA_VERSION);
   m_lua->setConstant("BUILT_IN_POWER_MODE", (int)BUILT_IN_POWER_MODE);
+  #ifdef PIN_ENABLE_REGULATOR
   m_lua->setConstant("PIN_ENABLE_REGULATOR", (int)PIN_ENABLE_REGULATOR);
+  #else
+  m_lua->setConstant("PIN_ENABLE_REGULATOR", -1);
+  #endif
   m_lua->setConstant("PIN_USB_BATTERY_IN", (int)PIN_USB_BATTERY_IN);
   m_lua->setConstant("RESISTOR_DIVIDER_R8", (float)RESISTOR_DIVIDER_R8);
   m_lua->setConstant("RESISTOR_DIVIDER_R9", (float)RESISTOR_DIVIDER_R9);

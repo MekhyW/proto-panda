@@ -2,14 +2,14 @@
 /*
     Avoid changing this vile, change the config.hpp instead if you need custom configuration
 */
-#define PANDA_VERSION "1.1.5"
+#define PANDA_VERSION "1.1.6"
 /*
     Pin to enable the buck converter.
     With this pin on HIGH the buck converter will start regulating the USB/Battery input
     to the desired 5v out for the panels.
 */
 #define PIN_ENABLE_REGULATOR 13
-#define BUILT_IN_POWER_MODE POWER_MODE_USB_5V
+#define BUILT_IN_POWER_MODE POWER_MODE_REGULATOR_PD
 
 /*
     This pin is the pin where the input will be read from the voltage divider.

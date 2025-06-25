@@ -137,6 +137,10 @@ void Devices::SetPowerMode(PowerMode mode){
     s_autoCheckPower = true;
     VoltageStopThreshold = 6.5;
     VoltageStartThreshold = 8.9;
+  }else if (s_powerMode == POWER_MODE_REGULATOR_PD){
+    s_autoCheckPower = false;
+    VoltageStopThreshold = 4.2;
+    VoltageStartThreshold = 4.9;
   }else{
     s_autoCheckPower = true;
     VoltageStopThreshold = 6.5;
@@ -171,7 +175,9 @@ bool Devices::WaitForPower(uint8_t brightness){
     brightness = maxBrightness;
   }
   BuzzerNoTone();
+  #ifdef PIN_ENABLE_REGULATOR
   digitalWrite(PIN_ENABLE_REGULATOR, LOW);
+  #endif
   int tries = 0;
   bool oldState = g_animation.isManaged();
   retry:
@@ -183,7 +189,9 @@ bool Devices::WaitForPower(uint8_t brightness){
   }
   g_animation.setManaged(false);
   //Turn off the regulator.
+  #ifdef PIN_ENABLE_REGULATOR
   digitalWrite(PIN_ENABLE_REGULATOR, LOW);
+  #endif
   while (Sensors::GetAvgBatteryVoltage() <= VoltageStartThreshold){
       DMADisplay::Display->clearScreen();
       DMADisplay::Display->flipDMABuffer();
@@ -191,14 +199,17 @@ bool Devices::WaitForPower(uint8_t brightness){
       Sensors::MeasureVoltage();
   }
   //Turn on the regulator.
+  #ifdef PIN_ENABLE_REGULATOR
   digitalWrite(PIN_ENABLE_REGULATOR, HIGH);
-
+  #endif
 
   char buff[50];
   for (int a=1; a<brightness;a+=4){
     Sensors::FullMeasureVoltage();
     if (!Devices::CheckPowerLevel()){
+        #ifdef PIN_ENABLE_REGULATOR
         digitalWrite(PIN_ENABLE_REGULATOR, LOW);
+        #endif
         delay(500);
         goto retry;
     }

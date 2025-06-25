@@ -41,11 +41,12 @@ void setup() {
   /*
     Startup regulator pins and shoot it low asap.
   */
-
+  #ifdef PIN_ENABLE_REGULATOR
   digitalWrite(PIN_ENABLE_REGULATOR, LOW);
-  pinMode(EDIT_MODE_PIN, INPUT_PULLDOWN);
   pinMode(PIN_ENABLE_REGULATOR, OUTPUT);
   digitalWrite(PIN_ENABLE_REGULATOR, LOW);
+  #endif
+  pinMode(EDIT_MODE_PIN, INPUT_PULLDOWN);
   pinMode(PIN_USB_BATTERY_IN, INPUT);
 
   Devices::Begin();

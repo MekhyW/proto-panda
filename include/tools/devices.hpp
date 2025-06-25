@@ -26,6 +26,7 @@ enum PowerMode
     POWER_MODE_USB_5V=0,
     POWER_MODE_USB_9V=1,
     POWER_MODE_BATTERY=2,
+    POWER_MODE_REGULATOR_PD=3,
 };
 
 class Devices{
