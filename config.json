@@ -237,6 +237,38 @@
       "from": 1,
       "to": 3,
       "name": "frames_noise"
+    },
+    {
+      "pattern": "/expressions/windows/windows.png",
+      "flip_left": false,
+      "flip_right": true,
+      "from": 1,
+      "to": 1,
+      "name": "frames_windows"
+    },
+    {
+      "pattern": "/expressions/eyes/eyes%d.png",
+      "flip_left": false,
+      "flip_right": true,
+      "from": 1,
+      "to": 8,
+      "name": "frames_eyes"
+    },
+    {
+      "pattern": "/expressions/uno.png", 
+      "flip_left": false, 
+      "flip_right": true,
+      "from": 1, 
+      "to": 1, 
+      "name": "frames_uno"
+    },
+    {
+      "pattern": "/expressions/youtube_loading_%d.png", 
+      "flip_left": false, 
+      "flip_right": false,
+      "from": 1, 
+      "to": 8, 
+      "name": "frames_youtube_loading"
     }
 
 
@@ -302,7 +334,7 @@
     },
 
 
-        {
+    {
       "name": "bored_intro",
       "frames": "frames_bored_transition",
       "animation": "loop",
@@ -521,9 +553,35 @@
       "duration": 5,
       "onEnter": "ledsStackCurrentBehavior()  ledsSegmentBehavior(0, BEHAVIOR_NOISE) ledsSegmentBehavior(1, BEHAVIOR_NOISE)",
       "onLeave": "ledsPopBehavior()"
+    },
+
+    {
+      "name": "windows",
+      "frames": "frames_windows",
+      "animation": "loop",
+      "duration": 200
+    },
+
+    {
+      "name": "youtube_loading",
+      "frames": "frames_youtube_loading",
+      "animation": "loop",
+      "duration": 150
+    },
+
+    {
+      "name": "eyes",
+      "frames": "frames_eyes",
+      "animation": [1, 2, 3, 4, 5, 6, 7, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      "duration": 200
+    },
+
+    {
+      "name": "uno",
+      "frames": "frames_uno",
+      "animation": "loop",
+      "duration": 200
     }
-
-
 
   ],
   "scripts": [
