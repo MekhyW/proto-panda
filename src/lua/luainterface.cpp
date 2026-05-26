@@ -7,12 +7,21 @@
 #include "tools/storage.hpp"
 #include "tools/ir.hpp"
 #include "drawing/animation.hpp"
+#include "drawing/modelanimation/keyframeplayer.hpp"
 #include "drawing/ledstrip.hpp"
 #include "bluetooth/ble_client.hpp"
-#include "drawing/dma_display.hpp"
 #include "soc/rtc_cntl_reg.h"
 #include "soc/soc.h"
 #include <FFat.h>
+
+#if PANDA_SD_MODE == 1
+#include <SD.h>
+#elif PANDA_SD_MODE == 2
+#include <SD_MMC.h>
+#else
+#error "NO SD_MODE Mode defined (set PANDA_SD_MODE to 1 for SD or 2 for SD_MMC)"
+#endif
+
 #include "lua/luafunctions/drawingfunctions.hpp"
 
 
@@ -210,7 +219,7 @@ std::vector<std::string> listFiles(std::string path, bool recursive) {
   if (path.back() != '/') {
       path += '/';
   }
-  File dir = SD.open(path.c_str());
+  File dir = PANDA_SD.open(path.c_str());
   if (!dir) {
       return fileList;
   }
@@ -243,19 +252,19 @@ std::vector<std::string> listFiles(std::string path, bool recursive) {
 }
 
 bool moveFile(std::string path, std::string pathtgt){
-  return SD.rename(path.c_str(), pathtgt.c_str());
+  return PANDA_SD.rename(path.c_str(), pathtgt.c_str());
 }
 
 bool removeFile(std::string path){
-  return SD.remove(path.c_str());
+  return PANDA_SD.remove(path.c_str());
 }
 
 bool createDir(std::string path){
-  return SD.mkdir(path.c_str());
+  return PANDA_SD.mkdir(path.c_str());
 }
 
 bool fileExists(std::string path){
-  return SD.exists(path.c_str());
+  return PANDA_SD.exists(path.c_str());
 }
 
 bool formatFFAT(bool full){
@@ -557,18 +566,18 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("panelPowerOn", powerOn);
   m_lua->FuncRegister("panelPowerOff", powerOff);
   m_lua->FuncRegister("setPoweringMode", setPoweringMode);
-  m_lua->FuncRegisterOptional("waitForPower", Devices::WaitForPower, 64);
   m_lua->FuncRegister("setAutoCheckPowerLevel", Devices::SetAutoCheckPowerLevel);
   m_lua->FuncRegister("setVoltageStopThreshold", Devices::SetVoltageStopThreshold);
   m_lua->FuncRegister("setVoltageStartThreshold", Devices::SetVoltageStartThreshold);
   m_lua->FuncRegister("getBatteryVoltage", Sensors::GetBatteryVoltage);
   m_lua->FuncRegister("getAvgBatteryVoltage", Sensors::GetAvgBatteryVoltage);
   m_lua->FuncRegister("setHaltOnError", setHaltOnError);
-  m_lua->FuncRegister("getFps", Devices::getFps); 
+  m_lua->FuncRegister("getLuaFps", Devices::getFps); 
   m_lua->FuncRegister("getFreePsram", Devices::getFreePsram); 
-  m_lua->FuncRegister("getLuaFps", Devices::getAutoFps); 
+  m_lua->FuncRegister("getFps", Devices::getAutoFps); 
   m_lua->FuncRegister("getFreeHeap", Devices::getFreeHeap); 
   #ifdef USE_SERVO
+  m_lua->FuncRegister("servoPause", Devices::StartServos);
   m_lua->FuncRegister("servoPause", Devices::ServoPause);
   m_lua->FuncRegister("servoResume", Devices::ServoResume); 
   m_lua->FuncRegister("servoMove", Devices::ServoMove);
@@ -582,8 +591,9 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("getInternalButtonStatus", getInternalButtonStatus); 
   //Panels
   #ifdef ENABLE_HUB75_PANEL
-  m_lua->FuncRegister("startPanels", StartPanels); 
-  m_lua->FuncRegister("flipPanelBuffer", FlipScreen);
+  //LoadFrameAsTexture(int i)
+  m_lua->FuncRegisterFromObjectOpt("flipPanelBuffer", &g_animation, &Animation::MakeFlip);
+  m_lua->FuncRegisterFromObjectOpt("loadFrameAsTexture", &g_animation, &Animation::LoadFrameAsTexture);
   m_lua->FuncRegister("drawPanelRect", DrawRect);
   m_lua->FuncRegister("drawPanelFillRect", DrawFillRect);
   m_lua->FuncRegister("drawPanelPixel", DrawPixel);
@@ -592,23 +602,37 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("drawPanelLine", DrawLine);
   m_lua->FuncRegister("drawPanelCircle", DrawCircle);
   m_lua->FuncRegister("drawPanelFillCircle", DrawFillCircle);
+  m_lua->FuncRegister("drawPanelFillTriangle", DrawFillTriangle);
   m_lua->FuncRegister("clearPanelBuffer", ClearScreen);
   m_lua->FuncRegister("drawPanelFace", DrawFace);
-  m_lua->FuncRegisterOptional("setPanelAnimation", setAnimation, -1, false, -1, 250);
-  m_lua->FuncRegister("popPanelAnimation", popPanelAnimation); 
-  m_lua->FuncRegister("setPanelColorMode", setColorMode); 
+
+
+  m_lua->FuncRegisterFromObjectOpt("setPanelAnimation", &g_animation, &Animation::SetAnimation, -1, false, -1, 250);
+  m_lua->FuncRegisterFromObjectOpt("setPanelModelAnimation", &g_animation, &Animation::SetModelAnimation, -1, false, -1);
+
+  m_lua->FuncRegisterFromObjectOpt("popPanelAnimation", &g_animation, &Animation::PopAnimation);
+  m_lua->FuncRegisterFromObjectOpt("setInterruptFrames", &g_animation, &Animation::SetInterruptAnimation);
+  m_lua->FuncRegisterFromObjectOpt("setInterruptAnimationPin", &g_animation, &Animation::SetInterruptPin);
+
+    
+  m_lua->FuncRegisterFromObjectOpt("setAnimationShader", &g_animation, &Animation::SetShader, 1.0f); 
+  m_lua->FuncRegisterFromObjectOpt("getAnimationStackSize", &g_animation, &Animation::getAnimationStackSize);   
+  m_lua->FuncRegisterFromObjectOpt("setPanelColorMode", &g_animation, &Animation::setColorMode);   
+
+  m_lua->FuncRegisterFromObjectOpt("setPanelManaged", &g_animation, &Animation::setManaged);   
+  m_lua->FuncRegisterFromObjectOpt("isPanelManaged", &g_animation, &Animation::isManaged);   
+  m_lua->FuncRegisterFromObjectOpt("getCurrentAnimationStorage", &g_animation, &Animation::getCurrentAnimationStorage);   
+  m_lua->FuncRegisterFromObjectOpt("getPanelCurrentFace", &g_animation, &Animation::getCurrentFace);   
+
   m_lua->FuncRegisterOptional("gentlySetPanelBrightness", gentlySetPanelBrightness, 0, 4);
-  m_lua->FuncRegister("setPanelManaged", setManaged);
-  m_lua->FuncRegister("isPanelManaged", isManaged);
-  m_lua->FuncRegister("getCurrentAnimationStorage", getCurrentAnimationStorage);
-  m_lua->FuncRegister("getPanelCurrentFace", getCurrentFace);
+
+
   m_lua->FuncRegister("drawPanelCurrentFrame", DrawCurrentFrame);
   m_lua->FuncRegister("setPanelBrightness", setPanelBrightness);
   m_lua->FuncRegister("getPanelBrightness", getPanelBrightness);
-  m_lua->FuncRegister("setInterruptFrames", setInterruptFrames);  
-  m_lua->FuncRegister("setInterruptAnimationPin", setInterruptAnimationPin); 
-  m_lua->FuncRegisterFromObjectOpt("setRainbowShader", &g_animation, &Animation::setRainbowShader, true); 
+
   m_lua->FuncRegisterFromObjectOpt("getAnimationStackSize", &g_animation, &Animation::getAnimationStackSize); 
+
   m_lua->FuncRegister("color565", color565);
   m_lua->FuncRegister("color444", color444);
   m_lua->FuncRegister("getFrameOffsetByName", GetOffsetByName);
@@ -664,9 +688,10 @@ void LuaInterface::RegisterMethods()
   //debug
   m_lua->FuncRegisterRaw("dumpStackToSerial", dumpStackToSerial);
   //Leds
+
   m_lua->FuncRegisterFromObjectOpt("ledsGetBrightness", &g_leds, &LedStrip::getBrightness);
   m_lua->FuncRegisterFromObjectOpt("ledsSetBrightness", &g_leds, &LedStrip::setBrightness, (uint8_t)128);
-  m_lua->FuncRegisterFromObjectOpt("ledsBegin", &g_leds, &LedStrip::Begin, (uint8_t)128);
+  m_lua->FuncRegisterFromObjectOpt("ledsBegin", &g_leds, &LedStrip::Begin, (uint16_t)128);
   m_lua->FuncRegisterFromObjectOpt("ledsBeginDual", &g_leds, &LedStrip::BeginDual, (uint8_t)128);
   m_lua->FuncRegisterFromObjectOpt("ledsSegmentRange", &g_leds, &LedStrip::setSegmentRange, 0);
   m_lua->FuncRegisterFromObjectOpt("ledsSegmentBehavior", &g_leds, &LedStrip::setSegmentBehavior, 0, 0, 0, 0);
@@ -688,6 +713,8 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("fileExists", fileExists);
   
   m_lua->FuncRegister("formatFFAT", formatFFAT);
+
+  m_lua->FuncRegister("listFilesInFolder", Storage::listFolder);
   #ifdef ENABLE_HUB75_PANEL
   m_lua->FuncRegister("composeBulkFile", composeBulkFile);
   m_lua->FuncRegister("deleteBulkFile", deleteBulkFile);
@@ -717,10 +744,11 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("MAX_LED_GROUPS", (int)MAX_LED_GROUPS);
 
 
+  m_lua->setConstant("POWER_MODE_NONE", (int)POWER_MODE_NONE);
   m_lua->setConstant("POWER_MODE_USB_5V", (int)POWER_MODE_USB_5V);
   m_lua->setConstant("POWER_MODE_USB_9V", (int)POWER_MODE_USB_9V);
   m_lua->setConstant("POWER_MODE_BATTERY", (int)POWER_MODE_BATTERY);
-  m_lua->setConstant("POWER_MODE_REGULATOR_PD", (int)POWER_MODE_REGULATOR_PD);
+  m_lua->setConstant("POWER_MODE_NONE", (int)POWER_MODE_NONE);
 
   m_lua->setConstant("BLACK", (int)1);
   m_lua->setConstant("WHITE", (int)0);
@@ -759,7 +787,13 @@ void LuaInterface::RegisterConstants()
   #else
   m_lua->setConstant("PIN_ENABLE_REGULATOR", -1);
   #endif
-  m_lua->setConstant("PIN_USB_BATTERY_IN", (int)PIN_USB_BATTERY_IN);
+  #ifdef USE_PIN_BATTERY_IN
+    m_lua->setConstant("USE_PIN_BATTERY_IN", 1);
+    m_lua->setConstant("PIN_USB_BATTERY_IN", (int)PIN_USB_BATTERY_IN);
+  #else 
+    m_lua->setConstant("PIN_USB_BATTERY_IN", -1);
+    m_lua->setConstant("USE_PIN_BATTERY_IN", 0);
+  #endif
   m_lua->setConstant("RESISTOR_DIVIDER_R8", (float)RESISTOR_DIVIDER_R8);
   m_lua->setConstant("RESISTOR_DIVIDER_R9", (float)RESISTOR_DIVIDER_R9);
   m_lua->setConstant("V_REF", (float)V_REF);
@@ -769,26 +803,27 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("OLED_SCREEN_HEIGHT", OLED_SCREEN_HEIGHT);
   m_lua->setConstant("PANEL_WIDTH", PANEL_WIDTH);
   m_lua->setConstant("PANEL_HEIGHT", PANEL_HEIGHT);
-  m_lua->setConstant("MAX_BLE_BUTTONS", (int)MAX_BLE_BUTTONS);
-  m_lua->setConstant("MAX_BLE_CLIENTS", (int)MAX_BLE_CLIENTS);
-  m_lua->setConstant("SERVO_COUNT", (int)SERVO_COUNT);
   m_lua->setConstant("MAX_LED_GROUPS", MAX_LED_GROUPS);
   m_lua->setConstant("EDIT_MODE_PIN", EDIT_MODE_PIN);
-  m_lua->setConstant("WIFI_AP_NAME", WIFI_AP_NAME);
-  m_lua->setConstant("WIFI_AP_PASSWORD", WIFI_AP_PASSWORD);
-  m_lua->setConstant("EDIT_MODE_FTP_USER", EDIT_MODE_FTP_USER);
-  m_lua->setConstant("EDIT_MODE_FTP_PASSWORD", EDIT_MODE_FTP_PASSWORD);
-  m_lua->setConstant("EDIT_MODE_FTP_PORT", EDIT_MODE_FTP_PORT);
-  m_lua->setConstant("SERVO_COUNT", SERVO_COUNT);
+  #ifdef ENABLE_EDIT_MODE
+  m_lua->setConstant("ENABLE_EDIT_MODE", 1);
+  #else 
+  m_lua->setConstant("ENABLE_EDIT_MODE", 0);
+  #endif
+  m_lua->setConstant("EDIT_ENABLE_LOGIC_LEVEL", EDIT_ENABLE_LOGIC_LEVEL);
   m_lua->setConstant("PANEL_CHAIN", PANEL_CHAIN);
 
   #ifdef ENABLE_HUB75_PANEL
+  m_lua->setConstant("ENABLE_HUB75_PANEL", 1);
+  m_lua->setConstant("COLOR_MODE_RGB", (int)COLOR_MODE_RGB);
   m_lua->setConstant("COLOR_MODE_RGB", (int)COLOR_MODE_RGB);
   m_lua->setConstant("COLOR_MODE_RBG", (int)COLOR_MODE_RBG);
   m_lua->setConstant("COLOR_MODE_GRB", (int)COLOR_MODE_GRB);
   m_lua->setConstant("COLOR_MODE_GBR", (int)COLOR_MODE_GBR);
   m_lua->setConstant("COLOR_MODE_BRG", (int)COLOR_MODE_BRG);
   m_lua->setConstant("COLOR_MODE_BGR", (int)COLOR_MODE_BGR);
+  #else
+  m_lua->setConstant("ENABLE_HUB75_PANEL", 0);
   #endif
 
   m_lua->setConstant("ESP_PWR_LVL_N24", (int)ESP_PWR_LVL_N24);
@@ -817,6 +852,31 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("ONLOW_WE" , (int)ONLOW_WE );
   m_lua->setConstant("ONHIGH_WE", (int)ONHIGH_WE);
 
+
+
+  m_lua->setConstant("KEYFRAME_TRANSLATE",       (int)KEYFRAME_TRANSLATE);
+  m_lua->setConstant("KEYFRAME_ROTATE",          (int)KEYFRAME_ROTATE);
+  m_lua->setConstant("KEYFRAME_SCALE",           (int)KEYFRAME_SCALE);
+  m_lua->setConstant("KEYFRAME_RESET",           (int)KEYFRAME_RESET);
+  m_lua->setConstant("KEYFRAME_COLOR",           (int)KEYFRAME_COLOR);
+  m_lua->setConstant("KEYFRAME_VISIBILITY",      (int)KEYFRAME_VISIBILITY);
+  m_lua->setConstant("KEYFRAME_SINE",            (int)KEYFRAME_SINE);
+  m_lua->setConstant("KEYFRAME_SHADER",          (int)KEYFRAME_SHADER);
+
+
+
+
+  m_lua->setConstant("SHADER_NONE",         (int)SHADER_NONE);
+  m_lua->setConstant("SHADER_RAINBOW",      (int)SHADER_RAINBOW);
+  m_lua->setConstant("SHADER_FIRE",         (int)SHADER_FIRE);
+  m_lua->setConstant("SHADER_TEXTURE",      (int)SHADER_TEXTURE);
+  m_lua->setConstant("SHADER_TRANS",        (int)SHADER_TRANS);
+  
+  m_lua->setConstant("SHADER_LAST",         (int)SHADER_TRANS);
+
+
+  m_lua->setConstant("MODEL_FRAME_ID_OFFSET",      (int)MODEL_FRAME_ID_OFFSET);
+
  
 }
 
@@ -833,23 +893,6 @@ bool LuaInterface::Start()
   RegisterMethods();
   RegisterConstants();
   auto _state = m_lua->GetState();
-
-  /*
-  
-  ClassRegister<Batata>::RegisterClassType(_state,"Batata",[](lua_State* L){
-        Batata *t = new Batata();
-        return t;
-  });
-    
-  ClassRegister<Batata>::RegisterClassMethod(_state,"Batata","Get",&Batata::Get);
-  ClassRegister<Batata>::RegisterClassMethod(_state,"Batata","Sum",&Batata::Sum, 0);
-  ClassRegister<Batata>::RegisterClassMethod(_state,"Batata","Set",&Batata::Set);
-  ClassRegister<Batata>::RegisterClassMethod(_state,"Batata","SumBatata",&Batata::SumBatata);
-  ClassRegister<Batata>::RegisterClassMethod(_state,"Batata","CloneBatata",&Batata::CloneBatata);
-
-  ClassRegister<Batata>::RegisterField(_state, "count", &Batata::count);
-
-*/
 
   static LuaCFunctionLambda EmptyGC = [](lua_State* L) -> int{
     return 0;
@@ -898,7 +941,52 @@ bool LuaInterface::Start()
   ClassRegister<BleCharacteristicsHandler>::RegisterClassMethod(_state,"BleCharacteristicsHandler","SetRequired",&BleCharacteristicsHandler::SetRequired);
 
   m_lua->FuncRegister("getCharacteristicsFromService", BleServiceHandler::GetCharacteristicsFromService);
-  
+
+  //Created only using loadModel(modeldata, name)
+  m_lua->FuncRegisterFromObjectOpt("loadModel", &g_models, &ModelDict::LoadModel, "");
+  ClassRegister<Model>::RegisterClassType(_state,"Model",[](lua_State* L){ luaL_error(L, "Cannot create a empty object of this class"); return nullptr;}, &EmptyGC);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Model","Recalculate",&Model::Recalculate);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Model","Reset",&Model::Reset);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Model","GetId",&Model::GetId);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Model","CopyToRaster",&Model::CopyToRaster);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Model","AddPointGroup",&Model::AddPointGroup);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Model","SetTriangle",&Model::SetTriangleF);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Model","GetTriangle",&Model::GetTriangle);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Model","SetBatchOperations",&Model::SetBatchOperations);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Model","SetAccumulativeOperations",&Model::SetAccumulativeOperations);
+
+  ClassRegister<Model>::RegisterClassMethod(_state,"Model","SetPointPosition",&Model::SetPointPosition);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Model","TranslatePoint",&Model::TranslatePoint);
+
+  ClassRegister<Model>::RegisterClassMethod(_state,"Model","SetPointsPosition",&Model::SetPointsPosition);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Model","ScalePoints",&Model::ScalePoints);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Model","TranslatePoints",&Model::TranslatePoints);
+
+  ClassRegister<Model>::RegisterClassMethod(_state,"Model","Scale",&Model::Scale);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Model","Rotate",&Model::Rotate);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Model","Translate",&Model::Translate);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Model","GetCenter",&Model::GetCenter);
+
+
+
+  //Created only using newKeyframeAnimation(duration)
+  m_lua->FuncRegisterFromObjectOpt("newKeyframeAnimation", &g_kf, &KeyframePlayer::NewKeyframeAnimation);  
+  ClassRegister<KeyframeAnimation>::RegisterClassType(_state,"KeyframeAnimation",[](lua_State* L){ luaL_error(L, "Cannot create a empty object of this class"); return nullptr;}, &EmptyGC);
+  ClassRegister<KeyframeAnimation>::RegisterClassMethod(_state,"KeyframeAnimation","Reset",&KeyframeAnimation::Reset);
+  ClassRegister<KeyframeAnimation>::RegisterClassMethod(_state,"KeyframeAnimation","GetId",&KeyframeAnimation::GetId);
+  ClassRegister<KeyframeAnimation>::RegisterClassMethod(_state,"KeyframeAnimation","AddTrack",&KeyframeAnimation::AddTrack);
+
+  static LuaCFunctionLambda ThisGc = [](lua_State* L) -> int{ return LuaCaller::GC<KeyframeTrack>(L); };
+
+  ClassRegister<KeyframeTrack>::RegisterClassType(_state,"KeyframeTrack", [](lua_State* L) -> KeyframeTrack* { return new KeyframeTrack();}, &ThisGc ); 
+  ClassRegister<KeyframeTrack>::RegisterClassMethod(_state,"KeyframeTrack","Reset", &KeyframeTrack::Reset);
+  ClassRegister<KeyframeTrack>::RegisterClassMethod(_state,"KeyframeTrack","SetResource", &KeyframeTrack::SetResource);
+  ClassRegister<KeyframeTrack>::RegisterClassMethod(_state,"KeyframeTrack","AddKeyFrame", &KeyframeTrack::AddKeyFrame);
+
+
+  m_lua->FuncRegisterOptional("KeyFrame",  Keyframe::KeyFrameMaker, false, false, (uint16_t)0,  Vec2f(0.0f, 0.0f));
+ 
+
   lastError = "";
 
   return true;

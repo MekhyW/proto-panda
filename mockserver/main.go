@@ -28,162 +28,343 @@ const (
 )
 
 var (
-	indexTemplate = template.Must(template.New("index").Parse(`<!DOCTYPE html>
-<html>
+	indexTemplate = template.Must(template.New("index").Parse(`<html>
 <head>
     <title>Directory Listing</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+      * {
+        box-sizing: border-box;
+      }
       body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
+        font-family: 'Courier New', monospace;
+        margin: 15px;
+        padding: 0;
         display: flex;
         flex-direction: column;
         min-height: 100vh;
+        background: #1a1a1a;
+        color: #ccc;
+        font-size: 18px;
+      }
+      @media (min-width: 768px) {
+        body {
+          margin: 30px;
+          font-size: 20px;
+        }
       }
       h1 {
-        color: #333;
+        color: #ff9900;
         margin-bottom: 20px;
+        font-size: 28px;
+        font-weight: bold;
+        word-break: break-word;
+      }
+      @media (min-width: 768px) {
+        h1 {
+          font-size: 36px;
+          margin-bottom: 25px;
+        }
       }
       table {
         border-collapse: collapse;
         width: 100%;
         margin-bottom: 20px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        background: #2d2d2d;
+        overflow-x: auto;
+        display: block;
+      }
+      @media (min-width: 768px) {
+        table {
+          display: table;
+        }
       }
       th, td {
-        border: 1px solid #ddd;
-        padding: 12px;
+        border: 1px solid #444;
+        padding: 12px 10px;
         text-align: left;
+        font-size: 16px;
+      }
+      @media (min-width: 768px) {
+        th, td {
+          padding: 15px;
+          font-size: 18px;
+        }
       }
       th {
-        background-color: #f8f9fa;
-        font-weight: 600;
+        background-color: #3c3c3c;
+        font-weight: bold;
+        color: #ff9900;
       }
       tr:nth-child(even) {
-        background-color: #f9f9f9;
+        background-color: #252525;
       }
       tr:hover {
-        background-color: #f1f1f1;
+        background-color: #3a3a3a;
       }
       .action-buttons {
         display: flex;
-        gap: 20px;
-        margin-top: auto;
+        flex-direction: column;
+        gap: 15px;
+        margin-top: 20px;
+      }
+      @media (min-width: 768px) {
+        .action-buttons {
+          flex-direction: row;
+          gap: 25px;
+        }
       }
       .action-box {
         flex: 1;
         padding: 20px;
-        background-color: #f8f9fa;
+        background-color: #2d2d2d;
         border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        border: 1px solid #444;
+      }
+      @media (min-width: 768px) {
+        .action-box {
+          padding: 25px;
+        }
       }
       .action-box h3 {
         margin-top: 0;
-        color: #333;
+        color: #ff9900;
+        font-size: 20px;
+        margin-bottom: 15px;
+      }
+      @media (min-width: 768px) {
+        .action-box h3 {
+          font-size: 24px;
+          margin-bottom: 20px;
+        }
       }
       .form-row {
         margin-bottom: 15px;
       }
       footer {
-        margin-top: 40px;
-        padding: 20px 0;
+        margin-top: 30px;
+        padding: 15px 0;
         text-align: center;
-        color: #777;
-        font-size: 0.9em;
-        border-top: 1px solid #eee;
+        color: #666;
+        font-size: 12px;
+        border-top: 1px solid #444;
+      }
+      @media (min-width: 768px) {
+        footer {
+          margin-top: 40px;
+          padding: 20px 0;
+          font-size: 14px;
+        }
       }
       .form-row label {
         display: block;
-        margin-bottom: 5px;
-        font-weight: 500;
+        margin-bottom: 6px;
+        font-weight: bold;
+        color: #aaa;
+        font-size: 15px;
+      }
+      @media (min-width: 768px) {
+        .form-row label {
+          margin-bottom: 8px;
+          font-size: 16px;
+        }
       }
       input[type="text"],
       input[type="file"] {
         width: 100%;
-        padding: 8px;
-        border: 1px solid #ddd;
+        padding: 10px;
+        border: 1px solid #555;
         border-radius: 4px;
         box-sizing: border-box;
+        background: #1e1e1e;
+        color: #fff;
+        font-family: 'Courier New', monospace;
+        font-size: 16px;
+      }
+      @media (min-width: 768px) {
+        input[type="text"],
+        input[type="file"] {
+          padding: 12px;
+          font-size: 18px;
+        }
+      }
+      input[type="text"]:focus,
+      input[type="file"]:focus {
+        outline: none;
+        border-color: #ff9900;
       }
       .btn {
-        padding: 10px 15px;
+        padding: 10px 20px;
         border: none;
         border-radius: 4px;
         cursor: pointer;
-        font-weight: 500;
-        transition: background-color 0.2s;
+        font-weight: bold;
+        transition: all 0.1s ease;
         text-align: center;
+        font-family: 'Courier New', monospace;
+        font-size: 16px;
+        width: 100%;
+      }
+      @media (min-width: 768px) {
+        .btn {
+          padding: 12px 24px;
+          font-size: 18px;
+          width: auto;
+        }
       }
       .btn-primary {
-        background-color: #4CAF50;
-        color: white;
+        background-color: #ff9900;
+        color: #111;
       }
       .btn-primary:hover {
-        background-color: #45a049;
+        background-color: #ffaa33;
+        transform: translateY(-1px);
       }
       .btn-danger {
-        background-color: #ff4444;
-        color: white;
+        background-color: #ff6666;
+        color: #111;
       }
       .btn-danger:hover {
-        background-color: #cc0000;
+        background-color: #ff4444;
+        transform: translateY(-1px);
       }
       .status {
         margin-top: 10px;
-        padding: 8px;
+        padding: 10px;
         border-radius: 4px;
+        font-size: 14px;
+        word-break: break-word;
+      }
+      @media (min-width: 768px) {
+        .status {
+          margin-top: 15px;
+          padding: 12px;
+          font-size: 15px;
+        }
       }
       .status-success {
-        background-color: #d4edda;
-        color: #155724;
+        background-color: #1e3a1e;
+        color: #4CAF50;
+        border: 1px solid #4CAF50;
       }
       .status-error {
-        background-color: #f8d7da;
-        color: #721c24;
+        background-color: #3a1e1e;
+        color: #ff6666;
+        border: 1px solid #ff6666;
       }
       a {
-        color: #007bff;
+        color: #9cdcfe;
         text-decoration: none;
+        font-size: 16px;
+        word-break: break-word;
+      }
+      @media (min-width: 768px) {
+        a {
+          font-size: 18px;
+        }
       }
       a:hover {
+        color: #ff9900;
         text-decoration: underline;
       }
       .breadcrumb {
-        margin-bottom: 15px;
-        font-size: 1.1em;
+        margin-bottom: 20px;
+        font-size: 18px;
+        color: #ff9900;
+        font-weight: bold;
+        padding: 12px;
+        background: #2d2d2d;
+        border-radius: 6px;
+        border: 1px solid #444;
+        word-break: break-word;
+        overflow-x: auto;
+      }
+      @media (min-width: 768px) {
+        .breadcrumb {
+          margin-bottom: 25px;
+          font-size: 24px;
+          padding: 15px;
+        }
       }
       .breadcrumb a {
-        color: #007bff;
+        color: #9cdcfe;
         text-decoration: none;
+        font-size: 18px;
+        font-weight: normal;
+      }
+      @media (min-width: 768px) {
+        .breadcrumb a {
+          font-size: 24px;
+        }
       }
       .breadcrumb a:hover {
+        color: #ff9900;
         text-decoration: underline;
       }
-      /* New/Updated Styles for Header */
+      /* Header Styles */
       .main-header {
-        background-color: #e9ecef;
+        background-color: #2d2d2d;
         padding: 20px;
         border-radius: 8px;
         margin-bottom: 20px;
         display: flex;
-        flex-direction: column; /* Center content vertically */
-        align-items: center; /* Center content horizontally */
+        flex-direction: column;
+        align-items: center;
         gap: 15px;
+        border: 1px solid #444;
+      }
+      @media (min-width: 768px) {
+        .main-header {
+          padding: 35px;
+          margin-bottom: 25px;
+          gap: 25px;
+        }
       }
       .main-header p {
         margin: 0;
-        font-size: 1.2em;
-        color: #333;
+        font-size: 22px;
+        color: #ff9900;
+        font-weight: bold;
+        text-align: center;
+      }
+      @media (min-width: 768px) {
+        .main-header p {
+          font-size: 28px;
+        }
       }
       .header-links {
         display: flex;
-        gap: 20px;
+        flex-direction: column;
+        gap: 15px;
         align-items: center;
+        width: 100%;
+      }
+      @media (min-width: 768px) {
+        .header-links {
+          flex-direction: row;
+          gap: 30px;
+        }
       }
       .editor-btn {
-        padding: 15px 30px; /* Bigger button */
-        font-size: 1.2em;
-        background-color: #007bff !important; /* Make editor button stand out */
+        padding: 12px 20px;
+        font-size: 16px;
+        background-color: #ff9900 !important;
+        color: #111 !important;
+        width: 100%;
+        text-align: center;
+      }
+      @media (min-width: 768px) {
+        .editor-btn {
+          padding: 15px 30px;
+          font-size: 18px;
+          width: auto;
+        }
+      }
+      .editor-btn:hover {
+        background-color: #ffaa33 !important;
+        transform: translateY(-2px);
       }
       .logo-container {
         display: flex;
@@ -195,26 +376,67 @@ var (
         height: auto;
         border-radius: 5px;
       }
+      button {
+        font-family: 'Courier New', monospace;
+      }
+      .btn-danger {
+        background-color: #ff6666;
+        color: #111;
+        border: none;
+        padding: 8px 16px;
+        font-size: 14px;
+        width: 100%;
+      }
+      @media (min-width: 768px) {
+        .btn-danger {
+          padding: 10px 20px;
+          font-size: 16px;
+          width: auto;
+        }
+      }
+      .btn-danger:hover {
+        background-color: #ff4444;
+      }
+      td .btn-danger {
+        width: auto;
+        padding: 6px 12px;
+        font-size: 13px;
+      }
+      @media (min-width: 768px) {
+        td .btn-danger {
+          padding: 8px 16px;
+          font-size: 15px;
+        }
+      }
+      /* Make table responsive */
+      .table-responsive {
+        overflow-x: auto;
+        width: 100%;
+      }
     </style>
 </head>
 <body>
-    <div class="breadcrumb">{{range .Breadcrumbs}}<a href="/{{.Path}}">{{.Name}}</a> &gt; {{end}}{{.CurrentDir}}</div>
+    <div class="breadcrumb">
+        {{range .Breadcrumbs}}<a href="/{{.Path}}">{{.Name}}</a> > {{end}}{{.CurrentDir}}
+    </div>
     
     {{if eq .Path "."}}
         <div class="logo-container">
             <img src="/doc/logoprotopanda.png" alt="Protopanda Logo" class="logo-img">
         </div>
         <div class="main-header">
-            <p>Welcome protopanda.</p>
+            <p>Welcome to ProtoPanda</p>
             <div class="header-links">
-                <a href="/editor.html" class="btn btn-primary editor-btn">Go to Editor</a>
+                <a href="/editor.html" class="btn btn-primary editor-btn">Static Frame Editor</a>
+                <a href="/modeleditor.html" class="btn btn-primary editor-btn">Model and Keyframe Editor</a>
             </div>
         </div>
     {{end}}
 
     <h1>Directory Listing: /{{.Path}}</h1>
     
-    <table>
+    <div class="table-responsive">
+    </table>
       <tr>
         <th>Name</th>
         <th>Size</th>
@@ -232,6 +454,7 @@ var (
       </tr>
       {{end}}
     </table>
+    </div>
     
     <div class="action-buttons">
       <div class="action-box">
@@ -324,7 +547,7 @@ var (
         });
       });
     </script>
-    <footer>Protopanda v{{.Version}}</footer>
+    <footer>ProtoPanda v{{.Version}} | Pixel Art Editor</footer>
 </body>
 </html>`))
 )

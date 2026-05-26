@@ -56,6 +56,20 @@
 //#define SPI_MISO 47
 //#define SPI_SCK 21
 
+/* 
+    SD_MMC
+*/
+//#define MMC_PIN_DATA2 -1
+//#define MMC_PIN_DATA3 SPI_CS
+//#define MMC_PIN_CMD SPI_MOSI
+//#define MMC_PIN_CLK SPI_SCK
+//#define MMC_PIN_DATA0 SPI_MISO
+//#define MMC_PIN_DATA1 -1
+//#define MMC_CLOCK_SPEED 40000
+//If using the full range of pins (data1 and 2, set this to false)
+//#define MMC_ONE_BIT true  
+//Set 2 to MMC and 1 to SD
+//#define PANDA_SD_MODE 2
 
 /*
  Oled screen
@@ -69,13 +83,6 @@
 
 //#define USE_LIDAR
 //#define LIDAR_ADDR 0x29
-
-/*
-    BLE Buttons
-*/
-
-//#define MAX_BLE_BUTTONS 5
-//#define MAX_BLE_CLIENTS 4
 
 /*
     Led strip
@@ -97,19 +104,11 @@
 */
 
 //#define EDIT_MODE_PIN 39
-//#define WIFI_AP_NAME "protopanda"
-//#define WIFI_AP_PASSWORD "pandawah"
-//#define EDIT_MODE_FTP_USER "wah"
-//#define EDIT_MODE_FTP_PASSWORD "wah"
-//#define EDIT_MODE_FTP_PORT 21
-//#define EDIT_MODE_LUA_PORT 7171
-
 /* 
 Servos
 */
 
 // #define USE_SERVO
-//#define SERVO_COUNT 4
 
 /*
     DMA display, or actual display
@@ -120,19 +119,4 @@ Servos
 
 //#define FILE_SIZE_BULK_SIZE ( PANEL_WIDTH * PANEL_HEIGHT * sizeof(uint16_t) )
 //#define FILE_SIZE (( FILE_SIZE_BULK_SIZE  + sizeof(uint16_t) ))
-
-//#define DMA_GPIO_R1 12
-//#define DMA_GPIO_G1 10
-//#define DMA_GPIO_B1 11
-//#define DMA_GPIO_R2 20
-//#define DMA_GPIO_G2 19
-//#define DMA_GPIO_B2 18
-//#define DMA_GPIO_A 17
-//#define DMA_GPIO_B 16
-//#define DMA_GPIO_C 15
-//#define DMA_GPIO_D 7
-//#define DMA_GPIO_LAT 5
-//#define DMA_GPIO_OE 4
-//#define DMA_GPIO_CLK 6
-
 

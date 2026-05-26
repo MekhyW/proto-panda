@@ -2,7 +2,7 @@
 /*
     Avoid changing this vile, change the config.hpp instead if you need custom configuration
 */
-#define PANDA_VERSION "2.0.4"
+#define PANDA_VERSION "3.0.1"
 /*
 Cache file version to invalidate cache in case of firmware update
 */
@@ -12,8 +12,9 @@ Cache file version to invalidate cache in case of firmware update
     With this pin on HIGH the buck converter will start regulating the USB/Battery input
     to the desired 5v out for the panels.
 */
+#define USE_ENABLE_PIN 
 #define PIN_ENABLE_REGULATOR 13
-#define BUILT_IN_POWER_MODE POWER_MODE_REGULATOR_PD
+#define BUILT_IN_POWER_MODE POWER_MODE_NONE
 /*
     Run all tasks on a single core. This can help leave the BLE to have a dedicated core and this will avoid crashes related to BLE on crowded areas.
 */
@@ -23,11 +24,12 @@ Cache file version to invalidate cache in case of firmware update
     The resistors are R9 and R8 (3k and 10k)
 
 */
+#define USE_PIN_BATTERY_IN
 #define PIN_USB_BATTERY_IN 3
 /*
     R8 is 10k
 */
-#define RESISTOR_DIVIDER_R8 11560.373
+#define RESISTOR_DIVIDER_R8 10000.00
 /*
     R9 is 3k
 */
@@ -62,6 +64,21 @@ Cache file version to invalidate cache in case of firmware update
 #define SPI_SCK 21
 #define SPI_MAX_CLOCK (80 * 1000 * 1000)
 
+/* 
+    SD_MMC
+*/
+#define MMC_PIN_DATA2 -1
+#define MMC_PIN_DATA3 SPI_CS
+#define MMC_PIN_CMD SPI_MOSI
+#define MMC_PIN_CLK SPI_SCK
+#define MMC_PIN_DATA0 SPI_MISO
+#define MMC_PIN_DATA1 -1
+#define MMC_CLOCK_SPEED 40000
+//If using the full range of pins (data1 and 2, set this to false)
+#define MMC_ONE_BIT true  
+//Set 2 to MMC and 1 to SD
+#define PANDA_SD_MODE 2
+
 
 /*
  Oled screen
@@ -71,17 +88,12 @@ Cache file version to invalidate cache in case of firmware update
 #define OLED_SCREEN_HEIGHT 64 
 #define OLED_SCREEN_ADDRESS 0x3C 
 #define OLED_SCREEN_ROTATION 2
+#define OLED_SCREEN_CLOCK_FREQ 800000
 
 
 #define USE_LIDAR
 #define LIDAR_ADDR 0x29
 
-/*
-    BLE Buttons
-*/
-
-#define MAX_BLE_BUTTONS 8
-#define MAX_BLE_CLIENTS 2
 
 /*
     Led strip
@@ -101,28 +113,19 @@ Cache file version to invalidate cache in case of firmware update
 /*
     Edit mode pin
 */
-
+//#define ENABLE_EDIT_MODE
 #define EDIT_MODE_PIN 39
-#define WIFI_AP_NAME "protopanda"
-#define WIFI_AP_PASSWORD "pandawah"
-#define EDIT_MODE_FTP_USER "wah"
-#define EDIT_MODE_FTP_PASSWORD "wah"
-#define EDIT_MODE_FTP_PORT 21
-#define EDIT_MODE_LUA_PORT 7171
-#define EDIT_MODE_HTTP_PORT 80
-
+#define EDIT_ENABLE_LOGIC_LEVEL 1
 /* 
 Servos
 */
 
-// #define USE_SERVO
-#define SERVO_COUNT 4
-
+#define USE_SERVO
 
 /*
     DMA display, or actual display
 */
-#define ENABLE_HUB75_PANEL 1
+#define ENABLE_HUB75_PANEL
 #define PANEL_WIDTH 64      // Number of pixels wide of each INDIVIDUAL panel module. 
 #define PANEL_HEIGHT 32     // Number of pixels tall of each INDIVIDUAL panel module.
 #define PANEL_CHAIN 2      // Total number of panels chained one to another
@@ -152,3 +155,10 @@ Servos
 #define DMA_GPIO_OE 4
 #define DMA_GPIO_CLK 6
 
+#if PANDA_SD_MODE == 1
+#define PANDA_SD SD
+#define PANDA_SD_NAME "SD"
+#elif PANDA_SD_MODE == 2
+#define PANDA_SD SD_MMC
+#define PANDA_SD_NAME "MMC"
+#endif

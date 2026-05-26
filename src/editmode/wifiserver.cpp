@@ -1,11 +1,20 @@
 #include "editmode/editmode.hpp"
+#ifdef ENABLE_EDIT_MODE
 #include "tools/config_default.hpp"
 #include "tools/devices.hpp"
 #include "drawing/framerepository.hpp"
 #include "lua/luainterface.hpp"
 #include "drawing/animation.hpp"
-#include "drawing/dma_display.hpp"
-#include "SD.h"
+
+
+#if PANDA_SD_MODE == 1
+#include <SD.h>
+#elif PANDA_SD_MODE == 2
+#include <SD_MMC.h>
+#else
+#error "NO SD_MODE Mode defined (set PANDA_SD_MODE to 1 for SD or 2 for SD_MMC)"
+#endif
+
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 
@@ -14,77 +23,63 @@ extern LuaInterface g_lua;
 extern FrameRepository g_frameRepo;
 extern Animation g_animation;
 
-bool createDirectories(String path)
-{
+bool createDirectories(String path){
   String currentPath = "";
   int startIdx = 0;
   int slashIdx;
 
-  while ((slashIdx = path.indexOf('/', startIdx)) != -1)
-  {
+  while ((slashIdx = path.indexOf('/', startIdx)) != -1){
     currentPath = path.substring(0, slashIdx);
-    if (!SD.exists(currentPath))
-    {
-      SD.mkdir(currentPath);
+    if (!PANDA_SD.exists(currentPath)){
+      PANDA_SD.mkdir(currentPath);
     }
     startIdx = slashIdx + 1;
   }
 
-  if (!SD.exists(path))
-  {
-    SD.mkdir(path);
+  if (!PANDA_SD.exists(path)){
+    PANDA_SD.mkdir(path);
   }
   return true;
 }
 
-void handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
-{
+void handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
   static File uploadFile;
   static String filePath;
 
-  if (!index)
-  {
+  if (!index){
     String path = "/";
-    if (request->hasParam("path", true))
-    {
+    if (request->hasParam("path", true)){
       path = request->getParam("path", true)->value();
     }
     filePath = path + "/" + filename;
 
     String dirPath = filePath.substring(0, filePath.lastIndexOf('/'));
-    if (dirPath.length() > 0 && !SD.exists(dirPath))
-    {
-      if (!createDirectories(dirPath))
-      {
+    if (dirPath.length() > 0 && !PANDA_SD.exists(dirPath)){
+      if (!createDirectories(dirPath)){
         request->send(500, "text/plain", "{\"success\": false, \"error\": \"Failed to open file for writing\"}");
       }
     }
 
-    uploadFile = SD.open(filePath, FILE_WRITE);
-    if (!uploadFile)
-    {
+    uploadFile = PANDA_SD.open(filePath, FILE_WRITE);
+    if (!uploadFile){
       request->send(500, "text/plain", "{\"success\": false, \"error\": \"Failed to open file for writing\"}");
       Serial.println("Failed to open file for writing");
       return;
     }
   }
 
-  if (uploadFile && len)
-  {
+  if (uploadFile && len){
     uploadFile.write(data, len);
   }
 
-  if (final && uploadFile)
-  {
+  if (final && uploadFile){
     uploadFile.close();
     request->send(200, "text/plain", "{\"success\": true}");
   }
 }
 
-void handleCopy(AsyncWebServerRequest *request)
-{
-  if (!request->hasParam("src") || !request->hasParam("dst"))
-  {
+void handleCopy(AsyncWebServerRequest *request){
+  if (!request->hasParam("src") || !request->hasParam("dst")){
     request->send(400, "text/plain", "Missing src or dst parameter");
     return;
   }
@@ -92,15 +87,13 @@ void handleCopy(AsyncWebServerRequest *request)
   String srcPath = request->getParam("src")->value();
   String dstPath = request->getParam("dst")->value();
 
-  if (!SD.exists(srcPath))
-  {
+  if (!PANDA_SD.exists(srcPath)){
     request->send(404, "text/plain", "Source file not found");
     return;
   }
 
-  File src = SD.open(srcPath);
-  if (src.isDirectory())
-  {
+  File src = PANDA_SD.open(srcPath);
+  if (src.isDirectory()){
     src.close();
     request->send(400, "text/plain", "Source is a directory");
     return;
@@ -108,24 +101,19 @@ void handleCopy(AsyncWebServerRequest *request)
 
   // Extract directory path from dstPath
   int lastSlash = dstPath.lastIndexOf('/');
-  if (lastSlash > 0)
-  {
+  if (lastSlash > 0){
     String dstDir = dstPath.substring(0, lastSlash);
     
     // Create directory if it doesn't exist
-    if (!SD.exists(dstDir))
-    {
+    if (!PANDA_SD.exists(dstDir)){
       // Create all necessary parent directories
       String currentPath = "";
-      for (int i = 0; i < dstDir.length(); i++)
-      {
+      for (int i = 0; i < dstDir.length(); i++){
         currentPath += dstDir[i];
         if (dstDir[i] == '/' && i > 0) // Found a directory level
         {
-          if (!SD.exists(currentPath.substring(0, currentPath.length() - 1)))
-          {
-            if (!SD.mkdir(currentPath.substring(0, currentPath.length() - 1)))
-            {
+          if (!PANDA_SD.exists(currentPath.substring(0, currentPath.length() - 1))){
+            if (!PANDA_SD.mkdir(currentPath.substring(0, currentPath.length() - 1))){
               src.close();
               request->send(500, "text/plain", "Failed to create directory: " + currentPath);
               return;
@@ -135,8 +123,7 @@ void handleCopy(AsyncWebServerRequest *request)
       }
       
       // Create the final directory
-      if (!SD.mkdir(dstDir))
-      {
+      if (!PANDA_SD.mkdir(dstDir)){
         src.close();
         request->send(500, "text/plain", "Failed to create destination directory");
         return;
@@ -145,9 +132,8 @@ void handleCopy(AsyncWebServerRequest *request)
   }
 
   // Check if destination already exists (file, not directory)
-  if (SD.exists(dstPath))
-  {
-    File dstCheck = SD.open(dstPath);
+  if (PANDA_SD.exists(dstPath)){
+    File dstCheck = PANDA_SD.open(dstPath);
     if (!dstCheck.isDirectory()) // Only fail if it's a file
     {
       src.close();
@@ -158,9 +144,8 @@ void handleCopy(AsyncWebServerRequest *request)
     dstCheck.close();
   }
 
-  File dst = SD.open(dstPath, FILE_WRITE);
-  if (!dst)
-  {
+  File dst = PANDA_SD.open(dstPath, FILE_WRITE);
+  if (!dst){
     src.close();
     request->send(500, "text/plain", "Failed to create destination file");
     return;
@@ -170,10 +155,8 @@ void handleCopy(AsyncWebServerRequest *request)
   size_t bytesRead;
   bool error = false;
   
-  while ((bytesRead = src.read(buffer, sizeof(buffer))) > 0)
-  {
-    if (dst.write(buffer, bytesRead) != bytesRead)
-    {
+  while ((bytesRead = src.read(buffer, sizeof(buffer))) > 0){
+    if (dst.write(buffer, bytesRead) != bytesRead){
       error = true;
       break;
     }
@@ -182,9 +165,8 @@ void handleCopy(AsyncWebServerRequest *request)
   src.close();
   dst.close();
 
-  if (error)
-  {
-    SD.remove(dstPath);
+  if (error){
+    PANDA_SD.remove(dstPath);
     request->send(500, "text/plain", "Copy failed");
     return;
   }
@@ -192,31 +174,25 @@ void handleCopy(AsyncWebServerRequest *request)
   request->send(200, "text/plain", "OK");
 }
 
-void handleRm(AsyncWebServerRequest *request)
-{
-  if (!request->hasParam("path"))
-  {
+void handleRm(AsyncWebServerRequest *request){
+  if (!request->hasParam("path")){
     request->send(400, "text/plain", "Missing path parameter");
     return;
   }
 
   String path = request->getParam("path")->value();
 
-  if (!SD.exists(path))
-  {
+  if (!PANDA_SD.exists(path)){
     request->send(404, "text/plain", "Path not found");
     return;
   }
 
-  File file = SD.open(path);
-  if (file.isDirectory())
-  {
+  File file = PANDA_SD.open(path);
+  if (file.isDirectory()){
     bool isEmpty = true;
     File entry = file.openNextFile();
-    while (entry)
-    {
-      if (String(entry.name()) != "." && String(entry.name()) != "..")
-      {
+    while (entry){
+      if (String(entry.name()) != "." && String(entry.name()) != ".."){
         isEmpty = false;
         break;
       }
@@ -224,25 +200,20 @@ void handleRm(AsyncWebServerRequest *request)
     }
     entry.close();
 
-    if (!isEmpty)
-    {
+    if (!isEmpty){
       file.close();
       request->send(400, "text/plain", "Directory is not empty");
       return;
     }
 
     file.close();
-    if (!SD.rmdir(path))
-    {
+    if (!PANDA_SD.rmdir(path)){
       request->send(500, "text/plain", "Failed to delete directory");
       return;
     }
-  }
-  else
-  {
+  }else{
     file.close();
-    if (!SD.remove(path))
-    {
+    if (!PANDA_SD.remove(path)){
       request->send(500, "text/plain", "Failed to delete file");
       return;
     }
@@ -251,45 +222,33 @@ void handleRm(AsyncWebServerRequest *request)
   request->send(200, "text/plain", "Deleted successfully");
 }
 
-void handleMkdir(AsyncWebServerRequest *request)
-{
-  if (request->hasParam("path", true) && request->hasParam("dirName", true))
-  {
+void handleMkdir(AsyncWebServerRequest *request){
+  if (request->hasParam("path", true) && request->hasParam("dirName", true)){
     String basePath = request->getParam("path", true)->value();
     String dirName = request->getParam("dirName", true)->value();
     String fullPath = basePath + "/" + dirName;
 
     fullPath.replace("//", "/");
-    if (SD.exists(fullPath))
-    {
+    if (PANDA_SD.exists(fullPath)){
       request->send(400, "text/plain", "Directory already exists");
     }
-    else if (SD.mkdir(fullPath))
-    {
+    else if (PANDA_SD.mkdir(fullPath)){
       request->send(200, "text/plain", "Directory created successfully");
-    }
-    else
-    {
+    }else{
       request->send(500, "text/plain", "Failed to create directory");
     }
-  }
-  else
-  {
+  }else{
     request->send(400, "text/plain", "Missing parameters");
   }
 }
-
-void serveDirectoryListing(AsyncWebServerRequest *request)
-{
+void serveDirectoryListing(AsyncWebServerRequest *request){
   String path = request->url();
   path.replace("//", "/");
-  while (path.endsWith("/") && path.length() > 1)
-  {
+  while (path.endsWith("/") && path.length() > 1){
     path.remove(path.length() - 1);
   }
 
-  if (!SD.exists(path))
-  {
+  if (!PANDA_SD.exists(path)){
     path = "/";
   }
 
@@ -297,155 +256,337 @@ void serveDirectoryListing(AsyncWebServerRequest *request)
   <html>
   <head>
     <title>Directory Listing</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+      * {
+        box-sizing: border-box;
+      }
       body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
+        font-family: 'Courier New', monospace;
+        margin: 15px;
+        padding: 0;
         display: flex;
         flex-direction: column;
         min-height: 100vh;
+        background: #1a1a1a;
+        color: #ccc;
+        font-size: 18px;
+      }
+      @media (min-width: 768px) {
+        body {
+          margin: 30px;
+          font-size: 20px;
+        }
       }
       h1 {
-        color: #333;
+        color: #ff9900;
         margin-bottom: 20px;
+        font-size: 28px;
+        font-weight: bold;
+        word-break: break-word;
+      }
+      @media (min-width: 768px) {
+        h1 {
+          font-size: 36px;
+          margin-bottom: 25px;
+        }
+      }
+      .table-responsive {
+        overflow-x: auto;
+        width: 100%;
       }
       table {
         border-collapse: collapse;
         width: 100%;
         margin-bottom: 20px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        background: #2d2d2d;
       }
       th, td {
-        border: 1px solid #ddd;
-        padding: 12px;
+        border: 1px solid #444;
+        padding: 12px 10px;
         text-align: left;
+        font-size: 16px;
+      }
+      @media (min-width: 768px) {
+        th, td {
+          padding: 15px;
+          font-size: 18px;
+        }
       }
       th {
-        background-color: #f8f9fa;
-        font-weight: 600;
+        background-color: #3c3c3c;
+        font-weight: bold;
+        color: #ff9900;
       }
       tr:nth-child(even) {
-        background-color: #f9f9f9;
+        background-color: #252525;
       }
       tr:hover {
-        background-color: #f1f1f1;
+        background-color: #3a3a3a;
       }
       .action-buttons {
         display: flex;
-        gap: 20px;
-        margin-top: auto;
+        flex-direction: column;
+        gap: 15px;
+        margin-top: 20px;
+      }
+      @media (min-width: 768px) {
+        .action-buttons {
+          flex-direction: row;
+          gap: 25px;
+        }
       }
       .action-box {
         flex: 1;
         padding: 20px;
-        background-color: #f8f9fa;
+        background-color: #2d2d2d;
         border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        border: 1px solid #444;
+      }
+      @media (min-width: 768px) {
+        .action-box {
+          padding: 25px;
+        }
       }
       .action-box h3 {
         margin-top: 0;
-        color: #333;
+        color: #ff9900;
+        font-size: 20px;
+        margin-bottom: 15px;
+      }
+      @media (min-width: 768px) {
+        .action-box h3 {
+          font-size: 24px;
+          margin-bottom: 20px;
+        }
       }
       .form-row {
         margin-bottom: 15px;
       }
       footer {
-        margin-top: 40px;
-        padding: 20px 0;
+        margin-top: 30px;
+        padding: 15px 0;
         text-align: center;
-        color: #777;
-        font-size: 0.9em;
-        border-top: 1px solid #eee;
+        color: #666;
+        font-size: 12px;
+        border-top: 1px solid #444;
+      }
+      @media (min-width: 768px) {
+        footer {
+          margin-top: 40px;
+          padding: 20px 0;
+          font-size: 14px;
+        }
       }
       .form-row label {
         display: block;
-        margin-bottom: 5px;
-        font-weight: 500;
+        margin-bottom: 6px;
+        font-weight: bold;
+        color: #aaa;
+        font-size: 15px;
+      }
+      @media (min-width: 768px) {
+        .form-row label {
+          margin-bottom: 8px;
+          font-size: 16px;
+        }
       }
       input[type="text"],
       input[type="file"] {
         width: 100%;
-        padding: 8px;
-        border: 1px solid #ddd;
+        padding: 10px;
+        border: 1px solid #555;
         border-radius: 4px;
         box-sizing: border-box;
+        background: #1e1e1e;
+        color: #fff;
+        font-family: 'Courier New', monospace;
+        font-size: 16px;
+      }
+      @media (min-width: 768px) {
+        input[type="text"],
+        input[type="file"] {
+          padding: 12px;
+          font-size: 18px;
+        }
+      }
+      input[type="text"]:focus,
+      input[type="file"]:focus {
+        outline: none;
+        border-color: #ff9900;
       }
       .btn {
-        padding: 10px 15px;
+        padding: 10px 20px;
         border: none;
         border-radius: 4px;
         cursor: pointer;
-        font-weight: 500;
-        transition: background-color 0.2s;
-        text-align: center; /* Ensure link text is centered */
+        font-weight: bold;
+        transition: all 0.1s ease;
+        text-align: center;
+        font-family: 'Courier New', monospace;
+        font-size: 16px;
+        width: 100%;
+      }
+      @media (min-width: 768px) {
+        .btn {
+          padding: 12px 24px;
+          font-size: 18px;
+          width: auto;
+        }
       }
       .btn-primary {
-        background-color: #4CAF50;
-        color: white;
+        background-color: #ff9900;
+        color: #111;
       }
       .btn-primary:hover {
-        background-color: #45a049;
+        background-color: #ffaa33;
+        transform: translateY(-1px);
       }
       .btn-danger {
-        background-color: #ff4444;
-        color: white;
+        background-color: #ff6666;
+        color: #111;
       }
       .btn-danger:hover {
-        background-color: #cc0000;
+        background-color: #ff4444;
+        transform: translateY(-1px);
       }
       .status {
         margin-top: 10px;
-        padding: 8px;
+        padding: 10px;
         border-radius: 4px;
+        font-size: 14px;
+        word-break: break-word;
+      }
+      @media (min-width: 768px) {
+        .status {
+          margin-top: 15px;
+          padding: 12px;
+          font-size: 15px;
+        }
       }
       .status-success {
-        background-color: #d4edda;
-        color: #155724;
+        background-color: #1e3a1e;
+        color: #4CAF50;
+        border: 1px solid #4CAF50;
       }
       .status-error {
-        background-color: #f8d7da;
-        color: #721c24;
+        background-color: #3a1e1e;
+        color: #ff6666;
+        border: 1px solid #ff6666;
       }
       a {
-        color: #007bff;
+        color: #9cdcfe;
         text-decoration: none;
+        font-size: 16px;
+        word-break: break-word;
+      }
+      @media (min-width: 768px) {
+        a {
+          font-size: 18px;
+        }
       }
       a:hover {
+        color: #ff9900;
         text-decoration: underline;
       }
       .breadcrumb {
-        margin-bottom: 15px;
-        font-size: 1.1em;
+        margin-bottom: 20px;
+        font-size: 18px;
+        color: #ff9900;
+        font-weight: bold;
+        padding: 12px;
+        background: #2d2d2d;
+        border-radius: 6px;
+        border: 1px solid #444;
+        word-break: break-word;
+        overflow-x: auto;
+      }
+      @media (min-width: 768px) {
+        .breadcrumb {
+          margin-bottom: 25px;
+          font-size: 24px;
+          padding: 15px;
+        }
       }
       .breadcrumb a {
-        color: #007bff;
+        color: #9cdcfe;
         text-decoration: none;
+        font-size: 18px;
+        font-weight: normal;
+      }
+      @media (min-width: 768px) {
+        .breadcrumb a {
+          font-size: 24px;
+        }
       }
       .breadcrumb a:hover {
+        color: #ff9900;
         text-decoration: underline;
       }
-      /* Updated style for the main header section */
       .main-header {
-        background-color: #e9ecef;
+        background-color: #2d2d2d;
         padding: 20px;
         border-radius: 8px;
         margin-bottom: 20px;
         display: flex;
-        flex-direction: column; /* Change to column to stack elements */
-        align-items: center; /* Center items horizontally */
+        flex-direction: column;
+        align-items: center;
         gap: 15px;
+        border: 1px solid #444;
+      }
+      @media (min-width: 768px) {
+        .main-header {
+          padding: 35px;
+          margin-bottom: 25px;
+          gap: 25px;
+        }
       }
       .main-header p {
         margin: 0;
-        font-size: 1.2em;
-        color: #333;
+        font-size: 22px;
+        color: #ff9900;
+        font-weight: bold;
+        text-align: center;
+      }
+      @media (min-width: 768px) {
+        .main-header p {
+          font-size: 28px;
+        }
       }
       .header-links {
         display: flex;
-        gap: 20px;
+        flex-direction: column;
+        gap: 15px;
         align-items: center;
+        width: 100%;
       }
-      /* Style for the logo image */
+      @media (min-width: 768px) {
+        .header-links {
+          flex-direction: row;
+          gap: 30px;
+        }
+      }
+      .editor-btn {
+        padding: 12px 20px;
+        font-size: 16px;
+        background-color: #ff9900 !important;
+        color: #111 !important;
+        width: 100%;
+        text-align: center;
+      }
+      @media (min-width: 768px) {
+        .editor-btn {
+          padding: 15px 30px;
+          font-size: 18px;
+          width: auto;
+        }
+      }
+      .editor-btn:hover {
+        background-color: #ffaa33 !important;
+        transform: translateY(-2px);
+      }
       .logo-container {
         display: flex;
         justify-content: center;
@@ -456,102 +597,96 @@ void serveDirectoryListing(AsyncWebServerRequest *request)
         height: auto;
         border-radius: 5px;
       }
-      /* Style for the bigger, centered editor button */
-      .editor-btn {
-        padding: 15px 30px; /* Increased padding for bigger button */
-        font-size: 1.2em;
-        background-color: #007bff !important; /* Make editor button stand out */
+      td .btn-danger {
+        width: auto;
+        padding: 6px 12px;
+        font-size: 13px;
+      }
+      @media (min-width: 768px) {
+        td .btn-danger {
+          padding: 8px 16px;
+          font-size: 15px;
+        }
       }
     </style>
   </head>
   <body>
     <div class="breadcrumb">)";
 
-  if (path != "/")
-  {
-    output += "<a href='/'>/</a> &gt; ";
+  if (path != "/"){
+    output += "<a href='/'>/</a> > ";
 
     String currentPath = "";
     String parts = path.substring(1);
     int lastSlash = 0;
 
-    while (lastSlash != -1)
-    {
+    while (lastSlash != -1){
       int nextSlash = parts.indexOf('/', lastSlash);
       String part = nextSlash == -1 ? parts.substring(lastSlash) : parts.substring(lastSlash, nextSlash);
       currentPath += "/" + part;
 
-      if (nextSlash != -1)
-      {
-        output += "<a href='" + currentPath + "'>" + part + "</a> &gt; ";
+      if (nextSlash != -1){
+        output += "<a href='" + currentPath + "'>" + part + "</a> > ";
         lastSlash = nextSlash + 1;
-      }
-      else
-      {
+      }else{
         output += part;
         lastSlash = -1;
       }
     }
-  }
-  else
-  {
+  }else{
     output += "Root Directory";
   }
 
   output += R"(</div>)";
   
-  // --- Updated Header Section Logic for Root Path ---
-  if (path == "/")
-  {
-    // 1. Image Inclusion (centered at the top)
+  // Header Section Logic for Root Path
+  if (path == "/"){
+    // Logo container
     output += R"(
     <div class="logo-container">
       <img src="/doc/logoprotopanda.png" alt="Protopanda Logo" class="logo-img">
     </div>)";
     
-    // 2. Welcome Message and Buttons (centered)
+    // Welcome message and buttons
     output += R"(
     <div class="main-header">
-      <p>Welcome to protopanda</p>
+      <p>Welcome to ProtoPanda</p>
       <div class="header-links">
-        <a href="/editor.html" class="btn btn-primary editor-btn">Go to Editor</a>
+        <a href="/editor.html" class="btn btn-primary editor-btn">Static Frame Editor</a>
+        <a href="/modeleditor.html" class="btn btn-primary editor-btn">Model and Keyframe Editor</a>
       </div>
     </div>)";
   }
-  // --- End Updated Header Section Logic ---
 
   output += R"(
     <h1>Directory Listing: )";
   output += path;
   output += R"(</h1>
     
+    <div class="table-responsive">
     <table>
       <tr>
         <th>Name</th>
         <th>Size</th>
         <th>Type</th>
         <th>Action</th>
-      </tr>)";
+      </td>)";
 
-  File root = SD.open(path);
+  File root = PANDA_SD.open(path);
   File file = root.openNextFile();
-  if (path == "/")
-  {
+  if (path == "/"){
     path = "";
   }
 
-  while (file)
-  {
+  while (file){
     String fileName = file.name();
     // Skip hidden files and special directories
-    if (!fileName.startsWith(".") && fileName.length() > 0)
-    {
+    if (!fileName.startsWith(".") && fileName.length() > 0){
       String filePath = path + "/" + fileName;
       output += "<tr>";
       output += "<td><a href='" + filePath + "'>" + fileName + "</a></td>";
       output += "<td>" + String(file.isDirectory() ? "-" : String(file.size())) + "</td>";
       output += "<td>" + String(file.isDirectory() ? "DIR" : "FILE") + "</td>";
-
       output += "<td><button class='btn btn-danger' onclick=\"deleteFile('" + filePath + "')\">Delete</button></td>";
       output += "</tr>";
     }
@@ -560,6 +695,7 @@ void serveDirectoryListing(AsyncWebServerRequest *request)
 
   output += R"(
     </table>
+    </div>
     
     <div class="action-buttons">
       <div class="action-box">
@@ -656,35 +792,31 @@ void serveDirectoryListing(AsyncWebServerRequest *request)
         });
       });
     </script>
-    <footer>Protopanda v)";
+    <footer>ProtoPanda v)";
 
   output += PANDA_VERSION;
 
-  output += R"(</footer>
+  output += R"( | Pixel Art Editor</footer>
   </body>
   </html>)";
 
   request->send(200, "text/html", output);
 }
 
-void handleLuaExecution(AsyncWebServerRequest *request)
-{
-  if (request->method() != HTTP_POST)
-  {
+void handleLuaExecution(AsyncWebServerRequest *request){
+  if (request->method() != HTTP_POST)  {
     request->send(405, "text/plain", "Method Not Allowed");
     return;
   }
 
-  if (!request->hasParam("body", true))
-  {
+  if (!request->hasParam("body", true))  {
     request->send(400, "text/plain", "Missing Lua code in body");
     return;
   }
 
   String luaCode = request->getParam("body", true)->value();
 
-  if (!g_lua.DoString(luaCode.c_str(), 1))
-  {
+  if (!g_lua.DoString(luaCode.c_str(), 1)){
     String error = g_lua.getLastError();
     request->send(500, "text/plain", "Lua Error: " + error);
     return;
@@ -711,11 +843,9 @@ void composeBulkFileTask(void *parameter){
   vTaskDelete(NULL);
 }
 
-void handleComposeStart(AsyncWebServerRequest *request)
-{
+void handleComposeStart(AsyncWebServerRequest *request){
   // Check if task is already running
-  if (composeTaskHandle != NULL)
-  {
+  if (composeTaskHandle != NULL){
     request->send(200, "text/plain", "Status: Composition already in progress");
     return;
   }
@@ -734,24 +864,18 @@ void handleComposeStart(AsyncWebServerRequest *request)
       tskIDLE_PRIORITY,
       &composeTaskHandle);
 
-  if (result == pdPASS)
-  {
+  if (result == pdPASS){
     request->send(200, "text/plain", "Status: Composition started successfully");
-  }
-  else
-  {
+  }else{
     request->send(500, "text/plain", "Error: Failed to start composition task");
   }
 }
 
-void managedLoop(void *)
-{
+void managedLoop(void *){
   
-  for (;;)
-  {
+  for (;;){
     Devices::BeginAutoFrame();
-    g_animation.Update(g_frameRepo.takeFile());
-    g_frameRepo.freeFile();
+    g_animation.Update(Devices::getAutoDeltaTime());
     Devices::EndAutoFrame();
     vTaskDelay(5);
     if (millis() > managedDuration){
@@ -762,11 +886,9 @@ void managedLoop(void *)
   vTaskDelete(NULL);
 }
 
-void handleSetManaged(AsyncWebServerRequest *request)
-{
+void handleSetManaged(AsyncWebServerRequest *request){
   
-  if (!isManaged)
-  {
+  if (!isManaged){
     managedDuration = millis() + 10*1000;
     isManaged = true;
     xTaskCreate(
@@ -779,26 +901,21 @@ void handleSetManaged(AsyncWebServerRequest *request)
 
     
     request->send(200, "text/plain", "ok");
-  }
-  else
-  {
+  }else{
     request->send(400, "text/plain", "already running");
   }
 }
-void handleComposeGet(AsyncWebServerRequest *request)
-{
+void handleComposeGet(AsyncWebServerRequest *request){
   request->send(200, "text/plain", String(g_frameRepo.getBulkComposingPercentage()));
 }
 
-void startWifiServer()
-{
-  server = new AsyncWebServer(EDIT_MODE_HTTP_PORT);
+void startWifiServer(int port){
+  server = new AsyncWebServer(port);
 
   server->on("/", HTTP_GET, serveDirectoryListing);
-  server->serveStatic("/", SD, "/", "max-age=0").setCacheControl("max-age=0");
+  server->serveStatic("/", SD_MMC, "/", "max-age=0").setCacheControl("max-age=0");
   server->on("/mkdir", HTTP_POST, handleMkdir);
-  server->on("/upload", HTTP_POST, [](AsyncWebServerRequest *request)
-             { request->send(200); }, handleUpload);
+  server->on("/upload", HTTP_POST, [](AsyncWebServerRequest *request){ request->send(200); }, handleUpload);
   server->on("/delete", HTTP_DELETE, handleRm);
   server->on("/copy", HTTP_PUT, handleCopy);
   server->on("/lua", HTTP_POST, handleLuaExecution);
@@ -814,16 +931,7 @@ void startWifiServer()
   float percentageHeapFree = freeHeapBytes * 100.0f / (float)totalHeapBytes;
   float percentagePsramFree = freePsramBytes* 100.0f / (float)totalPsramBytes;
 
-  Serial.printf("[Memory] %.1f%% free - %d of %d bytes free (psram: %d / %d  -> %.1f%%)", percentageHeapFree, freeHeapBytes, totalHeapBytes, totalPsramBytes, freePsramBytes, percentagePsramFree);
-  /*DMADisplay::Start(8, 1);
-
-  DMADisplay::Display->clearScreen();
-  DMADisplay::Display->setBrightness8(32);
-  char str[] = "u gay";
-  for (int i=0;i<strlen(str);i++){
-    DMADisplay::Display->drawChar(0 + i * 8,2, str[i], DMADisplay::Display->color333(255,255,255), 0, 1);
-  }
-  DMADisplay::Display->flipDMABuffer();*/
+  Serial.printf("[Memory] %.1f%% free - %lu of %lu bytes free (psram: %lu / %lu  -> %.1f%%)", percentageHeapFree, freeHeapBytes, totalHeapBytes, totalPsramBytes, freePsramBytes, percentagePsramFree);
 
   freeHeapBytes = ESP.getFreeHeap();  
   totalHeapBytes = ESP.getHeapSize(); 
@@ -832,6 +940,7 @@ void startWifiServer()
 
   percentageHeapFree = freeHeapBytes * 100.0f / (float)totalHeapBytes;
   percentagePsramFree = freePsramBytes* 100.0f / (float)totalPsramBytes;
-  Serial.printf("[Memory] %.1f%% free - %d of %d bytes free (psram: %d / %d  -> %.1f%%)", percentageHeapFree, freeHeapBytes, totalHeapBytes, totalPsramBytes, freePsramBytes, percentagePsramFree);
+  Serial.printf("[Memory] %.1f%% free - %lu of %lu bytes free (psram: %lu / %lu  -> %.1f%%)", percentageHeapFree, freeHeapBytes, totalHeapBytes, totalPsramBytes, freePsramBytes, percentagePsramFree);
   server->begin();
 }
+#endif

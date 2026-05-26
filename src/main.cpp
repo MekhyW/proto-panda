@@ -1,14 +1,13 @@
 #include "config.hpp"
 
 #include <SPI.h>
-#include "SD.h"
 #include <string>
-#include <FastLED.h>
 
 
 #include "tools/sensors.hpp"
 #include "tools/devices.hpp"
 #include "tools/oledscreen.hpp"
+#include "tools/hardwareconfig.hpp"
 #include "tools/storage.hpp"
 #include "tools/logger.hpp"
 #include "tools/ir.hpp"
@@ -16,7 +15,6 @@
 
 
 #include "drawing/framerepository.hpp"
-#include "drawing/dma_display.hpp"
 #include "drawing/animation.hpp"
 #include "drawing/ledstrip.hpp"
 #include "drawing/icons/icons.hpp"
@@ -26,6 +24,8 @@
 
 #include "bluetooth/ble_client.hpp"
 
+#include "drawing/modelanimation/keyframeplayer.hpp"
+
 
 LedStrip g_leds;
 FrameRepository g_frameRepo;
@@ -33,8 +33,14 @@ BleManager g_remoteControls;
 Animation g_animation;
 LuaInterface g_lua;
 TaskHandle_t g_secondCore;
+#ifdef ENABLE_EDIT_MODE
 EditMode g_editMode;
+#endif
 InfraRedManager g_InfraRed;
+ModelDict g_models;
+ModelHandler g_modelHandler;
+
+KeyframePlayer g_kf;
 
 void second_loop(void*);
 
@@ -42,13 +48,15 @@ void setup() {
   /*
     Startup regulator pins and shoot it low asap.
   */
-  #ifdef PIN_ENABLE_REGULATOR
+  #ifdef USE_ENABLE_PIN
   digitalWrite(PIN_ENABLE_REGULATOR, LOW);
   pinMode(PIN_ENABLE_REGULATOR, OUTPUT);
   digitalWrite(PIN_ENABLE_REGULATOR, LOW);
   #endif
   pinMode(EDIT_MODE_PIN, INPUT_PULLDOWN);
+  #ifdef USE_PIN_BATTERY_IN
   pinMode(PIN_USB_BATTERY_IN, INPUT);
+  #endif
 
   Devices::Begin();
   Serial.begin(115200);
@@ -68,6 +76,7 @@ void setup() {
   OledScreen::Start();
   Sensors::Start();
   
+  #ifdef ENABLE_EDIT_MODE
   g_editMode.CheckBeginEditMode();
 
   if (g_editMode.IsOnEditMode()){
@@ -78,35 +87,24 @@ void setup() {
     Devices::BuzzerNoTone();
     return;
   }
-
-  #ifdef ENABLE_HUB75_PANEL
-  Devices::CalculateMemmoryUsage(); 
-  if (!DMADisplay::Start()){
-    OledScreen::CriticalFail("Failed to initialize DMA display!");
-    Devices::BuzzerTone(300);
-    delay(1500);
-    Devices::BuzzerNoTone();
-    for(;;){}
-  }
-  Logger::Info("DMA display initialized!");
-  Devices::CalculateMemmoryUsageDifference("Dma display");
-  #endif 
+  #endif
 
   while (!Storage::Begin()){
-    DMADisplay::Display->clearScreen();
-    DMADisplay::Display->setBrightness8(8);
-    DMADisplay::Display->drawRGBBitmap(0,0, icon_panel_nosd, 64, 32);
-    DMADisplay::Display->drawRGBBitmap(63,0, icon_panel_nosd, 64, 32);
-    DMADisplay::Display->flipDMABuffer();
     OledScreen::display.clearDisplay();
     OledScreen::display.drawBitmap(0,0, icon_sd, 128, 64, 1);
     OledScreen::display.display();
     delay(500);
     OledScreen::display.clearDisplay();
     OledScreen::display.display();
-    DMADisplay::Display->setBrightness8(1);
   }
-  DMADisplay::Display->setBrightness8(0);
+
+  
+  Devices::CalculateMemmoryUsage(); 
+
+  HardwareConfig::LoadConfigs();
+
+
+  
   Devices::CalculateMemmoryUsageDifference("Storage");
   Logger::Begin();
   Devices::DisplayResetInfo();
@@ -158,12 +156,13 @@ void setup() {
   g_lua.CallFunction("onSetup");
   Devices::BuzzerTone(150);
   delay(100);
+
   Devices::BuzzerNoTone();
   Devices::CalculateMemmoryUsageDifference("onSetup");
 
   g_frameRepo.displayFFATInfo();
   Serial.printf("Running upon %d\n", xPortGetCoreID());
-  
+
   #ifndef SINGLE_CORE_RUN
   xTaskCreatePinnedToCore(second_loop, "second loop", 10000, NULL, ( 2 | portPRIVILEGE_BIT ), &g_secondCore, 0);
   Devices::CalculateMemmoryUsageDifference("second loop");
@@ -171,32 +170,31 @@ void setup() {
    
   Devices::BuzzerTone(880);
   delay(100);
+  
   g_lua.CallFunction("onPreflight");
   Devices::BuzzerNoTone();
   
+  
   Devices::CalculateMemmoryUsageDifference("completed setup");
+  digitalWrite(PIN_ENABLE_REGULATOR, HIGH);
 }
 
 void second_loop(void*){
   #ifndef SINGLE_CORE_RUN
   for( ;; )
   { 
-    uint32_t st = millis();
     Devices::BeginAutoFrame();
-    g_animation.Update(g_frameRepo.takeFile());
+    
+
+    g_animation.Update(Devices::getAutoDeltaTime());
     vTaskDelay(1);
-    uint32_t st2 = millis()-st;
-    g_frameRepo.freeFile();
+
     g_leds.Update();
     if (g_leds.IsManaged()){
       g_leds.Display();
     }
     vTaskDelay(1);
     Devices::EndAutoFrame();
-    st = millis()-st;
-    if (st > 80){
-      Logger::Info("Animation cycle took too long %d and %d ms", st2, st);
-    }
   }
   #endif
 }
@@ -204,24 +202,32 @@ void second_loop(void*){
 
 
 void loop() {
+  Devices::BeginFrame();
+  #ifdef ENABLE_EDIT_MODE
   if (g_editMode.IsOnEditMode()){
     g_editMode.LoopEditMode();
     return;
   }
-  
+  #endif
+
   if (Devices::AutoCheckPowerLevel() && !Devices::CheckPowerLevel()){
-    Devices::WaitForPower(0);
+    Devices::WaitForPower();
     return;
   }
-
-  Devices::BeginFrame();
+  
+  
   Devices::ReadSensors();
   g_remoteControls.update();
   g_InfraRed.update();
   g_remoteControls.sendUpdatesToLua();
 
-
+  static int meme = 0;
+  int salada = millis();
   g_lua.CallFunctionT("onLoop", Devices::getDeltaTime());
+  if (meme < millis()){
+    meme = millis()+1000;
+    Serial.printf("FPs: %f (%d)\n", Devices::getFps(), millis()-salada);
+  }
   #ifdef SINGLE_CORE_RUN
   g_animation.Update(g_frameRepo.takeFile());
   g_frameRepo.freeFile();

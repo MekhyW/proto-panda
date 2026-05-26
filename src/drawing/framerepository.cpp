@@ -6,6 +6,13 @@
 
 #include "tools/oledscreen.hpp"
 
+#if PANDA_SD_MODE == 1
+#include <SD.h>
+#elif PANDA_SD_MODE == 2
+#include <SD_MMC.h>
+#else
+#error "NO SD_MODE Mode defined (set PANDA_SD_MODE to 1 for SD or 2 for SD_MMC)"
+#endif
 
 #include <FFat.h>
 
@@ -28,7 +35,7 @@ bool FrameRepository::Begin(){
 
     m_mutex = xSemaphoreCreateMutex();
     Logger::Info("Starting FFAT");
-    if (!FFat.begin(true)) {
+    if (!FFat.begin(true, "/ffat", 3)) {
         Logger::Info("FFat Mount Failed");
         Logger::Info("Formatting FFat");
         if (!FFat.format()){
@@ -114,14 +121,14 @@ void FrameRepository::extractModes(JsonVariant &element, bool &flip_left, bool &
 }
 
 bool FrameRepository::loadCachedData(){
-    if( SD.exists("/rebuildfile") ) {
+    if( PANDA_SD.exists("/rebuildfile") ) {
         Logger::Error("rebuildfile is found, forcing rebuild.");
-        SD.remove("/cache/cache.json");
-        SD.remove("/rebuildfile");
+        PANDA_SD.remove("/cache/cache.json");
+        PANDA_SD.remove("/rebuildfile");
         return false;
     }
 
-    File file = SD.open( "/cache/cache.json", "r" );
+    File file = PANDA_SD.open( "/cache/cache.json", "r" );
     if( !file ) {
         Logger::Error("There is no cache build");
         return false;
@@ -134,7 +141,7 @@ bool FrameRepository::loadCachedData(){
     file.close();
     if( err ) {
         Logger::Error("Cache seems to be corrupted");
-        SD.remove("/cache/cache.json");
+        PANDA_SD.remove("/cache/cache.json");
         return false;
     }
 
@@ -161,9 +168,11 @@ bool FrameRepository::loadCachedData(){
     int frame_count = json_doc["total_frame_count"];
     int bulk_size = json_doc["bulk_size"];
 
-    File conf = SD.open( "/config.json" );
+    File conf = PANDA_SD.open( "/animation.json" );
     if( !conf ) {
-        OledScreen::CriticalFail("Can't open config.json");
+        conf.getWriteError();
+        conf.close();
+        OledScreen::CriticalFail("Can't open animation.json");
         for(;;){}
         return false;
     }
@@ -173,7 +182,7 @@ bool FrameRepository::loadCachedData(){
     conf.close();
     if( err2 ) {
        char miniHBuffer[1000];
-       sprintf(miniHBuffer, "config.json:\n%s", err.c_str());
+       sprintf(miniHBuffer, "animation.json:\n%s", err2.c_str());
        OledScreen::CriticalFail(miniHBuffer);
        for(;;){}
        return false;
@@ -282,9 +291,9 @@ void FrameRepository::composeBulkFile(){
     xSemaphoreTake(m_mutex, portMAX_DELAY);
     uint64_t start = micros();
     
-    File file = SD.open( "/config.json" );
+    File file = PANDA_SD.open( "/animation.json" );
     if( !file ) {
-        OledScreen::CriticalFail("Can't open config.json");
+        OledScreen::CriticalFail("Can't open animation.json");
         for(;;){}
     }
     m_bulkPercentage = 0.0f;
@@ -298,11 +307,11 @@ void FrameRepository::composeBulkFile(){
     file.close();
     if( err ) {
         char miniHBuffer[1000];
-        sprintf(miniHBuffer, "config.json:\n%s", err.c_str());
+        sprintf(miniHBuffer, "animation.json:\n%s", err.c_str());
         OledScreen::CriticalFail(miniHBuffer);
     }
 
-    File fdesc = SD.open( "/frame_description.txt",  FILE_WRITE);
+    File fdesc = PANDA_SD.open( "/frame_description.txt",  FILE_WRITE);
 
     FFat.remove("/frames.bulk");
     bulkFile = FFat.open("/frames.bulk", FILE_WRITE);
@@ -405,7 +414,7 @@ void FrameRepository::composeBulkFile(){
                 }
             }
         }else{
-            OledScreen::CriticalFail("Error on config.json. Expected in folders the element be an object or string.");
+            OledScreen::CriticalFail("Error on animation.json. Expected in folders the element be an object or string.");
         }
         jsonElement++;
     }
@@ -424,8 +433,8 @@ void FrameRepository::composeBulkFile(){
 }
 
 void FrameRepository::generateCacheFile(int bulkSize) {
-    SD.mkdir("/cache");
-    File cache = SD.open( "/cache/cache.json", "w" );
+    PANDA_SD.mkdir("/cache");
+    File cache = PANDA_SD.open( "/cache/cache.json", "w" );
     if( !cache ) {
         OledScreen::CriticalFail("Can't open /cache/cache.json, cant write!");
         for(;;){}
