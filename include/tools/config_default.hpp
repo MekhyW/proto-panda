@@ -77,7 +77,7 @@ Cache file version to invalidate cache in case of firmware update
 //If using the full range of pins (data1 and 2, set this to false)
 #define MMC_ONE_BIT true  
 //Set 2 to MMC and 1 to SD
-#define PANDA_SD_MODE 1
+#define PANDA_SD_MODE 2
 
 
 /*
