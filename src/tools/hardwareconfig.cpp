@@ -119,7 +119,7 @@ void HardwareConfig::loadAndParseDisplay(JsonObject displayInfo){
 
 void HardwareConfig::loadHub75AndStart(JsonObject hub75){
     if (!hub75["enabled"]) {
-        Devices::Display = new MockDisplay(panelConfig);
+        Devices::Display = new EmptyDisplay(panelConfig);
         return;
     }
 
@@ -215,7 +215,7 @@ bool HardwareConfig::StartDmaDisplay(){
         return false;
     }
     //Todo check avaliable ram
-    Devices::Display = new MatrixPanel_I2S_DMA_2(panelConfig);
+    Devices::Display = new BaseDisplay(panelConfig);
     if (Devices::Display == nullptr){
         Logger::Info("Failed to start DMA display");
         return false;

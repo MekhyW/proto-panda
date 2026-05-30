@@ -136,7 +136,7 @@ class Devices{
             return internalGZ;
         };
 
-        static MatrixPanel_I2S_DMA_2 *Display ;
+        static BaseDisplay *Display;
         
     private:
         static uint8_t maxBrightness;

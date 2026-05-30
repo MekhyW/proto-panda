@@ -2,6 +2,7 @@
 #include "tools/oledscreen.hpp"
 #include "tools/devices.hpp"
 #include "tools/compression.hpp"
+#include "tools/hardwareconfig.hpp"
 #include "drawing/framerepository.hpp"
 #include "drawing/modelanimation/keyframeplayer.hpp"
 #include "tools/storage.hpp"

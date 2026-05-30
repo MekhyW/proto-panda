@@ -3,7 +3,7 @@
 #include "tools/logger.hpp"
 #include "tools/devices.hpp"
 #include "tools/compression.hpp"
-
+#include "drawing/framerepository.hpp"
 #include "tools/oledscreen.hpp"
 
 #if PANDA_SD_MODE == 1

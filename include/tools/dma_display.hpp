@@ -3,9 +3,9 @@
 
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 
-class MatrixPanel_I2S_DMA_2 : public MatrixPanel_I2S_DMA{
+class BaseDisplay : public MatrixPanel_I2S_DMA{
     public:
-        MatrixPanel_I2S_DMA_2(const HUB75_I2S_CFG &mxconfig):MatrixPanel_I2S_DMA(mxconfig){}
+        BaseDisplay(const HUB75_I2S_CFG &mxconfig):MatrixPanel_I2S_DMA(mxconfig){}
 
   
         virtual void flipDma(){ flipDMABuffer();};
@@ -24,9 +24,9 @@ class MatrixPanel_I2S_DMA_2 : public MatrixPanel_I2S_DMA{
         uint8_t external_brightness;
 };
 
-class MockDisplay : public MatrixPanel_I2S_DMA_2{
+class EmptyDisplay : public BaseDisplay{
     public:
-        MockDisplay(const HUB75_I2S_CFG &mxconfig):MatrixPanel_I2S_DMA_2(mxconfig){}
+        EmptyDisplay(const HUB75_I2S_CFG &mxconfig):BaseDisplay(mxconfig){}
 
         bool begin(){return false;};
         void setBrightness8(const uint8_t b){};
