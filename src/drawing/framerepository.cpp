@@ -160,6 +160,19 @@ bool FrameRepository::loadCachedData(){
         return false;
     }
 
+    if ( !json_doc.containsKey("width") || !json_doc["width"].is<int>() || json_doc["width"].as<int>() != PANEL_WIDTH){
+        json_doc.clear();   
+        Logger::Error("Panel dimensions changed");
+        return false;
+    }
+
+    if ( !json_doc.containsKey("height") || !json_doc["height"].is<int>() || json_doc["height"].as<int>() != PANEL_HEIGHT){
+        json_doc.clear();   
+        Logger::Error("Panel dimensions changed");
+        return false;
+    }
+
+
     if ( !json_doc.containsKey("total_frame_count") || !json_doc["total_frame_count"].is<int>() || !json_doc["bulk_size"] ) {
         json_doc.clear();   
         Logger::Error("Cache structure is corrupted");

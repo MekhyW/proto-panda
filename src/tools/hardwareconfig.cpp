@@ -3,6 +3,7 @@
 #include "tools/logger.hpp"
 #include "tools/devices.hpp"
 #include "tools/psrammap.hpp"
+#include "tools/logger.hpp"
 
 #if PANDA_SD_MODE == 1
 #include <SD.h>
@@ -11,6 +12,10 @@
 #else
 #error "NO SD_MODE Mode defined (set PANDA_SD_MODE to 1 for SD or 2 for SD_MMC)"
 #endif
+
+
+int HardwareConfig::HardwarePanelWidth = 64;
+int HardwareConfig::HardwarePanelHeight = 32;
 
 const uint8_t invalidPins[] = {
     I2C_SDA,
@@ -32,9 +37,9 @@ const uint8_t invalidPins[] = {
 };
 
 HUB75_I2S_CFG HardwareConfig::panelConfig(
-    PANEL_WIDTH,  
-    PANEL_HEIGHT,   
-    PANEL_CHAIN 
+    64,  
+    32,   
+    1 
 
 );
 
@@ -56,6 +61,8 @@ void HardwareConfig::loadDefaults(){
     panelConfig.gpio.clk = DMA_GPIO_CLK;
     panelConfig.setPixelColorDepthBits(12);
     panelConfig.i2sspeed = HUB75_I2S_CFG::HZ_20M;
+    HardwarePanelWidth = 64;
+    HardwarePanelHeight = 32;
 }
 
 int HardwareConfig::checkInvalidPin(int pin){
@@ -96,6 +103,20 @@ void HardwareConfig::loadServosAndStart(JsonObject servos){
     }
 }
 
+void HardwareConfig::loadAndParseDisplay(JsonObject displayInfo){
+    if (!displayInfo.containsKey("type")){
+        OledScreen::CriticalFail("Display dont have a type");
+        return;
+    }
+    std::string displayType = displayInfo["type"].as<const char*>();
+    if (displayType == "hub75"){
+        loadHub75AndStart(displayInfo);
+    }else{
+        OledScreen::CriticalFail("Display type in hardware.json is not supported");
+    }
+    
+}
+
 void HardwareConfig::loadHub75AndStart(JsonObject hub75){
     if (!hub75["enabled"]) {
         Devices::Display = new MockDisplay(panelConfig);
@@ -115,6 +136,24 @@ void HardwareConfig::loadHub75AndStart(JsonObject hub75){
     if (hub75.containsKey("dma_lat")) panelConfig.gpio.lat = checkInvalidPin(hub75["dma_lat"]);
     if (hub75.containsKey("dma_oe")) panelConfig.gpio.oe = checkInvalidPin(hub75["dma_oe"]);
     if (hub75.containsKey("dma_clk")) panelConfig.gpio.clk = checkInvalidPin(hub75["dma_clk"]);
+
+    if (hub75.containsKey("width")){
+        panelConfig.mx_width = hub75["width"];
+    }else{
+        OledScreen::CriticalFail("Missing 'width' in display");
+    }
+    
+    if (hub75.containsKey("height")) {
+        panelConfig.mx_height = hub75["height"];
+    }else{
+        OledScreen::CriticalFail("Missing 'height' in display");
+    }
+
+    if (hub75.containsKey("chain_length")) {
+        panelConfig.chain_length = hub75["chain_length"];
+    }else{
+        OledScreen::CriticalFail("Missing 'chain_length' in display");
+    }
         
     if (hub75.containsKey("colordepth")) {
         panelConfig.setPixelColorDepthBits(hub75["colordepth"]);
@@ -146,11 +185,22 @@ bool HardwareConfig::LoadConfigs(){
        return false;
     }
 
-    if (hardwareConfigJson.containsKey("hub75")) {
-        loadHub75AndStart(hardwareConfigJson["hub75"]);
+    if (hardwareConfigJson.containsKey("canvas_width")) {
+        HardwareConfig::HardwarePanelWidth = hardwareConfigJson["canvas_width"].as<int>();
+    }
+    if (hardwareConfigJson.containsKey("canvas_height")) {
+        HardwareConfig::HardwarePanelHeight = hardwareConfigJson["canvas_height"].as<int>();
+    }
+
+    Logger::Info("Canvas size will be %dx%d", HardwareConfig::HardwarePanelWidth, HardwareConfig::HardwarePanelHeight);
+
+    if (hardwareConfigJson.containsKey("display")) {
+        Logger::Info("Loading HUB75 info");
+        loadAndParseDisplay(hardwareConfigJson["display"]);
     }
 
     if (hardwareConfigJson.containsKey("servos")) {
+        Logger::Info("Loading servos info");
         loadServosAndStart(hardwareConfigJson["servos"]);
     }
 

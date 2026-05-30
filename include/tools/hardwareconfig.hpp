@@ -8,13 +8,25 @@ class HardwareConfig{
     public:
         static bool LoadConfigs();
         static bool StartDmaDisplay();
+
+        static inline int PanelWidth(){
+            return HardwarePanelWidth;
+        }
+
+        static inline int PanelHeight(){
+            return HardwarePanelHeight;
+        }
         
     private:
         static HUB75_I2S_CFG panelConfig;
+        static void loadAndParseDisplay(JsonObject doc);
         static void loadHub75AndStart(JsonObject doc);
         static void loadServosAndStart(JsonObject doc);
         static void loadDefaults();
         static int checkInvalidPin(int pin);
+
+        static int HardwarePanelWidth;
+        static int HardwarePanelHeight;
 
 };
 

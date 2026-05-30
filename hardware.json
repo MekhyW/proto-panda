@@ -1,6 +1,14 @@
 {
-    "hub75": {
+    "_comment": "Any images loaded must have this exact size.",
+    "canvas_width": 64, 
+    "canvas_height": 32, 
+
+    "display": {
+        "type": "hub75",
         "enabled": true,
+        "width": 64,
+        "height": 32,
+        "chain_length": 2,
         "colordepth": 12,
         "dma_r1": 12,
         "dma_r2": 20,
@@ -16,6 +24,7 @@
         "dma_oe": 4,
         "dma_clk": 6
     },
+
     "servos": {
         "enabled": false,
         "pins": [1,2]

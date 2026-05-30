@@ -8,7 +8,7 @@
 
 
 #include "FS.h"
-unsigned char Animation::buffer[FILE_SIZE];
+unsigned char* Animation::buffer = nullptr;
 
 
 #ifdef ENABLE_HUB75_PANEL
@@ -300,6 +300,10 @@ void Animation::LoadFrameAsTexture(int i){
     }
     g_frameRepo.freeFile();
     return;
+}
+
+void Animation::Allocate(){
+    Animation::buffer = new unsigned char[FILE_SIZE];
 }
 
 void Animation::DrawFrame(int i){

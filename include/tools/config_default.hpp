@@ -126,8 +126,8 @@ Servos
     DMA display, or actual display
 */
 #define ENABLE_HUB75_PANEL
-#define PANEL_WIDTH 64      // Number of pixels wide of each INDIVIDUAL panel module. 
-#define PANEL_HEIGHT 32     // Number of pixels tall of each INDIVIDUAL panel module.
+#define PANEL_WIDTH (HardwareConfig::PanelWidth())      // Number of pixels wide of each INDIVIDUAL panel module. 
+#define PANEL_HEIGHT (HardwareConfig::PanelHeight())     // Number of pixels tall of each INDIVIDUAL panel module.
 #define PANEL_CHAIN 2      // Total number of panels chained one to another
 
 #define FILE_PIXEL_COUNT (PANEL_WIDTH * PANEL_HEIGHT)

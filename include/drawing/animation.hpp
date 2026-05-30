@@ -59,7 +59,7 @@ class AnimationSequence{
 class Animation{
     public:
         Animation():m_animations(),m_shader(SHADER_NONE),m_shaderStrenght(1.0f),m_lastFace(0),m_interruptPin(-1),m_colorMode(COLOR_MODE_RGB),m_needFlip(false),m_isManaged(true),m_needRedraw(false),m_onBlankScreen(false),m_frameDrawDuration(0),m_texture(nullptr),m_frameLoadDuration(0),m_cycleDuration(0),m_mutex(xSemaphoreCreateMutex()){};
-
+        void Allocate();
         void Update(uint32_t dt);
 
         void SetModelAnimation(int animationId, int repeatTimes, bool dropAll, int externalStorageId=-1);
@@ -114,7 +114,7 @@ class Animation{
             return m_animations.size();
         }
 
-        static unsigned char buffer[FILE_SIZE];
+        static unsigned char *buffer;
 
         uint32_t getDrawDuration() { return m_frameDrawDuration;};
         uint32_t getLoadDuration() { return m_frameLoadDuration;};

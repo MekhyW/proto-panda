@@ -103,6 +103,9 @@ void setup() {
 
   HardwareConfig::LoadConfigs();
 
+  g_animation.Allocate();
+  g_modelHandler.Allocate();
+
 
   
   Devices::CalculateMemmoryUsageDifference("Storage");
