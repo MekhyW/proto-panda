@@ -288,6 +288,8 @@ Before testing, let's make sure all wires are connected! Put your multimeter in 
 
 ![](./diy-assembly38.png)
 
+> Important: The wiring above is looking from up to down. If you plug jumper cables directly in to the HUB75 cable and make it facing you, thata will make the left and right sides to be flipped!
+
 Now that you've made sure every pin is correctly connected, let's wire the power for the panels.
 Get the power cable that came with the panels and cut their tips.
 

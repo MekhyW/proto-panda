@@ -287,6 +287,8 @@ Antes de testar, vamos garantir que todos os fios estejam conectados! Coloque se
 
 ![](./diy-assembly38.png)
 
+> Important: Os pinos estão sendo vistos de cima para baixo. Se você ver pelo outro lado da placa ou se olhar o conector de frente, esquerda e direita trocam de lugar.
+
 Agora que você verificou que cada pino está conectado corretamente, vamos conectar a alimentação dos painéis.
 Pegue o cabo de alimentação que veio com os painéis e corte as pontas.
 
