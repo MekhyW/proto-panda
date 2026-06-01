@@ -521,9 +521,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("dictLoad", dictLoad);
   m_lua->FuncRegister("dictFormat", dictFormat);
   //Oleed display internal
-  #ifdef ENABLE_HUB75_PANEL
   m_lua->FuncRegister("oledFaceToScreen", DrawPanelFaceToScreen);
-  #endif
   m_lua->FuncRegister("oledCreateIcon", OledScreen::CreateIcon);
   m_lua->FuncRegister("oledDrawIcon", OledScreen::DrawIcon);
   m_lua->FuncRegister("oledClearScreen", OledScreen::Clear);
@@ -590,8 +588,7 @@ void LuaInterface::RegisterMethods()
   //Internal sensor
   m_lua->FuncRegister("getInternalButtonStatus", getInternalButtonStatus); 
   //Panels
-  #ifdef ENABLE_HUB75_PANEL
-  //LoadFrameAsTexture(int i)
+
   m_lua->FuncRegisterFromObjectOpt("flipPanelBuffer", &g_animation, &Animation::MakeFlip);
   m_lua->FuncRegisterFromObjectOpt("loadFrameAsTexture", &g_animation, &Animation::LoadFrameAsTexture);
   m_lua->FuncRegister("drawPanelRect", DrawRect);
@@ -637,7 +634,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("color444", color444);
   m_lua->FuncRegister("getFrameOffsetByName", GetOffsetByName);
   m_lua->FuncRegister("getFrameCountByName", GetFrameCountByName);
-  #endif
+
   m_lua->FuncRegister("decodePng", decodePng); 
   //Aarduino
   m_lua->FuncRegister("tone", Devices::BuzzerTone);
@@ -715,10 +712,9 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("formatFFAT", formatFFAT);
 
   m_lua->FuncRegister("listFilesInFolder", Storage::listFolder);
-  #ifdef ENABLE_HUB75_PANEL
+
   m_lua->FuncRegister("composeBulkFile", composeBulkFile);
   m_lua->FuncRegister("deleteBulkFile", deleteBulkFile);
-  #endif
 }
 
 void LuaInterface::RegisterConstants()
@@ -813,8 +809,6 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("EDIT_ENABLE_LOGIC_LEVEL", EDIT_ENABLE_LOGIC_LEVEL);
   m_lua->setConstant("PANEL_CHAIN", PANEL_CHAIN);
 
-  #ifdef ENABLE_HUB75_PANEL
-  m_lua->setConstant("ENABLE_HUB75_PANEL", 1);
   m_lua->setConstant("COLOR_MODE_RGB", (int)COLOR_MODE_RGB);
   m_lua->setConstant("COLOR_MODE_RGB", (int)COLOR_MODE_RGB);
   m_lua->setConstant("COLOR_MODE_RBG", (int)COLOR_MODE_RBG);
@@ -822,9 +816,7 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("COLOR_MODE_GBR", (int)COLOR_MODE_GBR);
   m_lua->setConstant("COLOR_MODE_BRG", (int)COLOR_MODE_BRG);
   m_lua->setConstant("COLOR_MODE_BGR", (int)COLOR_MODE_BGR);
-  #else
-  m_lua->setConstant("ENABLE_HUB75_PANEL", 0);
-  #endif
+
 
   m_lua->setConstant("ESP_PWR_LVL_N24", (int)ESP_PWR_LVL_N24);
   m_lua->setConstant("ESP_PWR_LVL_N21", (int)ESP_PWR_LVL_N21);

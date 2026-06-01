@@ -488,8 +488,7 @@ void Model::RasterTriangleWithBitmap(ModelHandler *scene, int i, uint8_t *target
             if (!scene->MarkPixel(a, y0)) {
                 uint8_t rr=r, gg=g, bbl=bl;
                 ShaderProcessor::UpdateColorByShader(a, y0, rr, gg, bbl, m_shader, shaderStrenght);
-                Devices::Display->updateMatrixDMABuffer_2(a, y0, rr, gg, bbl);
-                Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH+PANEL_WIDTH-1) - a, y0, rr, gg, bbl);
+                Devices::Display->setPixelWithFlip(a, y0, rr, gg, bbl, FlipConfig::DefaultFlipConfig);
                 if (targetBitmap != nullptr){
                     if ((color & 0x8610) != 0) { 
                         int byteIdOled = a + y0*PANEL_WIDTH;
@@ -544,8 +543,7 @@ void Model::RasterTriangleWithBitmap(ModelHandler *scene, int i, uint8_t *target
             if (!scene->MarkPixel(xx, y)) {
                 uint8_t rr=r, gg=g, bbl=bl;
                 ShaderProcessor::UpdateColorByShader(a, y0, rr, gg, bbl, m_shader, shaderStrenght);
-                Devices::Display->updateMatrixDMABuffer_2(xx, y, rr, gg, bbl);
-                Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH+PANEL_WIDTH-1) - xx, y, rr, gg, bbl);
+                Devices::Display->setPixelWithFlip(xx, y, rr, gg, bbl, FlipConfig::DefaultFlipConfig);
                 if (targetBitmap != nullptr){
                     if ((color & 0x8610) != 0) { 
                         int16_t byteIdOled = xx + y*PANEL_WIDTH;
@@ -584,8 +582,7 @@ void Model::RasterTriangleWithBitmap(ModelHandler *scene, int i, uint8_t *target
             if (!scene->MarkPixel(xx, y)) {
                 uint8_t rr=r, gg=g, bbl=bl;
                 ShaderProcessor::UpdateColorByShader(a, y0, rr, gg, bbl, m_shader, shaderStrenght);
-                Devices::Display->updateMatrixDMABuffer_2(xx, y, rr, gg, bbl);
-                Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH+PANEL_WIDTH-1) - xx, y, rr, gg, bbl);
+                Devices::Display->setPixelWithFlip(xx, y, rr, gg, bbl, FlipConfig::DefaultFlipConfig);
                 if (targetBitmap != nullptr){
                     if ((color & 0x8610) != 0) { 
                         int16_t byteIdOled = xx + y*PANEL_WIDTH;

@@ -11,7 +11,7 @@
 #endif
 
 #include "tools/s3servo.hpp"
-#include "tools/dma_display.hpp"
+#include "tools/displays.hpp"
 
 
 #include <vector>

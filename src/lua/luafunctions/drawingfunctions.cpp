@@ -5,7 +5,6 @@
 #include "tools/devices.hpp"
 #include <FFat.h>
 
-#ifdef ENABLE_HUB75_PANEL
 
 extern FrameRepository g_frameRepo;
 extern Animation g_animation;
@@ -14,7 +13,7 @@ void DrawPixels(std::vector<Pixel> pixels)
 {
   Devices::Display->startWrite();
   for (auto &it : pixels ){
-    Devices::Display->updateMatrixDMABuffer_2(it.x, it.y, it.r, it.g, it.b);
+    Devices::Display->setPixelWithFlip(it.x, it.y, it.r, it.g, it.b, FlipConfig::DefaultFlipConfig);
   }
   Devices::Display->endWrite();
 }
@@ -131,5 +130,3 @@ void gentlySetPanelBrightness(uint8_t bright, uint8_t rate){
 }
 
 
-
-#endif

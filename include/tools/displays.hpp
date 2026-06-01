@@ -1,4 +1,27 @@
+#pragma once
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
+
+enum ColorMode{
+    COLOR_MODE_RGB,
+    COLOR_MODE_RBG,
+    COLOR_MODE_GRB,
+    COLOR_MODE_GBR,
+    COLOR_MODE_BRG,
+    COLOR_MODE_BGR,
+    
+};
+
+class FlipConfig {
+    public:
+        FlipConfig():flipLeft(false),flipRight(true),modeLeft(COLOR_MODE_RGB),modeRight(COLOR_MODE_RGB){}
+        FlipConfig(bool left, bool right, ColorMode cLeft, ColorMode cRight):flipLeft(left),flipRight(right),modeLeft(cLeft),modeRight(cRight){}
+        bool flipLeft;
+        bool flipRight;
+        ColorMode modeLeft;
+        ColorMode modeRight;
+
+    static FlipConfig DefaultFlipConfig;
+};
 
 class MatrixPanel_I2S_DMA2 : public MatrixPanel_I2S_DMA{
     public:
@@ -21,7 +44,7 @@ public:
     virtual void flipDma() {}
     virtual void clearScreen() {}
     virtual void setBrightness8(const uint8_t b) {}
-    virtual void updateMatrixDMABuffer_2(uint16_t x, uint16_t y, uint8_t red, uint8_t green, uint8_t blue) {}
+    virtual void setPixelWithFlip(uint16_t x, uint16_t y, uint8_t red, uint8_t green, uint8_t blue,  FlipConfig &flipSettings) {}
     
     // Graphics methods from Adafruit_GFX - empty implementations
     virtual void drawPixel(int16_t x, int16_t y, uint16_t color) {}
@@ -81,8 +104,48 @@ public:
         g |= g >> 6;
         b |= b >> 5;
     }
+
+    static void reorder_rgb(ColorMode mode, uint8_t *r, uint8_t *g, uint8_t *b){
+        uint8_t auxr = *r;
+        uint8_t auxb = *b;
+        uint8_t auxg = *g;
+        switch (mode)
+        {
+        case COLOR_MODE_RGB:
+            break;
+        case COLOR_MODE_RBG:
+            *b = auxg;
+            *g = auxb;
+            break;
+        case COLOR_MODE_GRB:
+            *r = auxg;
+            *g = auxr;
+            break;
+        case COLOR_MODE_GBR:
+            *g = auxr;
+            *b = auxg;
+            *r = auxb;
+            break;
+        case COLOR_MODE_BRG:
+            *b = auxr;
+            *r = auxg;
+            *g = auxb;
+            break;
+        case COLOR_MODE_BGR:
+            *b = auxr;
+            *r = auxb;
+            break;
+        default:
+            break;
+        }
+    }
+
+
+    
+    bool mirrorHalf;
             
-private:
+protected:
+    uint32_t halfPosition;
     uint8_t external_brightness = 0;
 };
 
@@ -101,7 +164,9 @@ public:
     }
     
     bool begin() override {
+        mirrorHalf = true;
         matrix = new MatrixPanel_I2S_DMA2(config);
+        halfPosition = (config.mx_width * config.chain_length)/2;
         return matrix->begin();
     }
     
@@ -121,9 +186,7 @@ public:
         matrix->setBrightness8(b);
     }
     
-    void updateMatrixDMABuffer_2(uint16_t x, uint16_t y, uint8_t red, uint8_t green, uint8_t blue) override {
-        matrix->updateMatrixDMABuffer_2(x, y, red, green, blue);
-    }
+    void setPixelWithFlip(uint16_t x, uint16_t y, uint8_t red, uint8_t green, uint8_t blue,  FlipConfig &flipSettings) override;
     
     void drawPixel(int16_t x, int16_t y, uint16_t color) override {
         matrix->drawPixel(x, y, color);
@@ -268,20 +331,25 @@ public:
     void drawIcon(int *ico, int16_t x, int16_t y, int16_t cols, int16_t rows) override {
         // Implement icon drawing if needed
     }
+
 };
+
+#define MAX7219_SIZE 8
 
 // MAX7219Display implementation
 class MAX7219Display : public BaseDisplay {
 public:
     MAX7219Display(uint32_t panels, int csPin, int dataInPin, int clockPin) {
-        m_frameBuffer = new uint8_t[8 * 8 * panels];
-        m_width = 8 * panels;
-        m_height = 8;
+        m_frameBuffer = new uint8_t[MAX7219_SIZE * MAX7219_SIZE * panels];
+        m_width = MAX7219_SIZE * panels;
+        m_height = MAX7219_SIZE;
         m_panels = panels;
-        m_lenght = 8 * panels;
+        m_lenght = MAX7219_SIZE * panels;
         m_csPin = csPin;
         m_dataInPin = dataInPin;
         m_clockPin = clockPin;
+        halfPosition = m_lenght/2;
+        mirrorHalf = false;
     }
     
     ~MAX7219Display() {
@@ -295,9 +363,10 @@ public:
     void flipDma() override;
     void clearScreen() override;
     void setBrightness8(const uint8_t b) override;
-    void updateMatrixDMABuffer_2(uint16_t x, uint16_t y, uint8_t red, uint8_t green, uint8_t blue) override;
+    void setPixelWithFlip(uint16_t x, uint16_t y, uint8_t red, uint8_t green, uint8_t blue,  FlipConfig &flipSettings) override;
     void startWrite() override {}
     void endWrite() override {}
+
     
     // Override only what you need, the rest will use BaseDisplay's empty implementations
     
@@ -305,6 +374,7 @@ private:
     void transfer(uint8_t address, uint8_t data);
     void initialize();
     void transferAll(uint8_t address, uint8_t data);
+    void setPixelAt(uint16_t xIn, uint16_t yIn, uint8_t color);
     
     uint8_t *m_frameBuffer;
     uint32_t m_width, m_height, m_panels, m_lenght;

@@ -23,8 +23,7 @@ void ModelHandler::RenderScene(std::vector<Model*> mdls){
     uint8_t* nextId = OledScreen::DisplayFace[(OledScreen::screenFlipId+1)%2];
     for (uint16_t y = 0; y < PANEL_HEIGHT; y++) {
         for (uint16_t x = 0; x < PANEL_WIDTH; x++) {
-            Devices::Display->updateMatrixDMABuffer_2(x, y, r, g, b);
-            Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH) + x, y, r, g, b);
+            Devices::Display->setPixelWithFlip(x, y, r, g, b, FlipConfig::DefaultFlipConfig);
             nextId[byteIdOled] = 0;
             byteIdOled++;
         }

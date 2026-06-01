@@ -190,12 +190,10 @@ void Devices::WaitForPower(){
   #endif
 
   while (Sensors::GetAvgBatteryVoltage() <= VoltageStartThreshold){
-      #ifdef ENABLE_HUB75_PANEL
       if (Devices::Display){
         Devices::Display->clearScreen();
         Devices::Display->flipDma();
       }
-      #endif
       OledScreen::DrawWaitForPower(Sensors::GetAvgBatteryVoltage());
       Sensors::MeasureVoltage();
   }
@@ -224,9 +222,7 @@ void Devices::WaitForPower(){
       delay(1000);
       goto retry;
     }
-    #ifdef ENABLE_HUB75_PANEL
     Devices::Display->setBrightness8(a); 
-    #endif
   }
   SetMaxBrightness(brightness);
   g_animation.setManaged(oldState);
@@ -257,9 +253,7 @@ bool Devices::CheckPowerLevel(){
 
 void Devices::SetMaxBrightness(uint8_t b){
   maxBrightness = b;
-  #ifdef ENABLE_HUB75_PANEL
   Devices::Display->setBrightness8(b); 
-  #endif
 }
 
 void Devices::BeginFrame(){

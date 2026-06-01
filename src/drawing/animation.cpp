@@ -12,7 +12,7 @@
 unsigned char* Animation::buffer = nullptr;
 
 
-#ifdef ENABLE_HUB75_PANEL
+
 
 
 AnimationFrameAction AnimationSequence::InterruptFrame(int pinRead){ 
@@ -106,42 +106,7 @@ int AnimationSequence::GetFrameId(){
     return m_frames[m_frame];
 }
 
-void reorder_rgb(ColorMode mode, uint8_t *r, uint8_t *g, uint8_t *b){
-    uint8_t auxr = *r;
-    uint8_t auxb = *b;
-    uint8_t auxg = *g;
-    switch (mode)
-    {
-    case COLOR_MODE_RGB:
-        break;
-    case COLOR_MODE_RBG:
-        *b = auxg;
-        *g = auxb;
-        break;
-    case COLOR_MODE_GRB:
-        *r = auxg;
-        *g = auxr;
-        break;
-    case COLOR_MODE_GBR:
-        *g = auxr;
-        *b = auxg;
-        *r = auxb;
-        break;
-    case COLOR_MODE_BRG:
-        *b = auxr;
-        *r = auxg;
-        *g = auxb;
-        break;
-    case COLOR_MODE_BGR:
-        *b = auxr;
-        *r = auxb;
-        break;
-    default:
-        break;
-    }
-}
-
-void Animation::drawPixelAt(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &flip_left, uint8_t &flip_right, int &byteIdOled, ColorMode& modeLeft, ColorMode& modeRight){
+void Animation::drawPixelAt(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, int &byteIdOled, FlipConfig &flipSettings){
     if ((color & 0x8610) != 0) { 
         OledScreen::DisplayFace[0][byteIdOled] = 1;
     }else{
@@ -149,27 +114,7 @@ void Animation::drawPixelAt(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r,
     }
     byteIdOled++;
 
-    uint8_t ra = r;
-    uint8_t ga = g;
-    uint8_t ba = b;
-
-    uint8_t rb = r;
-    uint8_t gb = g;
-    uint8_t bb = b;
-
-    reorder_rgb(modeLeft, &rb, &gb, &bb);
-    if (flip_left&1){
-        Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH-1)-x, y, rb, gb, bb);
-    }else{
-        Devices::Display->updateMatrixDMABuffer_2(x, y, rb, gb, bb);
-    }
-
-    reorder_rgb(modeRight, &ra, &ga, &ba);
-    if (flip_right&1){
-        Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH+PANEL_WIDTH-1)-x, y, ra, ga, ba);
-    }else{
-        Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH)+x, y, ra, ga, ba);
-    }
+    Devices::Display->setPixelWithFlip(x,y, r, g, b, flipSettings);
 }
 
 void Animation::adjustColor(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, int16_t &frameId){
@@ -372,6 +317,8 @@ void Animation::DrawFrame(int i){
     int16_t x=0;
     int16_t y=0;
 
+    FlipConfig flipSettings(flip_left, flip_right, currentModeLeft, currentModeRight);
+
     Devices::Display->startWrite();
     if (compressionMode == 1){
         int compressionReadPos = 0;
@@ -394,7 +341,7 @@ void Animation::DrawFrame(int i){
                 adjustColor(x, y, color, r, g, b, frameId);
                 
                 for (int iddx=0;iddx<lenght;iddx++){
-                    drawPixelAt(x, y, color, r, g, b, flip_left, flip_right, byteIdOled, currentModeLeft, currentModeRight);
+                    drawPixelAt(x, y, color, r, g, b, byteIdOled, flipSettings);
                     x++;
                     if (x >= PANEL_WIDTH){
                         x = 0;
@@ -422,7 +369,7 @@ void Animation::DrawFrame(int i){
         for (int16_t idx=begin;idx<finish;idx++){
             uint16_t color = readBuffer[idx];
             adjustColor(x, y, color, r, g, b, frameId);
-            drawPixelAt(x, y, color, r, g, b, flip_left, flip_right, byteIdOled, currentModeLeft, currentModeRight);
+            drawPixelAt(x, y, color, r, g, b, byteIdOled, flipSettings);
             x++;
             if (x >= PANEL_WIDTH){
                 x = 0;
@@ -608,4 +555,3 @@ void Animation::SetAnimation( std::vector<int> frames, int duration,int repeatTi
 }
 
 
-#endif

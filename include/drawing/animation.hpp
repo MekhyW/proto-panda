@@ -1,25 +1,16 @@
 #pragma once 
-
+#include "tools/displays.hpp"
 #include <vector>
 #include <stack>
 #include <stdint.h>
 #include <FS.h>
 #include "config.hpp"
 #include "tools/psrammap.hpp"
+
 #include "drawing/rendering/modelhandler.hpp"
 #include "drawing/rendering/shader.hpp"
 
-enum ColorMode{
-    COLOR_MODE_RGB,
-    COLOR_MODE_RBG,
-    COLOR_MODE_GRB,
-    COLOR_MODE_GBR,
-    COLOR_MODE_BRG,
-    COLOR_MODE_BGR,
-    
-};
 
-#ifdef ENABLE_HUB75_PANEL
 
 enum AnimationFrameAction{
     ANIMATION_NO_CHANGE,
@@ -27,6 +18,7 @@ enum AnimationFrameAction{
     ANIMATION_FINISHED,
     ANIMATION_NEED_FLIP,
 };
+
 class FrameRepository;
 extern FrameRepository g_frameRepo;
 
@@ -119,7 +111,7 @@ class Animation{
         uint32_t getDrawDuration() { return m_frameDrawDuration;};
         uint32_t getLoadDuration() { return m_frameLoadDuration;};
     private:
-        inline void drawPixelAt(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &flip_left, uint8_t &flip_right, int &byteIdOled, ColorMode &colorModeLeft, ColorMode &colorModeRight);
+        inline void drawPixelAt(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, int &byteIdOled, FlipConfig &flipSettings);
         inline void adjustColor(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, int16_t &frameId);
         std::stack<AnimationSequence> m_animations;
         bool internalUpdate(uint32_t dt, AnimationSequence &seq);
@@ -143,46 +135,3 @@ class Animation{
 
 
 extern Animation g_animation;
-#else
-class Animation{
-    public:
-        Animation(){};
-
-        void Update(uint32_t)){}
-
-        void SetAnimation(int duration, std::vector<int> frames, int repeatTimes, bool dropAll, int externalStorageId=-1){}
-        void SetInterruptAnimation(int duration, std::vector<int> frames){}
-        void SetInterruptPin(int pin){       }
-        void DrawFrame(int i){}
-        void DrawCurrentFrame(){}
-
-        bool PopAnimation(){return false;}
-        void MakeFlip(){}
-        void SetShader(int id){}
-
-        void setColorMode(ColorMode mode){
-           
-        };
-
-        bool needFlipScreen(){
-            return 0;
-        };
-        void setManaged(bool v){}
-        bool isManaged(){
-            return 0;
-        }
-        int getCurrentFace(){
-            return 0;
-        }
-
-        int getCurrentAnimationStorage(){ return 0;}
-        float getFps(){ return 0; }
-        int getAnimationStackSize(){ return 0; }
-
-        void setRainbowShader(bool enabled){}
-        static unsigned char buffer[FILE_SIZE];
-        uint32_t getDrawDuration() { return 0;};
-        uint32_t getLoadDuration() { return 0;};
-};
-extern Animation g_animation;
-#endif

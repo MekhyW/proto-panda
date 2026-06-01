@@ -172,6 +172,8 @@ void HardwareConfig::loadMax7219AndStart(JsonObject max7219){
     Devices::Display->clearScreen();
     Devices::Display->flipDma();
 
+    if (max7219.containsKey("mirrorOtherHalf")) Devices::Display->mirrorHalf = checkInvalidPin(max7219["mirrorOtherHalf"]);
+
     Logger::Info("Started max7219 display!");
 }
 
@@ -197,6 +199,7 @@ void HardwareConfig::loadHub75AndStart(JsonObject hub75){
     if (hub75.containsKey("dma_oe")) panelConfig.gpio.oe = checkInvalidPin(hub75["dma_oe"]);
     if (hub75.containsKey("dma_clk")) panelConfig.gpio.clk = checkInvalidPin(hub75["dma_clk"]);
 
+
     if (hub75.containsKey("width")){
         panelConfig.mx_width = hub75["width"];
     }else{
@@ -220,6 +223,8 @@ void HardwareConfig::loadHub75AndStart(JsonObject hub75){
     }
 
     StartDmaDisplay();
+
+    if (hub75.containsKey("mirrorOtherHalf")) Devices::Display->mirrorHalf = checkInvalidPin(hub75["mirrorOtherHalf"]);
     return;
 }
 
@@ -269,7 +274,6 @@ bool HardwareConfig::LoadConfigs(){
 }
 
 bool HardwareConfig::StartDmaDisplay(){
-    #ifdef ENABLE_HUB75_PANEL
     if (Devices::Display != nullptr){
         Logger::Info("DMA display is already started.");
         return false;
@@ -291,7 +295,4 @@ bool HardwareConfig::StartDmaDisplay(){
     Devices::CalculateMemmoryUsageDifference("Dma display");
 
     return true;
-    #else 
-    return false;
-    #endif
 }

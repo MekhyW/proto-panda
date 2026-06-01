@@ -157,12 +157,10 @@ Formata o sistema de arquivos FFat interno (flash).
 
 #### `deleteBulkFile()`
 Exclui o arquivo `frames.bulk`, forçando uma reconstrução na próxima inicialização.
-> **⚠️ Requer `ENABLE_HUB75_PANEL`**: Disponível apenas quando o suporte ao painel HUB75 está compilado.
 - **Retorna**: `nil`
 
 #### `composeBulkFile()`
 Dispara manualmente a reconstrução do arquivo `frames.bulk` a partir dos frames PNG no cartão SD.
-> **⚠️ Requer `ENABLE_HUB75_PANEL`**: Disponível apenas quando o suporte ao painel HUB75 está compilado.
 - **Retorna**: `nil`
 
 #### `dumpStackToSerial()`
@@ -240,8 +238,6 @@ Escaneia o barramento I2C e retorna os endereços dos dispositivos detectados.
 ## Desenho no Painel de LED
 
 [↑ Voltar ao topo](#tópicos)
-
-> **⚠️ Requer `ENABLE_HUB75_PANEL`**: Todas as funções desta seção estão disponíveis apenas quando o painel HUB75 está habilitado na configuração de build. Verifique a constante `ENABLE_HUB75_PANEL` em tempo de execução para confirmar.
 
 #### `flipPanelBuffer()`
 Os painéis têm dois buffers. Um para desenho e outro para renderização. Quando o desenho é concluído em um buffer, esta chamada os alterna para que você possa desenhar no outro.
@@ -592,7 +588,6 @@ Define a posição do cursor na tela OLED.
 
 #### `oledFaceToScreen(x, y)`
 Desenha a imagem atual exibida nos painéis externos na tela interna na posição especificada.
-> **⚠️ Requer `ENABLE_HUB75_PANEL`**: Disponível apenas quando o suporte ao painel HUB75 está compilado.
 - **Parâmetros**:
   - `x` (int): A coordenada X.
   - `y` (int): A coordenada Y.
@@ -1253,7 +1248,6 @@ Cria um novo keyframe. Os parâmetros dependem do tipo de operação sendo anima
 - `PANEL_WIDTH`: Largura do painel HUB75 em pixels.
 - `PANEL_HEIGHT`: Altura do painel HUB75 em pixels.
 - `PANEL_CHAIN`: Número de painéis encadeados.
-- `ENABLE_HUB75_PANEL`: `1` se o suporte ao painel HUB75 está compilado, `0` caso contrário.
 - `POWER_MODE_NONE`: Ignorar qualquer comportamento de alimentação.
 - `POWER_MODE_USB_5V`: Modo de alimentação USB 5V.
 - `POWER_MODE_USB_9V`: Modo de alimentação USB 9V PD.

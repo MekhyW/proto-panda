@@ -1,7 +1,45 @@
-#include "tools/dma_display.hpp"
+#include "tools/displays.hpp"
 #include "tools/logger.hpp"
 
+
+
 SPIClass spi3(FSPI);
+
+FlipConfig FlipConfig::DefaultFlipConfig = FlipConfig(false, true, COLOR_MODE_RGB, COLOR_MODE_RGB);
+
+void Hub75Display::setPixelWithFlip(uint16_t x, uint16_t y, uint8_t red, uint8_t green, uint8_t blue, FlipConfig& flipSettings) {
+    if (!mirrorHalf){
+        matrix->updateMatrixDMABuffer_2(x, y, red, green, blue);
+        return;
+    }
+
+    uint8_t ra = red;
+    uint8_t ga = green;
+    uint8_t ba = blue;
+
+    uint8_t rb = red;
+    uint8_t gb = green;
+    uint8_t bb = blue;
+
+    BaseDisplay::reorder_rgb(flipSettings.modeLeft, &ra, &ga, &ba);
+    
+
+    if (flipSettings.flipLeft){
+        matrix->updateMatrixDMABuffer_2((halfPosition-1)-x, y, ra, ga, ba);
+    }else{
+        matrix->updateMatrixDMABuffer_2(x, y, ra, ga, ba);
+    }
+
+    BaseDisplay::reorder_rgb(flipSettings.modeRight, &rb, &gb, &bb);
+
+    if (flipSettings.flipRight){
+        matrix->updateMatrixDMABuffer_2((halfPosition+halfPosition-1)-x, y, rb, gb, bb);
+    }else{
+        matrix->updateMatrixDMABuffer_2((halfPosition)+x, y, rb, gb, bb);
+    }
+    
+
+}
 
 bool MAX7219Display::begin(){
 
@@ -15,15 +53,13 @@ bool MAX7219Display::begin(){
 
     clearScreen();
 
-    for(uint8_t i = 0; i < 20; i++) initialize();
-     setBrightness8(32);
-
-
-    updateMatrixDMABuffer_2(1, 2, 255, 255, 255);
+    for(uint8_t i = 0; i < 20; i++){
+        initialize();
+    }
+    
+    setBrightness8(0);
 
     flipDma();
-    Logger::Error("send shit");
-
     return true;
 }
 void MAX7219Display::setBrightness8(const uint8_t b){
@@ -57,12 +93,33 @@ void MAX7219Display::transfer(uint8_t address, uint8_t data) {
     spi3.transfer(data);
 }
 
-void MAX7219Display::updateMatrixDMABuffer_2(uint16_t xIn, uint16_t yIn, uint8_t red, uint8_t green, uint8_t blue) {
+void MAX7219Display::setPixelWithFlip(uint16_t xIn, uint16_t yIn, uint8_t red, uint8_t green, uint8_t blue, FlipConfig& flipSettings) {
+    uint8_t color = 0;
+    if (red > 128 || green > 128 || blue > 128) {
+        color = 1;
+    }
 
+    if (!mirrorHalf){
+        setPixelAt(xIn, yIn, color);
+        return;
+    }
+
+    if (flipSettings.flipLeft){
+        setPixelAt((halfPosition-1)-xIn, yIn, color);
+    }else{
+        setPixelAt(xIn, yIn, color);
+    }
+
+    if (flipSettings.flipRight){
+        setPixelAt((halfPosition+halfPosition-1)-xIn, yIn, color);
+    }else{
+        setPixelAt((halfPosition)+xIn, yIn, color);
+    }
+}
+
+void MAX7219Display::setPixelAt(uint16_t xIn, uint16_t yIn, uint8_t color) {
     int x = xIn;
     int y = yIn;
-
-    y = y - 18;
     
     if (y >= 8 || x >= m_lenght) return;
     if (y < 0|| x < 0) return;
@@ -70,7 +127,7 @@ void MAX7219Display::updateMatrixDMABuffer_2(uint16_t xIn, uint16_t yIn, uint8_t
     uint16_t bufferIndex = y + (x / 8) * 8;
     uint8_t bitPosition = 7 - (x % 8);
 
-    if (red > 128 || green > 128 || blue > 128) {
+    if (color != 0) {
         m_frameBuffer[bufferIndex] |= (1 << bitPosition);
     } else {
         m_frameBuffer[bufferIndex] &= ~(1 << bitPosition);

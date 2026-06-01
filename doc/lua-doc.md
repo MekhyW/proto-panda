@@ -157,12 +157,10 @@ Formats the internal FFat (flash) filesystem.
 
 #### `deleteBulkFile()`
 Deletes the `frames.bulk` file, forcing a rebuild on next boot.
-> **⚠️ Requires `ENABLE_HUB75_PANEL`**: Only available when HUB75 panel support is compiled in.
 - **Returns**: `nil`
 
 #### `composeBulkFile()`
 Manually triggers a rebuild of the `frames.bulk` file from the PNG frames on the SD card.
-> **⚠️ Requires `ENABLE_HUB75_PANEL`**: Only available when HUB75 panel support is compiled in.
 - **Returns**: `nil`
 
 #### `dumpStackToSerial()`
@@ -240,8 +238,6 @@ Scans the I2C bus and returns addresses of detected devices.
 ## Led panel Drawing
 
 [↑ Back to top](#topics)
-
-> **⚠️ Requires `ENABLE_HUB75_PANEL`**: All functions in this section are only available when the HUB75 panel is enabled in the build config. Check the `ENABLE_HUB75_PANEL` constant at runtime to verify.
 
 #### `flipPanelBuffer()`
 The panels have two buffers. One for drawing and the other for rendering. When the drawing is finished in one buffer, this call flips them so you can draw into the other.
@@ -592,7 +588,6 @@ Sets the cursor position on the OLED screen.
 
 #### `oledFaceToScreen(x, y)`
 Draws the current panel image to the internal OLED screen at the specified position.
-> **⚠️ Requires `ENABLE_HUB75_PANEL`**: Only available when HUB75 panel support is compiled in.
 - **Parameters**:
   - `x` (int): The X coordinate.
   - `y` (int): The Y coordinate.
@@ -1253,7 +1248,6 @@ Creates a new keyframe. Parameters depend on the type of operation being animate
 - `PANEL_WIDTH`: Width of the HUB75 panel in pixels.
 - `PANEL_HEIGHT`: Height of the HUB75 panel in pixels.
 - `PANEL_CHAIN`: Number of panels chained together.
-- `ENABLE_HUB75_PANEL`: `1` if HUB75 panel support is compiled in, `0` otherwise.
 - `POWER_MODE_NONE`: Ignore any powering behavior.
 - `POWER_MODE_USB_5V`: Power mode for USB 5V input.
 - `POWER_MODE_USB_9V`: Power mode for USB 9V PD input.

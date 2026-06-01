@@ -5,6 +5,7 @@
 
     "display": {
         "type": "hub75",
+        "mirrorOtherHalf": true,
         "enabled": true,
         "width": 64,
         "height": 32,
