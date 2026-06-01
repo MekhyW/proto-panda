@@ -160,15 +160,15 @@ bool FrameRepository::loadCachedData(){
         return false;
     }
 
-    if ( !json_doc.containsKey("width") || !json_doc["width"].is<int>() || json_doc["width"].as<int>() != PANEL_WIDTH){
+    if ( !json_doc.containsKey("canvas_width") || !json_doc["canvas_width"].is<int>() || json_doc["canvas_width"].as<int>() != PANEL_WIDTH){
         json_doc.clear();   
-        Logger::Error("Panel dimensions changed");
+        Logger::Error("Canvas dimensions changed");
         return false;
     }
 
-    if ( !json_doc.containsKey("height") || !json_doc["height"].is<int>() || json_doc["height"].as<int>() != PANEL_HEIGHT){
+    if ( !json_doc.containsKey("canvas_height") || !json_doc["canvas_height"].is<int>() || json_doc["canvas_height"].as<int>() != PANEL_HEIGHT){
         json_doc.clear();   
-        Logger::Error("Panel dimensions changed");
+        Logger::Error("Canvas dimensions changed");
         return false;
     }
 
@@ -479,6 +479,8 @@ void FrameRepository::generateCacheFile(int bulkSize) {
 
     json_doc["bulk_size"] = bulkSize;
     json_doc["version"] = PANDA_VERSION;
+    json_doc["canvas_width"] = PANEL_WIDTH;
+    json_doc["canvas_height"] = PANEL_HEIGHT;
 
     // Serialize JSON to file
     if (serializeJson(json_doc, cache) == 0) {

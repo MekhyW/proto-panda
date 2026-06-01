@@ -21,6 +21,7 @@ class HardwareConfig{
         static HUB75_I2S_CFG panelConfig;
         static void loadAndParseDisplay(JsonObject doc);
         static void loadHub75AndStart(JsonObject doc);
+        static void loadMax7219AndStart(JsonObject doc);
         static void loadServosAndStart(JsonObject doc);
         static void loadDefaults();
         static int checkInvalidPin(int pin);

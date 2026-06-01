@@ -71,7 +71,7 @@ uint16_t color565(uint8_t r, uint8_t g, uint8_t b)
 
 void setPanelBrightness(uint8_t bright)
 {
-  Devices::Display->setBrightness(bright);
+  Devices::Display->setBrightness8(bright);
   Devices::Display->setBrightnessExt(bright);
   return;
 }

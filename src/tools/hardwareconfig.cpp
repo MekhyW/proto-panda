@@ -111,15 +111,75 @@ void HardwareConfig::loadAndParseDisplay(JsonObject displayInfo){
     std::string displayType = displayInfo["type"].as<const char*>();
     if (displayType == "hub75"){
         loadHub75AndStart(displayInfo);
+    }else if (displayType == "max7219"){
+        loadMax7219AndStart(displayInfo);
     }else{
         OledScreen::CriticalFail("Display type in hardware.json is not supported");
     }
     
 }
 
+void HardwareConfig::loadMax7219AndStart(JsonObject max7219){
+    if (!max7219["enabled"]) {
+        Devices::Display = new EmptyDisplay();
+        return;
+    }
+
+    uint32_t panels = 2;
+    int csPin;
+    int dataInPin;
+    int clockPin;
+
+    if (max7219.containsKey("cs")){
+        csPin = max7219["cs"];
+    }else{
+        OledScreen::CriticalFail("Missing 'cs' in display");
+    }
+
+    if (max7219.containsKey("din")){
+        dataInPin = max7219["din"];
+    }else{
+        OledScreen::CriticalFail("Missing 'din' in display");
+    }
+
+    if (max7219.containsKey("clk")){
+        clockPin = max7219["clk"];
+    }else{
+        OledScreen::CriticalFail("Missing 'clk' in display");
+    }
+
+    if (max7219.containsKey("panels")){
+        panels = max7219["panels"];
+    }else{
+        OledScreen::CriticalFail("Missing 'panels' in display");
+    }
+    
+   
+    if (Devices::Display != nullptr){
+        Logger::Info("DMA display is already started.");
+        return;
+    }
+
+    //Todo check avaliable ram
+    Devices::Display = new MAX7219Display(panels, csPin, dataInPin, clockPin);
+    if (Devices::Display == nullptr){
+        Logger::Info("Failed to start DMA display");
+        return;
+    }
+
+    Devices::Display->begin();
+    Devices::Display->setBrightness8(128);
+    Devices::Display->clearScreen();
+    Devices::Display->flipDma();
+
+    Logger::Info("Started max7219 display!");
+}
+
+
+
 void HardwareConfig::loadHub75AndStart(JsonObject hub75){
     if (!hub75["enabled"]) {
-        Devices::Display = new EmptyDisplay(panelConfig);
+        Devices::Display = new EmptyDisplay();
         return;
     }
 
@@ -195,7 +255,7 @@ bool HardwareConfig::LoadConfigs(){
     Logger::Info("Canvas size will be %dx%d", HardwareConfig::HardwarePanelWidth, HardwareConfig::HardwarePanelHeight);
 
     if (hardwareConfigJson.containsKey("display")) {
-        Logger::Info("Loading HUB75 info");
+        Logger::Info("Loading display info");
         loadAndParseDisplay(hardwareConfigJson["display"]);
     }
 
@@ -215,7 +275,7 @@ bool HardwareConfig::StartDmaDisplay(){
         return false;
     }
     //Todo check avaliable ram
-    Devices::Display = new BaseDisplay(panelConfig);
+    Devices::Display = new Hub75Display(panelConfig);
     if (Devices::Display == nullptr){
         Logger::Info("Failed to start DMA display");
         return false;

@@ -75,7 +75,7 @@ uint32_t Devices::m_toneDuration = 0;
 s3servo *Devices::servos;
 #endif
 
-MatrixPanel_I2S_DMA_2 *Devices::Display = nullptr;
+BaseDisplay *Devices::Display = nullptr;
 
 #ifdef USE_INTERNAL_ACCELEROMETER
 LSM6DS3 *Devices::lsm6 = nullptr;
@@ -92,7 +92,7 @@ float Devices::internalT = 0;
 void Devices::Begin(){
     Wire.begin(I2C_SDA, I2C_SLC);
     Wire.setClock(800000);
-    SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI, SPI_CS);
+    //SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI, SPI_CS);
 }
 
 std::vector<int> Devices::I2CScan(){ 
@@ -225,7 +225,7 @@ void Devices::WaitForPower(){
       goto retry;
     }
     #ifdef ENABLE_HUB75_PANEL
-    Devices::Display->setBrightness(a); 
+    Devices::Display->setBrightness8(a); 
     #endif
   }
   SetMaxBrightness(brightness);
@@ -258,7 +258,7 @@ bool Devices::CheckPowerLevel(){
 void Devices::SetMaxBrightness(uint8_t b){
   maxBrightness = b;
   #ifdef ENABLE_HUB75_PANEL
-  Devices::Display->setBrightness(b); 
+  Devices::Display->setBrightness8(b); 
   #endif
 }
 
