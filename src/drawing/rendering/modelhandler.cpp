@@ -16,7 +16,7 @@ void ModelHandler::RenderModels(std::vector<Model*> mdls, uint8_t *bitmap){
 
 void ModelHandler::RenderScene(std::vector<Model*> mdls){
     Devices::Display->startWrite();
-    memset(pixelBitmap, 0, sizeof(pixelBitmap));
+    memset(pixelBitmap, 0,  PANEL_HEIGHT * (PANEL_WIDTH/8) * sizeof(uint8_t));
     uint8_t r, g, b;
     Devices::Display->color565to888(0, r, g, b);
     int byteIdOled = 0;

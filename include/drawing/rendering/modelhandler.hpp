@@ -5,6 +5,9 @@
 
 class ModelHandler {
     public:
+        ModelHandler(){
+            pixelBitmap = nullptr;
+        }
         //Used to mark pixels that were drawn and dont need to draw twice
         void Allocate(){
             pixelBitmap = (uint8_t*)heap_caps_aligned_alloc( 32,  PANEL_HEIGHT * (PANEL_WIDTH/8), MALLOC_CAP_8BIT);

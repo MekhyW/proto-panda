@@ -108,42 +108,53 @@ void HardwareConfig::loadAndParseDisplay(JsonObject displayInfo){
         OledScreen::CriticalFail("Display dont have a type");
         return;
     }
-    std::string displayType = displayInfo["type"].as<const char*>();
-    if (displayType == "hub75"){
-        loadHub75AndStart(displayInfo);
-    }else if (displayType == "max7219"){
-        loadMax7219AndStart(displayInfo);
-    }else{
-        OledScreen::CriticalFail("Display type in hardware.json is not supported");
-    }
-    
-}
 
-void HardwareConfig::loadMax7219AndStart(JsonObject max7219){
-    if (!max7219["enabled"]) {
+    if (!displayInfo["enabled"]) {
         Devices::Display = new EmptyDisplay();
         return;
     }
 
+    std::string displayType = displayInfo["type"].as<const char*>();
+    if (displayType == "hub75"){
+        loadHub75AndStart(displayInfo["hub75"]);
+    }else if (displayType == "max7219"){
+        loadMax7219AndStart(displayInfo["max7219"]);
+    }else{
+        OledScreen::CriticalFail("Display type in hardware.json is not supported");
+    }
+    if (!Devices::Display){
+        Devices::Display = new EmptyDisplay();
+    }
+
+    if (displayInfo.containsKey("mirrorOtherHalf")) Devices::Display->mirrorHalf = checkInvalidPin(displayInfo["mirrorOtherHalf"]);
+}
+
+void HardwareConfig::loadMax7219AndStart(JsonObject max7219){
     uint32_t panels = 2;
     int csPin;
     int dataInPin;
     int clockPin;
 
-    if (max7219.containsKey("cs")){
-        csPin = max7219["cs"];
+    if (!max7219.containsKey("pins")){
+        OledScreen::CriticalFail("Missing 'pins' in max7219 display");
+    }
+
+    JsonObject pins = max7219["pins"];
+
+    if (pins.containsKey("cs")){
+        csPin = pins["cs"];
     }else{
         OledScreen::CriticalFail("Missing 'cs' in display");
     }
 
-    if (max7219.containsKey("din")){
-        dataInPin = max7219["din"];
+    if (pins.containsKey("din")){
+        dataInPin = pins["din"];
     }else{
         OledScreen::CriticalFail("Missing 'din' in display");
     }
 
-    if (max7219.containsKey("clk")){
-        clockPin = max7219["clk"];
+    if (pins.containsKey("clk")){
+        clockPin = pins["clk"];
     }else{
         OledScreen::CriticalFail("Missing 'clk' in display");
     }
@@ -171,33 +182,31 @@ void HardwareConfig::loadMax7219AndStart(JsonObject max7219){
     Devices::Display->setBrightness8(128);
     Devices::Display->clearScreen();
     Devices::Display->flipDma();
-
-    if (max7219.containsKey("mirrorOtherHalf")) Devices::Display->mirrorHalf = checkInvalidPin(max7219["mirrorOtherHalf"]);
-
     Logger::Info("Started max7219 display!");
 }
 
 
 
 void HardwareConfig::loadHub75AndStart(JsonObject hub75){
-    if (!hub75["enabled"]) {
-        Devices::Display = new EmptyDisplay();
-        return;
+    if (!hub75.containsKey("pins")){
+        OledScreen::CriticalFail("Missing 'pins' in hub75 display");
     }
 
-    if (hub75.containsKey("dma_r1")) panelConfig.gpio.r1 = checkInvalidPin(hub75["dma_r1"]);
-    if (hub75.containsKey("dma_g1")) panelConfig.gpio.g1 = checkInvalidPin(hub75["dma_g1"]);
-    if (hub75.containsKey("dma_b1")) panelConfig.gpio.b1 = checkInvalidPin(hub75["dma_b1"]);
-    if (hub75.containsKey("dma_r2")) panelConfig.gpio.r2 = checkInvalidPin(hub75["dma_r2"]);
-    if (hub75.containsKey("dma_g2")) panelConfig.gpio.g2 = checkInvalidPin(hub75["dma_g2"]);
-    if (hub75.containsKey("dma_b2")) panelConfig.gpio.b2 = checkInvalidPin(hub75["dma_b2"]);
-    if (hub75.containsKey("dma_a")) panelConfig.gpio.a = checkInvalidPin(hub75["dma_a"]);
-    if (hub75.containsKey("dma_b")) panelConfig.gpio.b = checkInvalidPin(hub75["dma_b"]);
-    if (hub75.containsKey("dma_c")) panelConfig.gpio.c = checkInvalidPin(hub75["dma_c"]);
-    if (hub75.containsKey("dma_d")) panelConfig.gpio.d = checkInvalidPin(hub75["dma_d"]);
-    if (hub75.containsKey("dma_lat")) panelConfig.gpio.lat = checkInvalidPin(hub75["dma_lat"]);
-    if (hub75.containsKey("dma_oe")) panelConfig.gpio.oe = checkInvalidPin(hub75["dma_oe"]);
-    if (hub75.containsKey("dma_clk")) panelConfig.gpio.clk = checkInvalidPin(hub75["dma_clk"]);
+    JsonObject pins = hub75["pins"];
+
+    if (pins.containsKey("dma_r1")) panelConfig.gpio.r1 = checkInvalidPin(pins["dma_r1"]);
+    if (pins.containsKey("dma_g1")) panelConfig.gpio.g1 = checkInvalidPin(pins["dma_g1"]);
+    if (pins.containsKey("dma_b1")) panelConfig.gpio.b1 = checkInvalidPin(pins["dma_b1"]);
+    if (pins.containsKey("dma_r2")) panelConfig.gpio.r2 = checkInvalidPin(pins["dma_r2"]);
+    if (pins.containsKey("dma_g2")) panelConfig.gpio.g2 = checkInvalidPin(pins["dma_g2"]);
+    if (pins.containsKey("dma_b2")) panelConfig.gpio.b2 = checkInvalidPin(pins["dma_b2"]);
+    if (pins.containsKey("dma_a")) panelConfig.gpio.a = checkInvalidPin(pins["dma_a"]);
+    if (pins.containsKey("dma_b")) panelConfig.gpio.b = checkInvalidPin(pins["dma_b"]);
+    if (pins.containsKey("dma_c")) panelConfig.gpio.c = checkInvalidPin(pins["dma_c"]);
+    if (pins.containsKey("dma_d")) panelConfig.gpio.d = checkInvalidPin(pins["dma_d"]);
+    if (pins.containsKey("dma_lat")) panelConfig.gpio.lat = checkInvalidPin(pins["dma_lat"]);
+    if (pins.containsKey("dma_oe")) panelConfig.gpio.oe = checkInvalidPin(pins["dma_oe"]);
+    if (pins.containsKey("dma_clk")) panelConfig.gpio.clk = checkInvalidPin(pins["dma_clk"]);
 
 
     if (hub75.containsKey("width")){
@@ -223,8 +232,6 @@ void HardwareConfig::loadHub75AndStart(JsonObject hub75){
     }
 
     StartDmaDisplay();
-
-    if (hub75.containsKey("mirrorOtherHalf")) Devices::Display->mirrorHalf = checkInvalidPin(hub75["mirrorOtherHalf"]);
     return;
 }
 
@@ -262,6 +269,9 @@ bool HardwareConfig::LoadConfigs(){
     if (hardwareConfigJson.containsKey("display")) {
         Logger::Info("Loading display info");
         loadAndParseDisplay(hardwareConfigJson["display"]);
+    }else{
+        Devices::Display = new EmptyDisplay();
+        Logger::Info("NO DISPLAY DEFINED!");
     }
 
     if (hardwareConfigJson.containsKey("servos")) {
