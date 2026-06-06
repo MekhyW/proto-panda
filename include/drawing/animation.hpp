@@ -50,7 +50,7 @@ class AnimationSequence{
 
 class Animation{
     public:
-        Animation():m_animations(),m_shader(SHADER_NONE),m_shaderStrenght(1.0f),m_lastFace(0),m_interruptPin(-1),m_colorMode(COLOR_MODE_RGB),m_needFlip(false),m_isManaged(true),m_needRedraw(false),m_onBlankScreen(false),m_frameDrawDuration(0),m_texture(nullptr),m_frameLoadDuration(0),m_cycleDuration(0),m_mutex(xSemaphoreCreateMutex()){};
+        Animation():m_animations(),m_shader(SHADER_NONE),m_shaderStrenght(1.0f),m_lastFace(0),m_interruptPin(-1),m_colorMode(COLOR_MODE_RGB),m_needFlip(false),m_isManaged(true),m_needRedraw(false),m_onBlankScreen(false),m_copyToFrameBuffer(false),m_frameDrawDuration(0),m_texture(nullptr),m_frameBuffer(nullptr),m_frameLoadDuration(0),m_cycleDuration(0),m_mutex(xSemaphoreCreateMutex()){};
         void Allocate();
         void Update(uint32_t dt);
 
@@ -70,6 +70,8 @@ class Animation{
         void DrawCurrentFrame(){
             DrawFrame(m_lastFace);
         }
+
+        void EnableFrameBuffer(bool enable);
 
 
         bool PopAnimation();
@@ -124,8 +126,9 @@ class Animation{
         bool m_isManaged;
         bool m_needRedraw;
         bool m_onBlankScreen;
+        bool m_copyToFrameBuffer;
 
-        uint16_t *m_texture;
+        uint16_t *m_texture,*m_frameBuffer;
         
         uint64_t m_frameDrawDuration;
         uint64_t m_frameLoadDuration;

@@ -112,9 +112,13 @@ void Animation::drawPixelAt(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r,
     }else{
         OledScreen::DisplayFace[0][byteIdOled] = 0;
     }
-    byteIdOled++;
+    
 
     Devices::Display->setPixelWithFlip(x,y, r, g, b, flipSettings);
+    if (m_copyToFrameBuffer){
+        m_frameBuffer[byteIdOled] = color;
+    }
+    byteIdOled++;
 }
 
 void Animation::adjustColor(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, int16_t &frameId){
@@ -127,6 +131,13 @@ void Animation::adjustColor(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r,
 
     }*/
     ShaderProcessor::UpdateColorByShader(x, y, r, g, b, m_shader, m_shaderStrenght);
+}
+
+void Animation::EnableFrameBuffer(bool enable){
+    if (enable && m_frameBuffer == nullptr){
+        m_frameBuffer = (uint16_t*)ps_malloc(sizeof(uint16_t) * PANEL_WIDTH * PANEL_HEIGHT);
+    }
+    m_copyToFrameBuffer = enable;
 }
 
 void Animation::LoadFrameAsTexture(int i){
