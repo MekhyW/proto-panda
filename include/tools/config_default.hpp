@@ -55,6 +55,13 @@ Cache file version to invalidate cache in case of firmware update
 #define I2C_SLC 9
 
 /*
+    SD CARD MODE
+*/
+//If you're using a SD card module, change this to 1.
+//But if you're using a smd assembled version, you can leave it as 2
+#define PANDA_SD_MODE 2
+
+/*
     SPI
 */
 
@@ -76,7 +83,7 @@ Cache file version to invalidate cache in case of firmware update
 #define MMC_CLOCK_SPEED 40000
 //If using the full range of pins (data1 and 2, set this to false)
 #define MMC_ONE_BIT true  
-//Set 2 to MMC and 1 to SD
+
 #define PANDA_SD_MODE 2
 
 
@@ -155,6 +162,7 @@ Servos
 #define DMA_GPIO_OE 4
 #define DMA_GPIO_CLK 6
 
+//DO NOT CHANGE THINGS HERE.
 #if PANDA_SD_MODE == 1
 #define PANDA_SD SD
 #define PANDA_SD_NAME "SD"
