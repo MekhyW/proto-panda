@@ -1,5 +1,8 @@
 #pragma once
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
+#include "FastLED.h"
+
+
 
 enum ColorMode{
     COLOR_MODE_RGB,
@@ -380,6 +383,38 @@ private:
     uint32_t m_width, m_height, m_panels, m_lenght;
     int m_csPin, m_dataInPin, m_clockPin;
 };
+
+
+class WS2812BDisplay : public BaseDisplay {
+public:
+    WS2812BDisplay(uint16_t w, uint16_t h, CRGB *leds) {
+        mirrorHalf = false;
+        m_leds = leds;
+        m_width = w;
+        m_height = h;
+        halfPosition = w/2;
+    }
+    
+    ~WS2812BDisplay() {
+    }
+    
+    bool begin() override;
+    void draw() override { flipDma(); }
+    void flipDma() override;
+    void clearScreen() override;
+    void setBrightness8(const uint8_t b) override;
+    void setPixelWithFlip(uint16_t x, uint16_t y, uint8_t red, uint8_t green, uint8_t blue,  FlipConfig &flipSettings) override;
+    void startWrite() override {}
+    void endWrite() override {}
+
+
+private:
+    int GetLEDIndex(int x, int y, int matrixIndex);
+    uint32_t m_width, m_height;
+    CRGB *m_leds;
+};
+
+
 
 class EmptyDisplay : public BaseDisplay {
 public:

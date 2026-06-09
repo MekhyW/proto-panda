@@ -216,7 +216,6 @@ void Animation::LoadFrameAsTexture(int i){
                 
                 
                 for (int iddx=0;iddx<lenght;iddx++){
-                    //drawPixelAt(x, y, color, r, g, b, flip_left, flip_right, byteIdOled);
                     m_texture[y * PANEL_WIDTH + x] = color;
                     x++;
                     if (x >= PANEL_WIDTH){

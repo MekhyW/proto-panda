@@ -4,6 +4,8 @@
 #include "tools/devices.hpp"
 #include "tools/psrammap.hpp"
 #include "tools/logger.hpp"
+#include "lua/luainterface.hpp"
+#include "drawing/ledstrip.hpp"
 
 #if PANDA_SD_MODE == 1
 #include <SD.h>
@@ -12,6 +14,8 @@
 #else
 #error "NO SD_MODE Mode defined (set PANDA_SD_MODE to 1 for SD or 2 for SD_MMC)"
 #endif
+
+extern LedStrip g_leds;
 
 
 int HardwareConfig::HardwarePanelWidth = 64;
@@ -119,6 +123,8 @@ void HardwareConfig::loadAndParseDisplay(JsonObject displayInfo){
         loadHub75AndStart(displayInfo["hub75"]);
     }else if (displayType == "max7219"){
         loadMax7219AndStart(displayInfo["max7219"]);
+    }else if (displayType == "ws2812b"){
+        loadWS2812BAndStart(displayInfo["ws2812b"]);
     }else{
         OledScreen::CriticalFail("Display type in hardware.json is not supported");
     }
@@ -127,6 +133,39 @@ void HardwareConfig::loadAndParseDisplay(JsonObject displayInfo){
     }
 
     if (displayInfo.containsKey("mirrorOtherHalf")) Devices::Display->mirrorHalf = checkInvalidPin(displayInfo["mirrorOtherHalf"]);
+}
+
+
+void HardwareConfig::loadWS2812BAndStart(JsonObject ws2812b){
+
+    uint16_t width,height,brightness;
+    if (ws2812b.containsKey("width")){
+        width = ws2812b["width"];
+    }else{
+        OledScreen::CriticalFail("Missing 'width' in display");
+    }
+    
+    if (ws2812b.containsKey("height")) {
+        height = ws2812b["height"];
+    }else{
+        OledScreen::CriticalFail("Missing 'height' in display");
+    }
+    if (ws2812b.containsKey("brightness")) {
+        brightness = ws2812b["brightness"];
+    }else{
+        OledScreen::CriticalFail("Missing 'brightness' in display");
+    }
+
+    CRGB *leds = g_leds.BeginScreen(width, height, brightness);
+
+    Devices::Display = new WS2812BDisplay(width, height, leds);
+    if (Devices::Display == nullptr){
+        Logger::Info("Failed to start WS2812BD display");
+        return;
+    }
+
+    Devices::Display->begin();
+
 }
 
 void HardwareConfig::loadMax7219AndStart(JsonObject max7219){

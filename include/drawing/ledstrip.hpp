@@ -84,11 +84,12 @@ class LedGroup : public BaseLedGroup{
 
 class LedStrip { 
     public:
-        LedStrip():m_groups(nullptr),m_ledAmount(0),m_maxBrightness(0),m_targetBrigthness(0),m_turnOnRate(0),m_currentTargetBrigtness(0),m_leds(nullptr),m_enabled(false),m_managed(false),m_gentlyTurnOn(false),m_mutex(xSemaphoreCreateMutex()){};
+        LedStrip():m_groups(nullptr),m_ledAmount(0),m_maxBrightness(0),m_targetBrigthness(0),m_turnOnRate(0),m_currentTargetBrigtness(0),m_leds(nullptr),m_enabled(false),m_managed(false),m_gentlyTurnOn(false),m_hasScreen(false),m_mutex(xSemaphoreCreateMutex()){};
         bool Begin(uint16_t ledCount, uint16_t maxbrightness){
             return BeginDual(ledCount, 0, maxbrightness);
         }
         static CRGB* allocateCRGB(size_t len);
+        CRGB *BeginScreen(uint16_t w, uint16_t h, uint8_t maxbrightness);
         bool BeginDual(uint16_t ledCount, uint16_t secondLedCount, uint8_t maxbrightness);
         void Update();
         
@@ -154,8 +155,9 @@ class LedStrip {
         uint8_t m_maxBrightness, m_targetBrigthness, m_turnOnRate;
         uint16_t m_currentTargetBrigtness;
         CRGB *m_leds;
+        CRGB *m_screen;
 
-        bool m_enabled, m_managed, m_gentlyTurnOn;
+        bool m_enabled, m_managed, m_gentlyTurnOn, m_hasScreen;
 
         SemaphoreHandle_t m_mutex;
         std::stack<LedGroup*> m_behaviorStack;
