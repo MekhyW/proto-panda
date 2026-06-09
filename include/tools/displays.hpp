@@ -387,12 +387,14 @@ private:
 
 class WS2812BDisplay : public BaseDisplay {
 public:
-    WS2812BDisplay(uint16_t w, uint16_t h, CRGB *leds) {
+    WS2812BDisplay(uint16_t w, uint16_t h, uint16_t p, CRGB *leds) {
         mirrorHalf = false;
         m_leds = leds;
         m_width = w;
         m_height = h;
-        halfPosition = w/2;
+        m_panels = p;
+        m_realWidth = p*w;
+        halfPosition = m_realWidth/2;
     }
     
     ~WS2812BDisplay() {
@@ -409,8 +411,8 @@ public:
 
 
 private:
-    int GetLEDIndex(int x, int y, int matrixIndex);
-    uint32_t m_width, m_height;
+    int GetLEDIndex(int x, int y);
+    uint32_t m_width, m_height, m_panels, m_realWidth;
     CRGB *m_leds;
 };
 

@@ -21,12 +21,23 @@ void Hub75Display::setPixelWithFlip(uint16_t x, uint16_t y, uint8_t red, uint8_t
     uint8_t bb = blue;
 
     BaseDisplay::reorder_rgb(flipSettings.modeLeft, &ra, &ga, &ba);
+    
 
-    matrix->updateMatrixDMABuffer_2(x, y, ra, ga, ba);
-   
-    //BaseDisplay::reorder_rgb(flipSettings.modeRight, &rb, &gb, &bb);
+    if (flipSettings.flipLeft){
+        matrix->updateMatrixDMABuffer_2((halfPosition-1)-x, y, ra, ga, ba);
+    }else{
+        matrix->updateMatrixDMABuffer_2(x, y, ra, ga, ba);
+    }
 
-    matrix->updateMatrixDMABuffer_2(64+x, y, rb, gb, bb);
+    BaseDisplay::reorder_rgb(flipSettings.modeRight, &rb, &gb, &bb);
+
+    if (flipSettings.flipRight){
+        matrix->updateMatrixDMABuffer_2((halfPosition+halfPosition-1)-x, y, rb, gb, bb);
+    }else{
+        matrix->updateMatrixDMABuffer_2((halfPosition)+x, y, rb, gb, bb);
+    }
+    
+
 }
 
 bool MAX7219Display::begin(){
@@ -87,11 +98,11 @@ void MAX7219Display::setPixelWithFlip(uint16_t xIn, uint16_t yIn, uint8_t red, u
         color = 1;
     }
 
-    //if (!mirrorHalf){
+    if (!mirrorHalf){
         setPixelAt(xIn, yIn, color);
-    //    return;
-    //}
-/*
+        return;
+    }
+
     if (flipSettings.flipLeft){
         setPixelAt((halfPosition-1)-xIn, yIn, color);
     }else{
@@ -103,7 +114,6 @@ void MAX7219Display::setPixelWithFlip(uint16_t xIn, uint16_t yIn, uint8_t red, u
     }else{
         setPixelAt((halfPosition)+xIn, yIn, color);
     }
-        */
 }
 
 void MAX7219Display::setPixelAt(uint16_t xIn, uint16_t yIn, uint8_t color) {
@@ -139,10 +149,6 @@ void MAX7219Display::flipDma() {
 
 
 bool WS2812BDisplay::begin(){
-    m_leds[GetLEDIndex(0, 1, 0)] = CRGB(255, 0, 0);
-    m_leds[GetLEDIndex(1, 1, 0)] = CRGB(0, 255, 0);
-    m_leds[GetLEDIndex(2, 2, 0)] = CRGB(0, 255, 255);
-    FastLED.show(); 
     return true;
 };
 
@@ -152,7 +158,7 @@ void WS2812BDisplay::flipDma(){
 };
 
 void WS2812BDisplay::clearScreen(){
-    for (int a=0;a<(m_width*m_height);++a){
+    for (int a=0;a<(m_width*m_height*m_panels);++a){
         m_leds[a] = CRGB(0,0,0);
     }
 };
@@ -161,8 +167,10 @@ void WS2812BDisplay::setBrightness8(const uint8_t b){
     FastLED.setBrightness(b);
 };
 
-int WS2812BDisplay::GetLEDIndex(int x, int y, int matrixIndex) {
+int WS2812BDisplay::GetLEDIndex(int x, int y) {
     int localX;
+
+    int matrixIndex = x / m_width;
     
     // Serpentine: even rows go left→right, odd rows go right→left
     if (y % 2 == 0) {
@@ -175,31 +183,33 @@ int WS2812BDisplay::GetLEDIndex(int x, int y, int matrixIndex) {
 }
 
 void WS2812BDisplay::setPixelWithFlip(uint16_t xIn, uint16_t yIn, uint8_t red, uint8_t green, uint8_t blue,  FlipConfig &flipSettings){
-    if (xIn >= m_width){
+    if (!mirrorHalf){
+        if (xIn >= m_realWidth){
+            return;
+        }
+        if (yIn >= m_height){
+            return;
+        }
+        m_leds[GetLEDIndex(xIn, yIn)] = CRGB(red, green, blue);
+        return;
+    }
+
+    if (xIn >= m_realWidth/2){
         return;
     }
     if (yIn >= m_height){
         return;
     }
 
-    //if (!mirrorHalf){
-    Serial.printf("Got pos: %dx%d (%d,%d,%d)\n", xIn, yIn, red, green, blue);
-        m_leds[xIn + yIn * m_width] = CRGB(red, green, blue);
-    //    return;
-    //}
-    if (mirrorHalf){
-        return;
-    }
-
     if (flipSettings.flipLeft){
-        m_leds[yIn*m_width + (halfPosition-1)-xIn] = CRGB(red, green, blue);
+        m_leds[GetLEDIndex((halfPosition-1)-xIn, yIn)] = CRGB(red, green, blue);
     }else{
-        m_leds[yIn*m_width + xIn] = CRGB(red, green, blue);
+        m_leds[GetLEDIndex(xIn, yIn)] = CRGB(red, green, blue);
     }
 
     if (flipSettings.flipRight){
-        m_leds[yIn*m_width + (halfPosition+halfPosition-1)-xIn] = CRGB(red, green, blue);
+        m_leds[GetLEDIndex( (halfPosition+halfPosition-1)-xIn, yIn)] = CRGB(red, green, blue);
     }else{
-        m_leds[yIn*m_width + (halfPosition)-xIn] = CRGB(red, green, blue);
+        m_leds[GetLEDIndex(halfPosition-xIn, yIn)] = CRGB(red, green, blue);
     }    
 };

@@ -138,27 +138,35 @@ void HardwareConfig::loadAndParseDisplay(JsonObject displayInfo){
 
 void HardwareConfig::loadWS2812BAndStart(JsonObject ws2812b){
 
-    uint16_t width,height,brightness;
-    if (ws2812b.containsKey("width")){
-        width = ws2812b["width"];
+ 
+
+    uint16_t width,height,brightness, panels;
+    if (ws2812b.containsKey("maxtrix_width")){
+        width = ws2812b["maxtrix_width"];
     }else{
-        OledScreen::CriticalFail("Missing 'width' in display");
+        OledScreen::CriticalFail("Missing 'maxtrix_width' in display");
     }
     
-    if (ws2812b.containsKey("height")) {
-        height = ws2812b["height"];
+    if (ws2812b.containsKey("maxtrix_height")) {
+        height = ws2812b["maxtrix_height"];
     }else{
-        OledScreen::CriticalFail("Missing 'height' in display");
+        OledScreen::CriticalFail("Missing 'maxtrix_height' in display");
     }
+    if (ws2812b.containsKey("panels")) {
+        panels = ws2812b["panels"];
+    }else{
+        OledScreen::CriticalFail("Missing 'panels' in display");
+    }
+
     if (ws2812b.containsKey("brightness")) {
         brightness = ws2812b["brightness"];
     }else{
         OledScreen::CriticalFail("Missing 'brightness' in display");
     }
 
-    CRGB *leds = g_leds.BeginScreen(width, height, brightness);
+    CRGB *leds = g_leds.BeginScreen(width*panels, height, brightness);
 
-    Devices::Display = new WS2812BDisplay(width, height, leds);
+    Devices::Display = new WS2812BDisplay(width, height, panels, leds);
     if (Devices::Display == nullptr){
         Logger::Info("Failed to start WS2812BD display");
         return;
