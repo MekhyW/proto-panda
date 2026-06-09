@@ -6,21 +6,38 @@
     "enableAnimation": true,
     
     "display": {
-        "type": "max7219",
+        "type": "hub75",
         "enabled": true,
         "mirrorOtherHalf": true,
         "max7219": {
-            "panels": 4,
+            "panels": 8,
+            "horizontal_panel_count": 4,
             "pins": {
                 "cs": 10,
                 "din": 11,
                 "clk": 12 
-            }           
+            }      
+        },
+        "ws2812b":{
+            "maxtrix_width": 8,
+            "maxtrix_height": 8,
+            "panels": 2,
+            "horizontal_panel_count": 1,
+            "brightness": 32,
+            "views": [
+                {
+                    "x": 0,
+                    "y": 0,
+                    "canvas_x": 16,
+                    "canvas_y": 8
+                }
+            ]  
         },
         "hub75": {
             "width": 64,
             "height": 32,
-            "chain_length": 2,
+            "panels": 2,
+            "horizontal_panel_count": 2,
             "colordepth": 12,
             "pins": {
                 "dma_r1": 12,

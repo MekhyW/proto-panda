@@ -157,6 +157,8 @@ Servos
 #define DMA_GPIO_OE 4
 #define DMA_GPIO_CLK 6
 
+#define MAX7219_SIZE 8
+
 #if PANDA_SD_MODE == 1
 #define PANDA_SD SD
 #define PANDA_SD_NAME "SD"

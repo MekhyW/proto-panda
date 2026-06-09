@@ -8,7 +8,12 @@ FlipConfig FlipConfig::DefaultFlipConfig = FlipConfig(false, true, COLOR_MODE_RG
 
 void Hub75Display::setPixelWithFlip(uint16_t x, uint16_t y, uint8_t red, uint8_t green, uint8_t blue, FlipConfig& flipSettings) {
     if (!mirrorHalf){
-        matrix->updateMatrixDMABuffer_2(x, y, red, green, blue);
+        int xIn;
+        int yIn;
+        if (!view.getPosition(x, y, xIn, yIn)){
+            return;
+        }
+        matrix->updateMatrixDMABuffer_2(xIn, yIn, red, green, blue);
         return;
     }
 
@@ -24,17 +29,37 @@ void Hub75Display::setPixelWithFlip(uint16_t x, uint16_t y, uint8_t red, uint8_t
     
 
     if (flipSettings.flipLeft){
-        matrix->updateMatrixDMABuffer_2((halfPosition-1)-x, y, ra, ga, ba);
+        int xIn;
+        int yIn;
+        if (!view.getPosition((halfPosition-1)-x, y, xIn, yIn)){
+            return;
+        }
+        matrix->updateMatrixDMABuffer_2(xIn, yIn, ra, ga, ba);
     }else{
-        matrix->updateMatrixDMABuffer_2(x, y, ra, ga, ba);
+        int xIn;
+        int yIn;
+        if (!view.getPosition(x, y, xIn, yIn)){
+            return;
+        }
+        matrix->updateMatrixDMABuffer_2(xIn, yIn, ra, ga, ba);
     }
 
     BaseDisplay::reorder_rgb(flipSettings.modeRight, &rb, &gb, &bb);
 
     if (flipSettings.flipRight){
-        matrix->updateMatrixDMABuffer_2((halfPosition+halfPosition-1)-x, y, rb, gb, bb);
+        int xIn;
+        int yIn;
+        if (!view.getPosition((halfPosition+halfPosition-1)-x, y, xIn, yIn)){
+            return;
+        }
+        matrix->updateMatrixDMABuffer_2(xIn, yIn, rb, gb, bb);
     }else{
-        matrix->updateMatrixDMABuffer_2((halfPosition)+x, y, rb, gb, bb);
+        int xIn;
+        int yIn;
+        if (!view.getPosition((halfPosition)+x, y, xIn, yIn)){
+            return;
+        }
+        matrix->updateMatrixDMABuffer_2(xIn, yIn, rb, gb, bb);
     }
     
 
@@ -119,12 +144,24 @@ void MAX7219Display::setPixelWithFlip(uint16_t xIn, uint16_t yIn, uint8_t red, u
 void MAX7219Display::setPixelAt(uint16_t xIn, uint16_t yIn, uint8_t color) {
     int x = xIn;
     int y = yIn;
-    
-    if (y >= 8 || x >= m_lenght) return;
-    if (y < 0|| x < 0) return;
+    if (!view.getPosition(xIn, yIn, x, y)){
+        return;
+    }
+    if (!mirrorHalf){
+        if (xIn >= m_lenght){
+            return;
+        }
+    }else{
+        if (xIn >= halfPosition){
+            return;
+        }
+    }
+    if (yIn >= MAX7219_SIZE){
+        return;
+    }
 
-    uint16_t bufferIndex = y + (x / 8) * 8;
-    uint8_t bitPosition = 7 - (x % 8);
+    uint16_t bufferIndex = y + (x / MAX7219_SIZE) * MAX7219_SIZE;
+    uint8_t bitPosition = 7 - (x % MAX7219_SIZE);
 
     if (color != 0) {
         m_frameBuffer[bufferIndex] |= (1 << bitPosition);
@@ -154,7 +191,8 @@ bool WS2812BDisplay::begin(){
 
 void WS2812BDisplay::flipDma(){
     FastLED.show(); 
-    delay(50);
+    FastLED.delay(5); 
+
 };
 
 void WS2812BDisplay::clearScreen(){
@@ -167,49 +205,94 @@ void WS2812BDisplay::setBrightness8(const uint8_t b){
     FastLED.setBrightness(b);
 };
 
-int WS2812BDisplay::GetLEDIndex(int x, int y) {
-    int localX;
-
-    int matrixIndex = x / m_width;
-    
-    // Serpentine: even rows go left→right, odd rows go right→left
-    if (y % 2 == 0) {
-        localX = x;
-    } else {
-        localX = (m_width - 1) - x;
+int WS2812BDisplay::GetLEDIndex(uint16_t x, uint16_t y) {
+    int xIn=0; 
+    int yIn=0;
+    if (!view.getPosition(x, y, xIn, yIn)){
+        return -1;
+    }
+    if (!mirrorHalf){
+        if (xIn >= m_realWidth){
+            return -1;
+        }
+    }else{
+        if (xIn >= m_realWidth/2){
+            return -1;
+        }
+    }
+    if (yIn >= m_height){
+        return -1;
     }
     
-    return (matrixIndex * m_width * m_height) + (y * m_width) + localX;
+
+    int localX;
+
+    int matrixIndex = xIn / m_width;
+    
+    // Serpentine: even rows go left→right, odd rows go right→left
+    if (yIn % 2 == 0) {
+        localX = xIn;
+    } else {
+        localX = (m_width - 1) - xIn;
+    }
+    
+    return (matrixIndex * m_width * m_height) + (yIn * m_width) + localX;
 }
 
 void WS2812BDisplay::setPixelWithFlip(uint16_t xIn, uint16_t yIn, uint8_t red, uint8_t green, uint8_t blue,  FlipConfig &flipSettings){
+    int idx;
+
+    uint8_t ra = red;
+    uint8_t ga = green;
+    uint8_t ba = blue;
+
+
+    BaseDisplay::reorder_rgb(flipSettings.modeLeft, &ra, &ga, &ba);
+
+
     if (!mirrorHalf){
-        if (xIn >= m_realWidth){
+        idx = GetLEDIndex(xIn, yIn);
+        if (idx <= -1){
             return;
         }
-        if (yIn >= m_height){
-            return;
-        }
-        m_leds[GetLEDIndex(xIn, yIn)] = CRGB(red, green, blue);
+        m_leds[idx] = CRGB(ra, ga, ba);
         return;
     }
 
-    if (xIn >= m_realWidth/2){
-        return;
-    }
-    if (yIn >= m_height){
-        return;
-    }
+
 
     if (flipSettings.flipLeft){
-        m_leds[GetLEDIndex((halfPosition-1)-xIn, yIn)] = CRGB(red, green, blue);
+        idx = GetLEDIndex((halfPosition-1)-xIn, yIn);
+        if (idx <= -1){
+            return;
+        }
+        m_leds[idx] = CRGB(ra, ga, ba);
     }else{
-        m_leds[GetLEDIndex(xIn, yIn)] = CRGB(red, green, blue);
+        idx = GetLEDIndex(xIn, yIn);
+        if (idx <= -1){
+            return;
+        }
+        m_leds[idx] = CRGB(ra, ga, ba);
     }
 
+    
+    uint8_t rb = red;
+    uint8_t gb = green;
+    uint8_t bb = blue;
+
+    BaseDisplay::reorder_rgb(flipSettings.modeRight, &rb, &gb, &bb);
+
     if (flipSettings.flipRight){
-        m_leds[GetLEDIndex( (halfPosition+halfPosition-1)-xIn, yIn)] = CRGB(red, green, blue);
+        idx = GetLEDIndex( (halfPosition+halfPosition-1)-xIn, yIn);
+        if (idx <= -1){
+            return;
+        }
+        m_leds[idx] = CRGB(rb, gb, bb);
     }else{
-        m_leds[GetLEDIndex(halfPosition-xIn, yIn)] = CRGB(red, green, blue);
+        idx = GetLEDIndex(halfPosition-xIn, yIn);
+        if (idx <= -1){
+            return;
+        }
+        m_leds[idx] = CRGB(rb, gb, bb);
     }    
 };

@@ -1,6 +1,8 @@
 #pragma once
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
-#include "FastLED.h"
+#include <FastLED.h>
+#include "tools/sectionview.hpp"
+#include "tools/config_default.hpp"
 
 
 
@@ -146,6 +148,7 @@ public:
 
     
     bool mirrorHalf;
+    SectionMap view;
             
 protected:
     uint32_t halfPosition;
@@ -337,9 +340,9 @@ public:
 
 };
 
-#define MAX7219_SIZE 8
 
-// MAX7219Display implementation
+
+
 class MAX7219Display : public BaseDisplay {
 public:
     MAX7219Display(uint32_t panels, int csPin, int dataInPin, int clockPin) {
@@ -411,7 +414,7 @@ public:
 
 
 private:
-    int GetLEDIndex(int x, int y);
+    int GetLEDIndex(uint16_t x, uint16_t y);
     uint32_t m_width, m_height, m_panels, m_realWidth;
     CRGB *m_leds;
 };

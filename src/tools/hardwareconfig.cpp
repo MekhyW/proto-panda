@@ -136,11 +136,41 @@ void HardwareConfig::loadAndParseDisplay(JsonObject displayInfo){
 }
 
 
+
+void HardwareConfig::loadViews(JsonObject ws2812b, BaseDisplay* display, uint16_t defaultWidth, uint16_t defaultHeight) {
+    if (!ws2812b.containsKey("views") || !ws2812b["views"].is<JsonArray>()) {
+        return;
+    }
+
+    JsonArray views = ws2812b["views"].as<JsonArray>();
+
+    for (JsonObject v : views) {
+        if (!v.containsKey("x") || !v.containsKey("y")) {
+            OledScreen::CriticalFail("View missing required 'x' or 'y' field");
+            return;
+        }
+        if (!v.containsKey("canvas_x") || !v.containsKey("canvas_y")) {
+            OledScreen::CriticalFail("View missing required 'canvas_x' or 'canvas_y' field");
+            return;
+        }
+
+        uint16_t x        = v["x"];
+        uint16_t y        = v["y"];
+        uint16_t canvas_x = v["canvas_x"];
+        uint16_t canvas_y = v["canvas_y"];
+        uint16_t w        = v.containsKey("width")  ? (uint16_t)v["width"]  : defaultWidth;
+        uint16_t h        = v.containsKey("height") ? (uint16_t)v["height"] : defaultHeight;
+        Logger::Info("Added view: %d %d  ->  %d %d   (%d,%d)", x, y, canvas_x, canvas_y, w, h);
+        display->view.addView(x, y, canvas_x, canvas_y, w, h);
+    }
+}
+
+
 void HardwareConfig::loadWS2812BAndStart(JsonObject ws2812b){
 
  
 
-    uint16_t width,height,brightness, panels;
+    uint16_t width,height,brightness, panels, horizontal_panel_count;
     if (ws2812b.containsKey("maxtrix_width")){
         width = ws2812b["maxtrix_width"];
     }else{
@@ -156,6 +186,11 @@ void HardwareConfig::loadWS2812BAndStart(JsonObject ws2812b){
         panels = ws2812b["panels"];
     }else{
         OledScreen::CriticalFail("Missing 'panels' in display");
+    }
+    if (ws2812b.containsKey("horizontal_panel_count")) {
+        horizontal_panel_count = ws2812b["horizontal_panel_count"];
+    }else{
+        OledScreen::CriticalFail("Missing 'horizontal_panel_count' in display");
     }
 
     if (ws2812b.containsKey("brightness")) {
@@ -173,6 +208,13 @@ void HardwareConfig::loadWS2812BAndStart(JsonObject ws2812b){
     }
 
     Devices::Display->begin();
+    //This will make the pixels from the canvas at 8x8 and draw them at 0x0 in a square of widthXheight
+    Logger::Info("Started WS2812BD display!");
+
+    if (ws2812b.containsKey("views") && ws2812b["views"].is<JsonArray>()) {
+        Logger::Info("Loading views!");
+        loadViews(ws2812b, Devices::Display, width, height);
+    }
 
 }
 
@@ -181,6 +223,7 @@ void HardwareConfig::loadMax7219AndStart(JsonObject max7219){
     int csPin;
     int dataInPin;
     int clockPin;
+    int horizontal_panel_count;
 
     if (!max7219.containsKey("pins")){
         OledScreen::CriticalFail("Missing 'pins' in max7219 display");
@@ -211,6 +254,12 @@ void HardwareConfig::loadMax7219AndStart(JsonObject max7219){
     }else{
         OledScreen::CriticalFail("Missing 'panels' in display");
     }
+
+    if (max7219.containsKey("horizontal_panel_count")){
+        horizontal_panel_count = max7219["panhorizontal_panel_countels"];
+    }else{
+        OledScreen::CriticalFail("Missing 'horizontal_panel_count' in display");
+    }
     
    
     if (Devices::Display != nullptr){
@@ -230,6 +279,11 @@ void HardwareConfig::loadMax7219AndStart(JsonObject max7219){
     Devices::Display->clearScreen();
     Devices::Display->flipDma();
     Logger::Info("Started max7219 display!");
+
+    if (max7219.containsKey("views") && max7219["views"].is<JsonArray>()) {
+        Logger::Info("Loading views!");
+        loadViews(max7219, Devices::Display, 8, 8);
+    }
 }
 
 
@@ -268,17 +322,22 @@ void HardwareConfig::loadHub75AndStart(JsonObject hub75){
         OledScreen::CriticalFail("Missing 'height' in display");
     }
 
-    if (hub75.containsKey("chain_length")) {
-        panelConfig.chain_length = hub75["chain_length"];
+    if (hub75.containsKey("panels")) {
+        panelConfig.chain_length = hub75["panels"];
     }else{
-        OledScreen::CriticalFail("Missing 'chain_length' in display");
+        OledScreen::CriticalFail("Missing 'panels' in display");
     }
-        
+
     if (hub75.containsKey("colordepth")) {
         panelConfig.setPixelColorDepthBits(hub75["colordepth"]);
     }
 
     StartDmaDisplay();
+
+    if (hub75.containsKey("views") && hub75["views"].is<JsonArray>()) {
+        Logger::Info("Loading views!");
+        loadViews(hub75, Devices::Display, panelConfig.mx_width, panelConfig.mx_height);
+    }
     return;
 }
 
