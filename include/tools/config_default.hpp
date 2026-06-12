@@ -2,7 +2,7 @@
 /*
     Avoid changing this vile, change the config.hpp instead if you need custom configuration
 */
-#define PANDA_VERSION "3.0.3"
+#define PANDA_VERSION "3.0.4"
 /*
 Cache file version to invalidate cache in case of firmware update
 */
@@ -55,6 +55,13 @@ Cache file version to invalidate cache in case of firmware update
 #define I2C_SLC 9
 
 /*
+    SD CARD MODE
+*/
+//If you're using a SD card module, change this to 1.
+//But if you're using a smd assembled version, you can leave it as 2
+#define PANDA_SD_MODE 2
+
+/*
     SPI
 */
 
@@ -76,7 +83,7 @@ Cache file version to invalidate cache in case of firmware update
 #define MMC_CLOCK_SPEED 40000
 //If using the full range of pins (data1 and 2, set this to false)
 #define MMC_ONE_BIT true  
-//Set 2 to MMC and 1 to SD
+
 #define PANDA_SD_MODE 2
 
 
@@ -117,7 +124,7 @@ Cache file version to invalidate cache in case of firmware update
 */
 #define ENABLE_EDIT_MODE
 #define EDIT_MODE_PIN 39
-#define EDIT_ENABLE_LOGIC_LEVEL 0
+#define EDIT_ENABLE_LOGIC_LEVEL LOW
 /* 
 Servos
 */
@@ -156,6 +163,7 @@ Servos
 #define DMA_GPIO_LAT 5
 #define DMA_GPIO_OE 4
 #define DMA_GPIO_CLK 6
+
 
 #define MAX7219_SIZE 8
 
