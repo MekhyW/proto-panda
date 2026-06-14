@@ -135,11 +135,10 @@ Servos
     DMA display, or actual display
 */
 
-#define PANEL_WIDTH (HardwareConfig::PanelWidth())      // Number of pixels wide of each INDIVIDUAL panel module. 
-#define PANEL_HEIGHT (HardwareConfig::PanelHeight())     // Number of pixels tall of each INDIVIDUAL panel module.
-#define PANEL_CHAIN 2      // Total number of panels chained one to another
+#define CANVAS_WIDTH (HardwareConfig::CanvasWidth())      // Number of pixels wide of each INDIVIDUAL sprite
+#define CANVAS_HEIGHT (HardwareConfig::CanvasHeight())     // Number of pixels tall of each INDIVIDUAL sprite
 
-#define FILE_PIXEL_COUNT (PANEL_WIDTH * PANEL_HEIGHT)
+#define FILE_PIXEL_COUNT (CANVAS_WIDTH * CANVAS_HEIGHT)
 #define FILE_SIZE_BULK_SIZE ( FILE_PIXEL_COUNT * sizeof(uint16_t) )
 #define FILE_HEADER_BYTES 8
 #define FILE_HEADER_SIZE (sizeof(uint8_t) * FILE_HEADER_BYTES )

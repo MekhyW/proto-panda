@@ -478,11 +478,11 @@ void Model::RasterTriangleWithBitmap(ModelHandler *scene, int i, uint8_t *target
         if (a < 0){
             a = 0;
         }
-        if (y0 < 0 || y0 >= PANEL_HEIGHT){
+        if (y0 < 0 || y0 >= CANVAS_HEIGHT){
             return;
         }
         for (;a <= b; a++) {
-            if (a >= PANEL_WIDTH){
+            if (a >= CANVAS_WIDTH){
                 break;
             }
             if (!scene->MarkPixel(a, y0)) {
@@ -491,7 +491,7 @@ void Model::RasterTriangleWithBitmap(ModelHandler *scene, int i, uint8_t *target
                 Devices::Display->setPixelWithFlip(a, y0, rr, gg, bbl, FlipConfig::DefaultFlipConfig);
                 if (targetBitmap != nullptr){
                     if ((color & 0x8610) != 0) { 
-                        int byteIdOled = a + y0*PANEL_WIDTH;
+                        int byteIdOled = a + y0*CANVAS_WIDTH;
                         targetBitmap[byteIdOled] = 1;
                     }
                 }
@@ -533,11 +533,11 @@ void Model::RasterTriangleWithBitmap(ModelHandler *scene, int i, uint8_t *target
         if (a < 0){
             a = 0;
         }
-        if (y < 0 || y >= PANEL_HEIGHT){
+        if (y < 0 || y >= CANVAS_HEIGHT){
             continue;
         }
         for (int16_t xx = a; xx <= b; xx++) {
-            if (xx >= PANEL_WIDTH){
+            if (xx >= CANVAS_WIDTH){
                 break;
             }
             if (!scene->MarkPixel(xx, y)) {
@@ -546,7 +546,7 @@ void Model::RasterTriangleWithBitmap(ModelHandler *scene, int i, uint8_t *target
                 Devices::Display->setPixelWithFlip(xx, y, rr, gg, bbl, FlipConfig::DefaultFlipConfig);
                 if (targetBitmap != nullptr){
                     if ((color & 0x8610) != 0) { 
-                        int16_t byteIdOled = xx + y*PANEL_WIDTH;
+                        int16_t byteIdOled = xx + y*CANVAS_WIDTH;
                         targetBitmap[byteIdOled] = 1;
                     }
                 }
@@ -572,11 +572,11 @@ void Model::RasterTriangleWithBitmap(ModelHandler *scene, int i, uint8_t *target
         if (a < 0){
             a = 0;
         }
-        if (y < 0 || y >= PANEL_HEIGHT){
+        if (y < 0 || y >= CANVAS_HEIGHT){
             continue;
         }
         for (int16_t xx = a; xx <= b; xx++) {
-            if (xx >= PANEL_WIDTH){
+            if (xx >= CANVAS_WIDTH){
                 break;
             }
             if (!scene->MarkPixel(xx, y)) {
@@ -585,7 +585,7 @@ void Model::RasterTriangleWithBitmap(ModelHandler *scene, int i, uint8_t *target
                 Devices::Display->setPixelWithFlip(xx, y, rr, gg, bbl, FlipConfig::DefaultFlipConfig);
                 if (targetBitmap != nullptr){
                     if ((color & 0x8610) != 0) { 
-                        int16_t byteIdOled = xx + y*PANEL_WIDTH;
+                        int16_t byteIdOled = xx + y*CANVAS_WIDTH;
                         targetBitmap[byteIdOled] = 1;
                     }
                 }

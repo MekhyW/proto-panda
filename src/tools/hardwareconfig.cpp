@@ -18,8 +18,8 @@
 extern LedStrip g_leds;
 
 
-int HardwareConfig::HardwarePanelWidth = 64;
-int HardwareConfig::HardwarePanelHeight = 32;
+int HardwareConfig::HardwareCanvasWidth = 64;
+int HardwareConfig::HardwareCanvasHeight = 32;
 
 const uint8_t invalidPins[] = {
     I2C_SDA,
@@ -65,8 +65,8 @@ void HardwareConfig::loadDefaults(){
     panelConfig.gpio.clk = DMA_GPIO_CLK;
     panelConfig.setPixelColorDepthBits(12);
     panelConfig.i2sspeed = HUB75_I2S_CFG::HZ_20M;
-    HardwarePanelWidth = 64;
-    HardwarePanelHeight = 32;
+    HardwareCanvasWidth = 64;
+    HardwareCanvasHeight = 32;
 }
 
 int HardwareConfig::checkInvalidPin(int pin){
@@ -120,7 +120,7 @@ void HardwareConfig::loadAndParseDisplay(JsonObject displayInfo){
 
     std::string displayType = displayInfo["type"].as<const char*>();
     if (displayType == "hub75"){
-        loadHub75AndStart(displayInfo["hub75"]);
+        loadHub75AndStart(displayInfo["hub75"], false);
     }else if (displayType == "max7219"){
         loadMax7219AndStart(displayInfo["max7219"]);
     }else if (displayType == "ws2812b"){
@@ -288,12 +288,15 @@ void HardwareConfig::loadMax7219AndStart(JsonObject max7219){
 
 
 
-void HardwareConfig::loadHub75AndStart(JsonObject hub75){
+void HardwareConfig::loadHub75AndStart(JsonObject hub75, bool compatibilityMode){
+    JsonObject pins = hub75;
     if (!hub75.containsKey("pins")){
-        OledScreen::CriticalFail("Missing 'pins' in hub75 display");
+        if (!hub75.containsKey("dma_r1")){
+            OledScreen::CriticalFail("Missing 'pins' in hub75 display");
+        }
     }
 
-    JsonObject pins = hub75["pins"];
+    pins = hub75["pins"];
 
     if (pins.containsKey("dma_r1")) panelConfig.gpio.r1 = checkInvalidPin(pins["dma_r1"]);
     if (pins.containsKey("dma_g1")) panelConfig.gpio.g1 = checkInvalidPin(pins["dma_g1"]);
@@ -313,19 +316,28 @@ void HardwareConfig::loadHub75AndStart(JsonObject hub75){
     if (hub75.containsKey("width")){
         panelConfig.mx_width = hub75["width"];
     }else{
-        OledScreen::CriticalFail("Missing 'width' in display");
+        if (!compatibilityMode){
+            OledScreen::CriticalFail("Missing 'width' in display");
+        }
+        panelConfig.mx_height = HardwareConfig::HardwareCanvasWidth;
     }
     
     if (hub75.containsKey("height")) {
         panelConfig.mx_height = hub75["height"];
     }else{
-        OledScreen::CriticalFail("Missing 'height' in display");
+        if (!compatibilityMode){
+            OledScreen::CriticalFail("Missing 'height' in display");
+        }
+        panelConfig.mx_height = HardwareConfig::HardwareCanvasHeight;
     }
 
     if (hub75.containsKey("panels")) {
         panelConfig.chain_length = hub75["panels"];
     }else{
-        OledScreen::CriticalFail("Missing 'panels' in display");
+        if (!compatibilityMode){
+            OledScreen::CriticalFail("Missing 'panels' in display");
+        }
+        panelConfig.chain_length = 2;
     }
 
     if (hub75.containsKey("colordepth")) {
@@ -364,17 +376,20 @@ bool HardwareConfig::LoadConfigs(){
     }
 
     if (hardwareConfigJson.containsKey("canvas_width")) {
-        HardwareConfig::HardwarePanelWidth = hardwareConfigJson["canvas_width"].as<int>();
+        HardwareConfig::HardwareCanvasWidth = hardwareConfigJson["canvas_width"].as<int>();
     }
     if (hardwareConfigJson.containsKey("canvas_height")) {
-        HardwareConfig::HardwarePanelHeight = hardwareConfigJson["canvas_height"].as<int>();
+        HardwareConfig::HardwareCanvasHeight = hardwareConfigJson["canvas_height"].as<int>();
     }
 
-    Logger::Info("Canvas size will be %dx%d", HardwareConfig::HardwarePanelWidth, HardwareConfig::HardwarePanelHeight);
+    Logger::Info("Canvas size will be %dx%d", HardwareConfig::HardwareCanvasWidth, HardwareConfig::HardwareCanvasHeight);
 
     if (hardwareConfigJson.containsKey("display")) {
         Logger::Info("Loading display info");
         loadAndParseDisplay(hardwareConfigJson["display"]);
+    }else if (hardwareConfigJson.containsKey("hub75")) { //Backward compatibility
+        loadHub75AndStart(hardwareConfigJson["hub75"], true);
+        Devices::Display->mirrorHalf = true;
     }else{
         Devices::Display = new EmptyDisplay();
         Logger::Info("NO DISPLAY DEFINED!");

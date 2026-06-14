@@ -1245,9 +1245,8 @@ Creates a new keyframe. Parameters depend on the type of operation being animate
 - `VCC_THRESHOLD_HALT`: Voltage below which the system halts to prevent damage.
 - `OLED_SCREEN_WIDTH`: Width of the internal OLED screen in pixels.
 - `OLED_SCREEN_HEIGHT`: Height of the internal OLED screen in pixels.
-- `PANEL_WIDTH`: Width of the HUB75 panel in pixels.
-- `PANEL_HEIGHT`: Height of the HUB75 panel in pixels.
-- `PANEL_CHAIN`: Number of panels chained together.
+- `CANVAS_WIDTH`: Width of the HUB75 panel in pixels.
+- `CANVAS_HEIGHT`: Height of the HUB75 panel in pixels.
 - `POWER_MODE_NONE`: Ignore any powering behavior.
 - `POWER_MODE_USB_5V`: Power mode for USB 5V input.
 - `POWER_MODE_USB_9V`: Power mode for USB 9V PD input.

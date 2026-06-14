@@ -16,13 +16,13 @@ void ModelHandler::RenderModels(std::vector<Model*> mdls, uint8_t *bitmap){
 
 void ModelHandler::RenderScene(std::vector<Model*> mdls){
     Devices::Display->startWrite();
-    memset(pixelBitmap, 0,  PANEL_HEIGHT * (PANEL_WIDTH/8) * sizeof(uint8_t));
+    memset(pixelBitmap, 0,  CANVAS_HEIGHT * (CANVAS_WIDTH/8) * sizeof(uint8_t));
     uint8_t r, g, b;
     Devices::Display->color565to888(0, r, g, b);
     int byteIdOled = 0;
     uint8_t* nextId = OledScreen::DisplayFace[(OledScreen::screenFlipId+1)%2];
-    for (uint16_t y = 0; y < PANEL_HEIGHT; y++) {
-        for (uint16_t x = 0; x < PANEL_WIDTH; x++) {
+    for (uint16_t y = 0; y < CANVAS_HEIGHT; y++) {
+        for (uint16_t x = 0; x < CANVAS_WIDTH; x++) {
             Devices::Display->setPixelWithFlip(x, y, r, g, b, FlipConfig::DefaultFlipConfig);
             nextId[byteIdOled] = 0;
             byteIdOled++;

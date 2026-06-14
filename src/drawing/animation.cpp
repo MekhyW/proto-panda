@@ -135,7 +135,7 @@ void Animation::adjustColor(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r,
 
 void Animation::EnableFrameBuffer(bool enable){
     if (enable && m_frameBuffer == nullptr){
-        m_frameBuffer = (uint16_t*)ps_malloc(sizeof(uint16_t) * PANEL_WIDTH * PANEL_HEIGHT);
+        m_frameBuffer = (uint16_t*)ps_malloc(sizeof(uint16_t) * CANVAS_WIDTH * CANVAS_HEIGHT);
     }
     m_copyToFrameBuffer = enable;
 }
@@ -184,7 +184,7 @@ void Animation::LoadFrameAsTexture(int i){
     }
 
     if (m_texture == nullptr){
-        m_texture = (uint16_t*)ps_malloc(sizeof(uint16_t) * PANEL_WIDTH * PANEL_HEIGHT);
+        m_texture = (uint16_t*)ps_malloc(sizeof(uint16_t) * CANVAS_WIDTH * CANVAS_HEIGHT);
         ShaderProcessor::SetTextureAddr(m_texture);
     }
 
@@ -216,13 +216,13 @@ void Animation::LoadFrameAsTexture(int i){
                 
                 
                 for (int iddx=0;iddx<lenght;iddx++){
-                    m_texture[y * PANEL_WIDTH + x] = color;
+                    m_texture[y * CANVAS_WIDTH + x] = color;
                     x++;
-                    if (x >= PANEL_WIDTH){
+                    if (x >= CANVAS_WIDTH){
                         x = 0;
                         y++;
                         
-                        if (y >= PANEL_HEIGHT){
+                        if (y >= CANVAS_HEIGHT){
                             g_frameRepo.freeFile();
                             return;
                         }
@@ -246,9 +246,9 @@ void Animation::LoadFrameAsTexture(int i){
         for (int16_t idx=begin;idx<finish;idx++){
             uint16_t color = readBuffer[idx];
             
-            m_texture[y * PANEL_WIDTH + x] = color;
+            m_texture[y * CANVAS_WIDTH + x] = color;
             x++;
-            if (x >= PANEL_WIDTH){
+            if (x >= CANVAS_WIDTH){
                 x = 0;
                 y++;
             }
@@ -353,11 +353,11 @@ void Animation::DrawFrame(int i){
                 for (int iddx=0;iddx<lenght;iddx++){
                     drawPixelAt(x, y, color, r, g, b, byteIdOled, flipSettings);
                     x++;
-                    if (x >= PANEL_WIDTH){
+                    if (x >= CANVAS_WIDTH){
                         x = 0;
                         y++;
                         
-                        if (y >= PANEL_HEIGHT){
+                        if (y >= CANVAS_HEIGHT){
                             goto finished;
                         }
                     }
@@ -381,7 +381,7 @@ void Animation::DrawFrame(int i){
             adjustColor(x, y, color, r, g, b, frameId);
             drawPixelAt(x, y, color, r, g, b, byteIdOled, flipSettings);
             x++;
-            if (x >= PANEL_WIDTH){
+            if (x >= CANVAS_WIDTH){
                 x = 0;
                 y++;
             }
@@ -431,11 +431,11 @@ void Animation::Update(uint32_t dt){
     }else{
         if (!m_onBlankScreen){
             Devices::Display->clearScreen();
-            Devices::Display->drawLine(0          , 0            , PANEL_WIDTH    , PANEL_HEIGHT  , Devices::Display->color565(255,255,255));
-            Devices::Display->drawLine(0          ,  PANEL_HEIGHT, PANEL_WIDTH    , 0             , Devices::Display->color565(255,255,255));
+            Devices::Display->drawLine(0          , 0            , CANVAS_WIDTH    , CANVAS_HEIGHT  , Devices::Display->color565(255,255,255));
+            Devices::Display->drawLine(0          ,  CANVAS_HEIGHT, CANVAS_WIDTH    , 0             , Devices::Display->color565(255,255,255));
 
-            Devices::Display->drawLine(PANEL_WIDTH, 0            , PANEL_WIDTH*2  , PANEL_HEIGHT  , Devices::Display->color565(255,255,255));
-            Devices::Display->drawLine(PANEL_WIDTH, PANEL_HEIGHT , PANEL_WIDTH*2  , 0             , Devices::Display->color565(255,255,255));
+            Devices::Display->drawLine(CANVAS_WIDTH, 0            , CANVAS_WIDTH*2  , CANVAS_HEIGHT  , Devices::Display->color565(255,255,255));
+            Devices::Display->drawLine(CANVAS_WIDTH, CANVAS_HEIGHT , CANVAS_WIDTH*2  , 0             , Devices::Display->color565(255,255,255));
             m_needFlip = true;
         }
         xSemaphoreGive(m_mutex);

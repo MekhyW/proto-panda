@@ -797,8 +797,8 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("VCC_THRESHOLD_HALT", VCC_THRESHOLD_HALT);
   m_lua->setConstant("OLED_SCREEN_WIDTH", OLED_SCREEN_WIDTH);
   m_lua->setConstant("OLED_SCREEN_HEIGHT", OLED_SCREEN_HEIGHT);
-  m_lua->setConstant("PANEL_WIDTH", PANEL_WIDTH);
-  m_lua->setConstant("PANEL_HEIGHT", PANEL_HEIGHT);
+  m_lua->setConstant("CANVAS_WIDTH", CANVAS_WIDTH);
+  m_lua->setConstant("CANVAS_HEIGHT", CANVAS_HEIGHT);
   m_lua->setConstant("MAX_LED_GROUPS", MAX_LED_GROUPS);
   m_lua->setConstant("EDIT_MODE_PIN", EDIT_MODE_PIN);
   #ifdef ENABLE_EDIT_MODE
@@ -807,7 +807,6 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("ENABLE_EDIT_MODE", 0);
   #endif
   m_lua->setConstant("EDIT_ENABLE_LOGIC_LEVEL", EDIT_ENABLE_LOGIC_LEVEL);
-  m_lua->setConstant("PANEL_CHAIN", PANEL_CHAIN);
 
   m_lua->setConstant("COLOR_MODE_RGB", (int)COLOR_MODE_RGB);
   m_lua->setConstant("COLOR_MODE_RGB", (int)COLOR_MODE_RGB);

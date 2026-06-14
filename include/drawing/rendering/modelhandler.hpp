@@ -10,7 +10,7 @@ class ModelHandler {
         }
         //Used to mark pixels that were drawn and dont need to draw twice
         void Allocate(){
-            pixelBitmap = (uint8_t*)heap_caps_aligned_alloc( 32,  PANEL_HEIGHT * (PANEL_WIDTH/8), MALLOC_CAP_8BIT);
+            pixelBitmap = (uint8_t*)heap_caps_aligned_alloc( 32,  CANVAS_HEIGHT * (CANVAS_WIDTH/8), MALLOC_CAP_8BIT);
         }
     
         void RenderScene(std::vector<Model*> mdls);
@@ -22,7 +22,7 @@ class ModelHandler {
         };
                     
         inline bool IRAM_ATTR MarkPixel(int x, int y) {
-            uint8_t* bytePtr = &pixelBitmap[(y * (PANEL_WIDTH/8)) + (x >> 3)];
+            uint8_t* bytePtr = &pixelBitmap[(y * (CANVAS_WIDTH/8)) + (x >> 3)];
             uint8_t mask = 1 << (x & 7);
             if (*bytePtr & mask) return true;
             *bytePtr |= mask;
