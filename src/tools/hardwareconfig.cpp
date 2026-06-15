@@ -7,6 +7,10 @@
 #include "lua/luainterface.hpp"
 #include "drawing/ledstrip.hpp"
 
+#include "tools/displays/hub75.hpp"
+#include "tools/displays/max7219.hpp"
+#include "tools/displays/ws2812.hpp"
+
 #if PANDA_SD_MODE == 1
 #include <SD.h>
 #elif PANDA_SD_MODE == 2
@@ -386,7 +390,7 @@ bool HardwareConfig::LoadConfigs(){
 
     if (hardwareConfigJson.containsKey("display")) {
         Logger::Info("Loading display info");
-        loadAndParseDisplay(hardwareConfigJson["display"]);
+        Devices::Display = new EmptyDisplay();
     }else if (hardwareConfigJson.containsKey("hub75")) { //Backward compatibility
         loadHub75AndStart(hardwareConfigJson["hub75"], true);
         Devices::Display->mirrorHalf = true;

@@ -106,7 +106,7 @@ Cache file version to invalidate cache in case of firmware update
     Led strip
 */
 
-#define LED_STRIP_PIN_1 45
+#define LED_STRIP_PIN_1 41
 #define LED_STRIP_PIN_2 42
 #define LED_STRIP_TYPE WS2812B
 #define MAX_LED_GROUPS 16

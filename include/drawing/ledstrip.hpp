@@ -1,7 +1,9 @@
 #pragma once
 
-#include "FastLED.h"
+
 #include "config.hpp"
+#include "FastLED.h"
+
 #include <stack>
 
 
