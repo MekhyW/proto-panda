@@ -390,7 +390,7 @@ bool HardwareConfig::LoadConfigs(){
 
     if (hardwareConfigJson.containsKey("display")) {
         Logger::Info("Loading display info");
-        Devices::Display = new EmptyDisplay();
+        loadAndParseDisplay(hardwareConfigJson["display"]);
     }else if (hardwareConfigJson.containsKey("hub75")) { //Backward compatibility
         loadHub75AndStart(hardwareConfigJson["hub75"], true);
         Devices::Display->mirrorHalf = true;
