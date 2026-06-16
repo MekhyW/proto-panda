@@ -9,6 +9,28 @@
         "type": "hub75",
         "enabled": true,
         "mirrorOtherHalf": true,
+        "hub75": {
+            "width": 64,
+            "height": 32,
+            "panels": 2,
+            "horizontal_panel_count": 2,
+            "colordepth": 12,
+            "pins": {
+                "dma_r1": 12,
+                "dma_r2": 20,
+                "dma_g1": 10,
+                "dma_g2": 18,
+                "dma_b1": 11,
+                "dma_b2": 19,
+                "dma_a": 17,
+                "dma_b": 16,
+                "dma_c": 15,
+                "dma_d": 7,
+                "dma_lat": 5,
+                "dma_oe": 4,
+                "dma_clk": 6
+            }
+        },
         "max7219": {
             "panels": 8,
             "horizontal_panel_count": 4,
@@ -32,30 +54,7 @@
                     "canvas_y": 8
                 }
             ]  
-        },
-        "hub75": {
-            "width": 64,
-            "height": 32,
-            "panels": 2,
-            "horizontal_panel_count": 2,
-            "colordepth": 12,
-            "pins": {
-                "dma_r1": 12,
-                "dma_r2": 20,
-                "dma_g1": 10,
-                "dma_g2": 18,
-                "dma_b1": 11,
-                "dma_b2": 19,
-                "dma_a": 17,
-                "dma_b": 16,
-                "dma_c": 15,
-                "dma_d": 7,
-                "dma_lat": 5,
-                "dma_oe": 4,
-                "dma_clk": 6
-            }
-        }
-        
+        }        
     }, 
 
     "servos": {
@@ -70,12 +69,12 @@
             {
                 "_comment": "If pin_side is undefined, it defaults to 'left'",
                 "pin_side": "left",
-                "led_count": 16,
+                "led_count": 64,
                 "mode": "pride"
             },
             {
                 "pin_side": "right",
-                "led_count": 16,
+                "led_count": 64,
                 "mode": "pride"
             }
         ]
