@@ -799,6 +799,11 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("OLED_SCREEN_HEIGHT", OLED_SCREEN_HEIGHT);
   m_lua->setConstant("CANVAS_WIDTH", CANVAS_WIDTH);
   m_lua->setConstant("CANVAS_HEIGHT", CANVAS_HEIGHT);
+  m_lua->setConstant("PANEL_WIDTH", CANVAS_WIDTH);
+  m_lua->setConstant("PANEL_HEIGHT", CANVAS_HEIGHT);
+  m_lua->setConstant("DEFAULT_CANVAS_WIDTH", DEFAULT_CANVAS_WIDTH);
+  m_lua->setConstant("DEFAULT_CANVAS_HEIGHT", DEFAULT_CANVAS_HEIGHT);
+
   m_lua->setConstant("MAX_LED_GROUPS", MAX_LED_GROUPS);
   m_lua->setConstant("EDIT_MODE_PIN", EDIT_MODE_PIN);
   #ifdef ENABLE_EDIT_MODE
@@ -843,8 +848,6 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("ONLOW_WE" , (int)ONLOW_WE );
   m_lua->setConstant("ONHIGH_WE", (int)ONHIGH_WE);
 
-
-
   m_lua->setConstant("KEYFRAME_TRANSLATE",       (int)KEYFRAME_TRANSLATE);
   m_lua->setConstant("KEYFRAME_ROTATE",          (int)KEYFRAME_ROTATE);
   m_lua->setConstant("KEYFRAME_SCALE",           (int)KEYFRAME_SCALE);
@@ -853,9 +856,6 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("KEYFRAME_VISIBILITY",      (int)KEYFRAME_VISIBILITY);
   m_lua->setConstant("KEYFRAME_SINE",            (int)KEYFRAME_SINE);
   m_lua->setConstant("KEYFRAME_SHADER",          (int)KEYFRAME_SHADER);
-
-
-
 
   m_lua->setConstant("SHADER_NONE",         (int)SHADER_NONE);
   m_lua->setConstant("SHADER_RAINBOW",      (int)SHADER_RAINBOW);

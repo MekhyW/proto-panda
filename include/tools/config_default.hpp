@@ -134,6 +134,9 @@ Servos
 /*
     DMA display, or actual display
 */
+#define DEFAULT_CANVAS_WIDTH 64
+#define DEFAULT_CANVAS_HEIGHT 32
+
 
 #define CANVAS_WIDTH (HardwareConfig::CanvasWidth())      // Number of pixels wide of each INDIVIDUAL sprite
 #define CANVAS_HEIGHT (HardwareConfig::CanvasHeight())     // Number of pixels tall of each INDIVIDUAL sprite

@@ -21,9 +21,8 @@
 
 extern LedStrip g_leds;
 
-
-int HardwareConfig::HardwareCanvasWidth = 64;
-int HardwareConfig::HardwareCanvasHeight = 32;
+int HardwareConfig::HardwareCanvasWidth = DEFAULT_CANVAS_WIDTH;
+int HardwareConfig::HardwareCanvasHeight = DEFAULT_CANVAS_HEIGHT;
 
 const uint8_t invalidPins[] = {
     I2C_SDA,
