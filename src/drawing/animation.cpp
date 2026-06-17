@@ -273,22 +273,22 @@ void Animation::drawFFTOverlay(FlipConfig flipSettings, int16_t frameId) {
         barH = constrain(barH, 0, SCREEN_H);
         if (barH == 0) continue;
         
-        // Calculate HSV color
-        uint8_t h = (uint8_t)((float)i / COUNT * 255.0f); // Hue 0-255
-
+        uint8_t h = (uint8_t)((float)i / COUNT * 255.0f);
         uint8_t r, g, b;
         ShaderProcessor::Hsv2Rgb(h, 255, 255, r, g, b);
         
-        // Draw each pixel in the bar
         for (int yOffset = 0; yOffset < barH; yOffset++) {
-            int16_t x = i * BAR_W;
             int16_t y = SCREEN_H - barH + yOffset;
-            
-            uint16_t color = Devices::Display->color565(r, g, b);
-            adjustColor(x, y, color, r, g, b, frameId);
-            
-            int byteIdOled = y * CANVAS_WIDTH + x;  // Calculate byte offset
-            drawPixelAt(x, y, color, r, g, b, byteIdOled, flipSettings);
+
+            for (int xOffset = 0; xOffset < BAR_W; xOffset++) {
+                int16_t x = i * BAR_W + xOffset;
+
+                uint16_t color = Devices::Display->color565(r, g, b);
+                adjustColor(x, y, color, r, g, b, frameId);
+
+                int byteIdOled = y * CANVAS_WIDTH + x;
+                drawPixelAt(x, y, color, r, g, b, byteIdOled, flipSettings);
+            }
         }
     }
 }

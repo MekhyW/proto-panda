@@ -94,9 +94,9 @@ function _M.setup(expressions)
     end
 
     if cfg.fft and cfg.fft.enabled then
-        _M.settings.addElement(function() return "FFT Overlay ["..(_M.has_boop and "ON" or "OFF").."]" end,  function()
+        _M.settings.addElement(function() return "FFT Overlay ["..(_M.has_fft_overlay and "ON" or "OFF").."]" end,  function()
             if _M.has_fft_overlay  then  
-                _M.has_fft_overlay = nil
+                _M.has_fft_overlay = false
             else 
                 _M.has_fft_overlay = true
             end

@@ -24,11 +24,14 @@ function _M.load()
 	cfg.noise_threshold = cfg.noise_threshold or 2000
 	cfg.band_count = cfg.band_count or 16
 
-	cfg.fft.enabled = beginFft(cfg.gpio, cfg.samples, cfg.sampling_frequency, cfg.noise_threshold, cfg.band_count)
+	fft.enabled = beginFft(cfg.gpio, cfg.samples, cfg.sampling_frequency, cfg.noise_threshold, cfg.band_count)
 
-	if not cfg.fft.enabled then 
+	if not fft.enabled then 
 		generic.displaySplashMessage("FFT FAILED")
 		delay(2000)
 	end
+
+	startFft()
+
 end
 return _M
