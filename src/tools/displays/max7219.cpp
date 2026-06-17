@@ -69,26 +69,28 @@ void MAX7219Display::setPixelWithFlip(uint16_t xIn, uint16_t yIn, uint8_t red, u
     if (xIn >= halfPosition){
         return;
     }
+
+    int x = xIn;
+    int y = yIn;
+    if (!view.getPosition(xIn, y, x, y)){
+        return;
+    }
     
     if (flipSettings.flipLeft){
-        setPixelAt((halfPosition-1)-xIn, yIn, color);
+        setPixelAt((halfPosition-1)-x, y, color);
     }else{
-        setPixelAt(xIn, yIn, color);
+        setPixelAt(x, y, color);
     }
 
     if (flipSettings.flipRight){
-        setPixelAt((halfPosition+halfPosition-1)-xIn, yIn, color);
+        setPixelAt((m_lenght-1)-x, y, color);
     }else{
-        setPixelAt((halfPosition)+xIn, yIn, color);
+        setPixelAt((halfPosition)+x, y, color);
     }
 }
 
-void MAX7219Display::setPixelAt(uint16_t xIn, uint16_t yIn, uint8_t color) {
-    int x = xIn;
-    int y = yIn;
-    if (!view.getPosition(xIn, yIn, x, y)){
-        return;
-    }
+void MAX7219Display::setPixelAt(uint16_t x, uint16_t y, uint8_t color) {
+
 
     // Check bounds
     if (x >= m_width || y >= m_height) {
