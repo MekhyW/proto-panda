@@ -173,7 +173,7 @@ void HardwareConfig::loadWS2812BAndStart(JsonObject ws2812b){
 
  
 
-    uint16_t width,height,brightness, panels, horizontal_panel_count;
+    uint16_t width,height,brightness, panels, horizontal_panel_count=0;
     if (ws2812b.containsKey("maxtrix_width")){
         width = ws2812b["maxtrix_width"];
     }else{
@@ -226,7 +226,7 @@ void HardwareConfig::loadMax7219AndStart(JsonObject max7219){
     int csPin;
     int dataInPin;
     int clockPin;
-    int horizontal_panel_count;
+    int horizontal_panel_count=0;
 
     if (!max7219.containsKey("pins")){
         OledScreen::CriticalFail("Missing 'pins' in max7219 display");
@@ -259,7 +259,7 @@ void HardwareConfig::loadMax7219AndStart(JsonObject max7219){
     }
 
     if (max7219.containsKey("horizontal_panel_count")){
-        horizontal_panel_count = max7219["panhorizontal_panel_countels"];
+        horizontal_panel_count = max7219["horizontal_panel_count"];
     }else{
         OledScreen::CriticalFail("Missing 'horizontal_panel_count' in display");
     }
@@ -271,7 +271,7 @@ void HardwareConfig::loadMax7219AndStart(JsonObject max7219){
     }
 
     //Todo check avaliable ram
-    Devices::Display = new MAX7219Display(panels, csPin, dataInPin, clockPin);
+    Devices::Display = new MAX7219Display(panels, horizontal_panel_count, csPin, dataInPin, clockPin);
     if (Devices::Display == nullptr){
         Logger::Info("Failed to start DMA display");
         return;

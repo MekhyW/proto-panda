@@ -21,27 +21,25 @@ public:
                     int w,     int h) {
         if (m_count < MAX_VIEWS) {
             View& v = m_views[m_count++];
-            v.dispX = srcX;   v.dispY = srcY;
-            v.srcX  = dispX;  v.srcY  = dispY; 
+            v.dispX = dispX;   v.dispY = dispY;
+            v.srcX  = srcX;  v.srcY  = srcY; 
             v.w     = w;      v.h     = h;
         }
     }
 
-    inline bool getPosition(int x, int y,
-                            int& tx, int& ty) const {
-        if (m_count == 0){
-            tx = x;
-            ty = y;
+    inline bool getPosition(int x, int y, int& tx, int& ty) const {
+        if (m_count == 0) {
+            tx = x; ty = y;
             return true;
         }
         const View* v   = m_views;
         const View* end = v + m_count;
         for (; v != end; ++v) {
-            int dx = ((int)x) - v->dispX;
-            int dy = ((int)y) - v->dispY;
-            if (dx < v->w && dy < v->h) {
-                tx = v->srcX + dx;
-                ty = v->srcY + dy;
+            int dx = x - v->srcX;   // offset within canvas region
+            int dy = y - v->srcY;
+            if (dx >= 0 && dy >= 0 && dx < v->w && dy < v->h) {
+                tx = v->dispX + dx;  // map to display position
+                ty = v->dispY + dy;
                 return true;
             }
         }

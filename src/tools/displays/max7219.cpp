@@ -1,12 +1,9 @@
 #include "tools/displays/max7219.hpp"
 #include <SPI.h>
 
-
 SPIClass spi3(FSPI);
 
-
 bool MAX7219Display::begin(){
-
     pinMode(m_csPin, OUTPUT);
     digitalWrite(m_csPin, LOW);
 
@@ -24,10 +21,12 @@ bool MAX7219Display::begin(){
     setBrightness8(0);
 
     flipDma();
+    transferAll(0x0a, 64);
     return true;
 }
+
 void MAX7219Display::setBrightness8(const uint8_t b){
-    transferAll(0x0a, b);
+    //transferAll(0x0a, b);
     return;
 }
 
@@ -38,14 +37,13 @@ void MAX7219Display::clearScreen(){
 
 void MAX7219Display::transferAll(uint8_t address, uint8_t data) {
     digitalWrite(m_csPin, LOW);
-    for (int i = 0; i <= m_panels; i++) {  // reverse order
+    for (int i = 0; i < m_panels; i++) {
         transfer(address, data);
     }
     digitalWrite(m_csPin, HIGH);
 }
 
 void MAX7219Display::initialize() {
-    
     transferAll(0x0b, 0x07);  // scan limit
     transferAll(0x09, 0x00);  // decode mode
     transferAll(0x0c, 0x01);  // shutdown
@@ -68,6 +66,10 @@ void MAX7219Display::setPixelWithFlip(uint16_t xIn, uint16_t yIn, uint8_t red, u
         return;
     }
 
+    if (xIn >= halfPosition){
+        return;
+    }
+    
     if (flipSettings.flipLeft){
         setPixelAt((halfPosition-1)-xIn, yIn, color);
     }else{
@@ -87,21 +89,24 @@ void MAX7219Display::setPixelAt(uint16_t xIn, uint16_t yIn, uint8_t color) {
     if (!view.getPosition(xIn, yIn, x, y)){
         return;
     }
-    if (!mirrorHalf){
-        if (xIn >= m_lenght){
-            return;
-        }
-    }else{
-        if (xIn >= halfPosition){
-            return;
-        }
-    }
-    if (yIn >= MAX7219_SIZE){
+
+    // Check bounds
+    if (x >= m_width || y >= m_height) {
         return;
     }
-
-    uint16_t bufferIndex = y + (x / MAX7219_SIZE) * MAX7219_SIZE;
-    uint8_t bitPosition = 7 - (x % MAX7219_SIZE);
+       
+    // Calculate which panel this pixel belongs to (2D layout)
+    uint16_t panelRow = y / MAX7219_SIZE;
+    uint16_t panelCol = x / MAX7219_SIZE;
+    uint16_t panelIndex = (panelRow * m_horizontalPanels) + panelCol;
+    
+    // Calculate position within the panel
+    uint16_t xInPanel = x % MAX7219_SIZE;
+    uint16_t yInPanel = y % MAX7219_SIZE;
+    
+    // Buffer index: row within panel + (panelIndex * 8 rows)
+    uint16_t bufferIndex = yInPanel + (panelIndex * MAX7219_SIZE);
+    uint8_t bitPosition = 7 - xInPanel;
 
     if (color != 0) {
         m_frameBuffer[bufferIndex] |= (1 << bitPosition);
@@ -114,13 +119,10 @@ void MAX7219Display::flipDma() {
     for (uint8_t row = 0; row < 8; row++) {
         uint8_t reg = row + 1;
         digitalWrite(m_csPin, LOW);
-        
-        for (int panel = 0; panel < m_panels; panel++) {  // 0 → n-1 instead of n-1 → 0
+        for (int panel = 0; panel < m_panels; panel++) {
             uint16_t bufferIndex = row + panel * 8;
             transfer(reg, m_frameBuffer[bufferIndex]);
         }
-        
         digitalWrite(m_csPin, HIGH);
     }
 }
-
