@@ -4,8 +4,6 @@
 #include "tools/devices.hpp"
 
 
-
-
 Keyframe Keyframe::KeyFrameMaker(int mode, uint32_t at, Vec2f val, Vec2f cntr, uint16_t color , bool igInterp, bool dynamicCenterP){
     Keyframe kf;
     kf.type = (KeyframeType)mode;
@@ -87,7 +85,11 @@ void KeyframeTrack::Reserve(){
 }
 
 KeyframeAnimation* KeyframePlayer::NewKeyframeAnimation(uint32_t duration){
-    KeyframeAnimation* kf = new KeyframeAnimation();
+    KeyframeAnimation* kf = (KeyframeAnimation*)ps_malloc(sizeof(KeyframeAnimation));
+    #ifndef __INTELLISENSE__
+    //This code will be compiled. But for some reason intellisense claims its invalid. So i'm using this to avoid visual warning in the IDE
+    new(kf) KeyframeAnimation(); // calls constructor
+    #endif
     kf->duration = duration;
 
     int idx = AddKeyframeAnimation(kf);

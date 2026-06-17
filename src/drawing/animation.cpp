@@ -259,7 +259,7 @@ void Animation::LoadFrameAsTexture(int i){
 }
 
 void Animation::Allocate(){
-    Animation::buffer = new unsigned char[FILE_SIZE];
+    Animation::buffer = (unsigned char*)ps_malloc(sizeof(unsigned char) * FILE_SIZE);
 }
 
 void Animation::drawFFTOverlay(FlipConfig flipSettings, int16_t frameId) {

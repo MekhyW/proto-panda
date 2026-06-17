@@ -44,6 +44,18 @@ class Model {
         Model():triangleCount(0),aux1(nullptr),aux2(nullptr),aux3(nullptr),color(nullptr),accumulatedOperation(true),batchOperations(false),visible(true), m_shader(SHADER_NONE),shaderStrenght(1.0f){
             bones.setModel(this);
         };
+        void Clear(){
+            triangleCount = 0;
+            aux1 = nullptr;
+            aux2 = nullptr;
+            aux3 = nullptr;
+            color = nullptr;
+            accumulatedOperation = true;
+            batchOperations = false;
+            visible = true;
+            m_shader = SHADER_NONE;
+            shaderStrenght = 1.0f;
+        }
         bool Begin(int sz);
         void Free();
         void Recalculate();

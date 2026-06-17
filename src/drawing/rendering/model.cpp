@@ -640,8 +640,11 @@ Model* ModelDict::LoadModel(ModelData modelInfo, std::string name){
     if (m_modelsMap[name] != nullptr){
         return nullptr;
     }
-
-    Model *mem = new Model();
+    Model *mem = (Model*)ps_malloc(sizeof(Model));
+    #ifndef __INTELLISENSE__
+    //This code will be compiled. But for some reason intellisense claims its invalid. So i'm using this to avoid visual warning in the IDE
+    new (mem) Model();
+    #endif
     int tsize = modelInfo.color.size();
     mem->Begin(tsize);
     for (int i=0;i<tsize;i++){

@@ -141,7 +141,11 @@ EspFile *custom_fopen(lua_State *L, const char* filename, const char *mode){
   if (filename == NULL){
     return NULL;
   }
-  File *myFile = new File(PANDA_SD.open(filename, mode));
+  
+  File *myFile = (File*)ps_malloc(sizeof(File));
+  #ifndef __INTELLISENSE__
+  new (myFile) File(PANDA_SD.open(filename, mode));
+  #endif
   if (*myFile){
     EspFile *fp = new EspFile;
     fp->lastUngetC = -1;

@@ -396,8 +396,11 @@ SizedArray *decodePng(std::string filename)
     OledScreen::CriticalFail("Failed to allocate");
     for (;;){}
   }
-
-  SizedArray *aux = new SizedArray();
+  SizedArray *aux = (SizedArray*)ps_malloc(sizeof(SizedArray));
+  #ifndef __INTELLISENSE__
+  //This code will be compiled. But for some reason intellisense claims its invalid. So i'm using this to avoid visual warning in the IDE
+  new (aux) SizedArray();
+  #endif
   aux->data = decodedData;
   aux->size =  x * y;
   aux->deleteAfterInsertion = heap_caps_free;
@@ -886,7 +889,7 @@ void LuaInterface::RegisterConstants()
 
 bool LuaInterface::Start()
 {
-
+  
   m_lua = new (LuaWrapper);
   if (!m_lua)
   {
@@ -982,7 +985,13 @@ bool LuaInterface::Start()
 
   static LuaCFunctionLambda ThisGc = [](lua_State* L) -> int{ return LuaCaller::GC<KeyframeTrack>(L); };
 
-  ClassRegister<KeyframeTrack>::RegisterClassType(_state,"KeyframeTrack", [](lua_State* L) -> KeyframeTrack* { return new KeyframeTrack();}, &ThisGc ); 
+  ClassRegister<KeyframeTrack>::RegisterClassType(_state,"KeyframeTrack", [](lua_State* L) -> KeyframeTrack* { 
+    KeyframeTrack *kt = (KeyframeTrack*)ps_malloc(sizeof(KeyframeTrack));
+    #ifndef __INTELLISENSE__
+    //This code will be compiled. But for some reason intellisense claims its invalid. So i'm using this to avoid visual warning in the IDE
+    new (kt) KeyframeTrack();
+    #endif
+    return new KeyframeTrack();}, &ThisGc ); 
   ClassRegister<KeyframeTrack>::RegisterClassMethod(_state,"KeyframeTrack","Reset", &KeyframeTrack::Reset);
   ClassRegister<KeyframeTrack>::RegisterClassMethod(_state,"KeyframeTrack","SetResource", &KeyframeTrack::SetResource);
   ClassRegister<KeyframeTrack>::RegisterClassMethod(_state,"KeyframeTrack","AddKeyFrame", &KeyframeTrack::AddKeyFrame);
