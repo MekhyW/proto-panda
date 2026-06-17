@@ -12,7 +12,7 @@ Cache file version to invalidate cache in case of firmware update
     With this pin on HIGH the buck converter will start regulating the USB/Battery input
     to the desired 5v out for the panels.
 */
-#define USE_ENABLE_PIN 
+//#define USE_ENABLE_PIN 
 #define PIN_ENABLE_REGULATOR 13
 #define BUILT_IN_POWER_MODE POWER_MODE_NONE
 /*

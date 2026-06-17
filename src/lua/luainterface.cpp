@@ -604,6 +604,18 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("drawPanelFace", DrawFace);
 
 
+  m_lua->FuncRegisterFromObjectOpt("startFft", &g_fft, &FFT::start);
+  m_lua->FuncRegisterFromObjectOpt("stopFft", &g_fft, &FFT::stop);
+  m_lua->FuncRegisterFromObjectOpt("setManaged", &g_fft, &FFT::setManaged);
+  m_lua->FuncRegisterFromObjectOpt("deinitFft", &g_fft, &FFT::deinit);
+  m_lua->FuncRegisterFromObjectOpt("updateFft", &g_fft, &FFT::update);
+  m_lua->FuncRegisterFromObjectOpt("isManagedFft", &g_fft, &FFT::isManaged);
+  m_lua->FuncRegisterFromObjectOpt("getBandCountFft", &g_fft, &FFT::getBandCount);
+  m_lua->FuncRegisterFromObjectOpt("isRunningFft", &g_fft, &FFT::isRunning);
+  m_lua->FuncRegisterFromObjectOpt("getBandValueFft", &g_fft, &FFT::getBandValue);
+  m_lua->FuncRegisterFromObjectOpt("begin", &g_fft, &FFT::begin, 16, 2000, 44100, 512, 1);
+
+
   m_lua->FuncRegisterFromObjectOpt("setPanelAnimation", &g_animation, &Animation::SetAnimation, -1, false, -1, 250);
   m_lua->FuncRegisterFromObjectOpt("setPanelModelAnimation", &g_animation, &Animation::SetModelAnimation, -1, false, -1);
 
@@ -612,6 +624,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegisterFromObjectOpt("setInterruptAnimationPin", &g_animation, &Animation::SetInterruptPin);
 
     
+  m_lua->FuncRegisterFromObjectOpt("setFFTOverlay", &g_animation, &Animation::SetFFTOverlay); 
   m_lua->FuncRegisterFromObjectOpt("setAnimationShader", &g_animation, &Animation::SetShader, 1.0f); 
   m_lua->FuncRegisterFromObjectOpt("getAnimationStackSize", &g_animation, &Animation::getAnimationStackSize);   
   m_lua->FuncRegisterFromObjectOpt("setPanelColorMode", &g_animation, &Animation::setColorMode);   

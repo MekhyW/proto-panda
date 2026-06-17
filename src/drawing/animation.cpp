@@ -6,7 +6,7 @@
 #include "drawing/framerepository.hpp"
 #include "drawing/modelanimation/keyframeplayer.hpp"
 #include "tools/storage.hpp"
-
+#include "drawing/rendering/shader.hpp"
 
 #include "FS.h"
 unsigned char* Animation::buffer = nullptr;
@@ -262,6 +262,37 @@ void Animation::Allocate(){
     Animation::buffer = new unsigned char[FILE_SIZE];
 }
 
+void Animation::drawFFTOverlay(FlipConfig flipSettings, int16_t frameId) {
+    const int SCREEN_W = CANVAS_WIDTH;
+    const int SCREEN_H = CANVAS_HEIGHT;
+    const int COUNT    = g_fft.getBandCount(); 
+    const int BAR_W    = SCREEN_W / COUNT; 
+    
+    for (int i = 0; i < COUNT; i++) {
+        int barH = map(g_fft.getBandValue(i), 0, 200000, 0, SCREEN_H);
+        barH = constrain(barH, 0, SCREEN_H);
+        if (barH == 0) continue;
+        
+        // Calculate HSV color
+        uint8_t h = (uint8_t)((float)i / COUNT * 255.0f); // Hue 0-255
+
+        uint8_t r, g, b;
+        ShaderProcessor::Hsv2Rgb(h, 255, 255, r, g, b);
+        
+        // Draw each pixel in the bar
+        for (int yOffset = 0; yOffset < barH; yOffset++) {
+            int16_t x = i * BAR_W;
+            int16_t y = SCREEN_H - barH + yOffset;
+            
+            uint16_t color = Devices::Display->color565(r, g, b);
+            adjustColor(x, y, color, r, g, b, frameId);
+            
+            int byteIdOled = y * CANVAS_WIDTH + x;  // Calculate byte offset
+            drawPixelAt(x, y, color, r, g, b, byteIdOled, flipSettings);
+        }
+    }
+}
+
 void Animation::DrawFrame(int i){
     if (i == 0){
         return;
@@ -388,11 +419,15 @@ void Animation::DrawFrame(int i){
         }
     }
     finished:
+
+    if (m_fftOverlay && g_fft.isRunning()){
+        drawFFTOverlay(flipSettings, frameId);
+    }
+
     Devices::Display->endWrite();
     m_needFlip = true;
     m_frameDrawDuration = micros()-ld;
     m_cycleDuration =  micros()-begin;
-
 }
 
 bool Animation::PopAnimation(){
@@ -411,6 +446,10 @@ bool Animation::PopAnimation(){
 void Animation::MakeFlip(){
     Devices::Display->flipDma();
     m_needFlip = false;
+}
+
+void Animation::SetFFTOverlay(bool set){
+    m_fftOverlay = set;
 }
 
 void Animation::SetShader(int id, float strenght){
@@ -470,14 +509,14 @@ bool Animation::internalUpdate(uint32_t dt, AnimationSequence &running){
         }
         break;
     case ANIMATION_NO_CHANGE:
-        if (m_shader != SHADER_NONE){
+        if (m_shader != SHADER_NONE || m_fftOverlay){
             m_lastFace = running.GetFrameId();
             if (managed){
                 DrawFrame(m_lastFace);
             }
         }
         if (m_needRedraw){
-            m_needRedraw = false;
+            //m_needRedraw = false;
             if (managed){
                 DrawFrame(m_lastFace);
             }

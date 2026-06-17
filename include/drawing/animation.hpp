@@ -10,7 +10,8 @@
 #include "drawing/rendering/modelhandler.hpp"
 #include "drawing/rendering/shader.hpp"
 
-
+#include "tools/fft.hpp"
+extern FFT g_fft;
 
 enum AnimationFrameAction{
     ANIMATION_NO_CHANGE,
@@ -50,7 +51,7 @@ class AnimationSequence{
 
 class Animation{
     public:
-        Animation():m_animations(),m_shader(SHADER_NONE),m_shaderStrenght(1.0f),m_lastFace(0),m_interruptPin(-1),m_colorMode(COLOR_MODE_RGB),m_needFlip(false),m_isManaged(true),m_needRedraw(false),m_onBlankScreen(false),m_copyToFrameBuffer(false),m_frameDrawDuration(0),m_texture(nullptr),m_frameBuffer(nullptr),m_frameLoadDuration(0),m_cycleDuration(0),m_mutex(xSemaphoreCreateMutex()){};
+        Animation():m_animations(),m_shader(SHADER_NONE),m_shaderStrenght(1.0f),m_lastFace(0),m_interruptPin(-1),m_colorMode(COLOR_MODE_RGB),m_needFlip(false),m_isManaged(true),m_needRedraw(false),m_onBlankScreen(false),m_copyToFrameBuffer(false),m_fftOverlay(false),m_frameDrawDuration(0),m_texture(nullptr),m_frameBuffer(nullptr),m_frameLoadDuration(0),m_cycleDuration(0),m_mutex(xSemaphoreCreateMutex()){};
         void Allocate();
         void Update(uint32_t dt);
 
@@ -77,6 +78,7 @@ class Animation{
         bool PopAnimation();
         void MakeFlip();
         void SetShader(int id, float strenght=1.0f);
+        void SetFFTOverlay(bool set);
 
         uint16_t* GetTexture(){
             return m_texture;
@@ -113,6 +115,7 @@ class Animation{
         uint32_t getDrawDuration() { return m_frameDrawDuration;};
         uint32_t getLoadDuration() { return m_frameLoadDuration;};
     private:
+        void drawFFTOverlay(FlipConfig flipSettings, int16_t frameId);
         inline void drawPixelAt(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, int &byteIdOled, FlipConfig &flipSettings);
         inline void adjustColor(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, int16_t &frameId);
         std::stack<AnimationSequence> m_animations;
@@ -127,6 +130,7 @@ class Animation{
         bool m_needRedraw;
         bool m_onBlankScreen;
         bool m_copyToFrameBuffer;
+        bool m_fftOverlay;
 
         uint16_t *m_texture,*m_frameBuffer;
         
