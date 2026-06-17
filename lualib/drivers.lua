@@ -60,6 +60,9 @@ do
             wheel=0,
             buttons={0,0,0,0,0,0,0,0}
         }
+        drivers.keyboard[i] = {
+            button = 0
+        }
         drivers.joystick[i] = {  
             buttons = {},   
             left_hat = 0, 
@@ -165,6 +168,8 @@ function drivers.onHidCallback(connectionId, controllerId, data)
     if len == 2 then  
         --Mouse press
         print("Keyboard press: ", data[1], data[2])
+        local keyboard = drivers.keyboard[controllerId]
+        keyboard.button = data[1]
     elseif len == 4 or len == 3 then 
         local empty = true
         local mouse = drivers.mouse[controllerId]
@@ -215,7 +220,7 @@ function drivers.onHidCallback(connectionId, controllerId, data)
             str = str .. b..', '
         end
         print(str)
-    elseif len == 6 or len == 8 then  
+    elseif len == 6 or len == 8 or len == 9  then  
         local joystickObject = drivers.joystick[controllerId]
 
         local buttons = data[5]
@@ -239,8 +244,14 @@ function drivers.onHidCallback(connectionId, controllerId, data)
 
         joystickObject.right_analog_x = data[3] - 127
         joystickObject.right_analog_y = data[4] - 128
+
     else 
         print("packet size is unknown: "..(#data))
+        local str = ""
+        for i,b in pairs(data) do
+            str = str ..b..', '  
+        end
+        print(str)
     end
 end
 
