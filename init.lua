@@ -8,6 +8,7 @@ local configloader = require("configloader")
 local drivers = require("drivers")
 local input = require("input")
 local leds = require("leds")
+local fft = require("fft")
 
 function onSetup()
 
@@ -30,7 +31,8 @@ function onSetup()
     expressions.Load() 
     scripts.Load() 
     boop.Load()
-
+    generic.displaySplashMessage("Starting:\nFFT")
+    fft.load()
     generic.displaySplashMessage("Starting:\nLeds")
     leds.begin()
     generic.displaySplashMessage("Starting:\nMenu") 

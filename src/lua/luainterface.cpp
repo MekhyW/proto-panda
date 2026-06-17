@@ -613,7 +613,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegisterFromObjectOpt("getBandCountFft", &g_fft, &FFT::getBandCount);
   m_lua->FuncRegisterFromObjectOpt("isRunningFft", &g_fft, &FFT::isRunning);
   m_lua->FuncRegisterFromObjectOpt("getBandValueFft", &g_fft, &FFT::getBandValue);
-  m_lua->FuncRegisterFromObjectOpt("begin", &g_fft, &FFT::begin, 16, 2000, 44100, 512, 1);
+  m_lua->FuncRegisterFromObjectOpt("beginFft", &g_fft, &FFT::begin, 16, 2000, 44100, 512, 1);
 
 
   m_lua->FuncRegisterFromObjectOpt("setPanelAnimation", &g_animation, &Animation::SetAnimation, -1, false, -1, 250);
