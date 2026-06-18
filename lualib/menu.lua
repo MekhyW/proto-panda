@@ -13,6 +13,7 @@ local generic = require("generic")
 local boop = require("boop")
 local input = require("input")
 local drivers = require("drivers")
+local configloader = require("configloader")
 
 MAX_INTERFACE_ICONS = 4
 MENU_SPACING = 13
@@ -44,6 +45,8 @@ function _M.setup(expressions)
     _M.brigthness = tonumber(dictGet("panel_brightness")) or 64
     _M.led_brightness = tonumber(dictGet("led_brightness")) or 64
     _M.has_boop = dictGet("has_boop") == "1" 
+    _M.has_fft_overlay = dictGet("has_fft_overlay") == "1" 
+    setFFTOverlay(_M.has_fft_overlay)
     _M.inverted_left_right = dictGet("inverted_left_right") == "1" 
     _M.reapplyButtons()
     _M.settings_icon = oledCreateIcon({0x00, 0x00, 0x16, 0x80, 0x3f, 0xc0, 0x7f, 0xe0, 0x39, 0xc0, 0x70, 0xe0, 0x70, 0xe0, 0x39, 0xc0, 0x7f, 0xe0, 0x3f, 0xc0, 0x16, 0x80, 0x00, 0x00}, 12, 12)
@@ -77,17 +80,31 @@ function _M.setup(expressions)
         dictSet("face_selection_style", _M.face_selection_style)
         dictSave()
     end)
+    local cfg = configloader.Get()
+    if cfg.boop and cfg.boop.enabled then
+        _M.settings.addElement(function() return "Boop ["..(_M.has_boop and "ON" or "OFF").."]" end,  function()
+            if _M.has_boop  then  
+                _M.has_boop = nil
+            else 
+                _M.has_boop = true
+            end
+            dictSet("has_boop", _M.has_boop and "1" or "0")
+            dictSave()
+        end)
+    end
 
-
-    _M.settings.addElement(function() return "Boop ["..(_M.has_boop and "ON" or "OFF").."]" end,  function()
-        if _M.has_boop  then  
-            _M.has_boop = nil
-        else 
-            _M.has_boop = true
-        end
-        dictSet("has_boop", _M.has_boop and "1" or "0")
-        dictSave()
-    end)
+    if cfg.fft and cfg.fft.enabled then
+        _M.settings.addElement(function() return "FFT Overlay ["..(_M.has_fft_overlay and "ON" or "OFF").."]" end,  function()
+            if _M.has_fft_overlay  then  
+                _M.has_fft_overlay = false
+            else 
+                _M.has_fft_overlay = true
+            end
+            setFFTOverlay(_M.has_fft_overlay)
+            dictSet("has_fft_overlay", _M.has_fft_overlay and "1" or "0")
+            dictSave()
+        end)
+    end
 
     _M.settings.addElement(function() return "Calibrate boop" end,  function()
         if boop.onEnter() then 

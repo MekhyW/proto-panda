@@ -4,6 +4,20 @@
 #include "config.hpp"
 #include <Arduino.h>
 
+CRGB* LedStrip::BeginScreen(uint16_t w, uint16_t h, uint8_t maxbrightness){
+    m_screen = new CRGB[w*h];
+    FastLED.addLeds<LED_STRIP_TYPE,IF_USING_WS2812B_MATRIX_SCREEN_PIN,GRB>(m_screen, w*h).setCorrection(TypicalLEDStrip).setDither(maxbrightness < 255);
+    FastLED.setBrightness(maxbrightness);
+    m_maxBrightness = maxbrightness;
+
+    for (int a=0;a<(w*h);++a){
+        m_screen[a] = CRGB(0,0,0);
+    }
+    m_hasScreen = true;
+    FastLED.show(); 
+    return m_screen;
+}
+
 bool LedStrip::BeginDual(uint16_t ledCount, uint16_t secondLedCount, uint8_t maxbrightness){
     if (m_groups == nullptr){
         m_groups = (LedGroup*)ps_malloc(sizeof(LedGroup) *MAX_LED_GROUPS);
@@ -219,7 +233,7 @@ void LedStrip::Display(){
     if (!m_enabled){
         return;
     }
-    if (m_ledAmount > 0){
+    if (m_ledAmount > 0 && !m_hasScreen){
         FastLED.show(); 
     }
 }

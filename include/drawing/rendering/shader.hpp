@@ -19,13 +19,11 @@ class ShaderProcessor{
         static void ShaderTexture(int16_t &x, int16_t &y, uint8_t &r, uint8_t &g, uint8_t &b, ShaderType &shdr, float &shaderStrength);
         static void ShaderTrans(int16_t &x, int16_t &y, uint8_t &r, uint8_t &g, uint8_t &b, ShaderType &shdr, float &shaderStrength);
 
-
-        static void Hsv2Rgb(uint8_t h, uint8_t s, uint8_t v, uint8_t& r, uint8_t& g, uint8_t& b);
-
         static uint32_t FrameId;
         static uint32_t Time;
         static uint16_t* Texture;
     public:
+    static void Hsv2Rgb(uint8_t h, uint8_t s, uint8_t v, uint8_t& r, uint8_t& g, uint8_t& b);
         static void SetTextureAddr(uint16_t *addr){
             Texture = addr;
         }

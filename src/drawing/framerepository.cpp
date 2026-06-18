@@ -3,7 +3,7 @@
 #include "tools/logger.hpp"
 #include "tools/devices.hpp"
 #include "tools/compression.hpp"
-
+#include "drawing/framerepository.hpp"
 #include "tools/oledscreen.hpp"
 
 #if PANDA_SD_MODE == 1
@@ -159,6 +159,19 @@ bool FrameRepository::loadCachedData(){
         Logger::Error("Version mismatched.");
         return false;
     }
+
+    if ( !json_doc.containsKey("canvas_width") || !json_doc["canvas_width"].is<int>() || json_doc["canvas_width"].as<int>() != CANVAS_WIDTH){
+        json_doc.clear();   
+        Logger::Error("Canvas dimensions changed");
+        return false;
+    }
+
+    if ( !json_doc.containsKey("canvas_height") || !json_doc["canvas_height"].is<int>() || json_doc["canvas_height"].as<int>() != CANVAS_HEIGHT){
+        json_doc.clear();   
+        Logger::Error("Canvas dimensions changed");
+        return false;
+    }
+
 
     if ( !json_doc.containsKey("total_frame_count") || !json_doc["total_frame_count"].is<int>() || !json_doc["bulk_size"] ) {
         json_doc.clear();   
@@ -466,6 +479,8 @@ void FrameRepository::generateCacheFile(int bulkSize) {
 
     json_doc["bulk_size"] = bulkSize;
     json_doc["version"] = PANDA_VERSION;
+    json_doc["canvas_width"] = CANVAS_WIDTH;
+    json_doc["canvas_height"] = CANVAS_HEIGHT;
 
     // Serialize JSON to file
     if (serializeJson(json_doc, cache) == 0) {

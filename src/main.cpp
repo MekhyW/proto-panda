@@ -11,6 +11,7 @@
 #include "tools/storage.hpp"
 #include "tools/logger.hpp"
 #include "tools/ir.hpp"
+#include "tools/fft.hpp"
 #include "lua/luainterface.hpp"
 
 
@@ -39,7 +40,7 @@ EditMode g_editMode;
 InfraRedManager g_InfraRed;
 ModelDict g_models;
 ModelHandler g_modelHandler;
-
+FFT g_fft;
 KeyframePlayer g_kf;
 
 void second_loop(void*);
@@ -106,8 +107,10 @@ void setup() {
 
   
   Devices::CalculateMemmoryUsage(); 
-
   HardwareConfig::LoadConfigs();
+
+  g_animation.Allocate();
+  g_modelHandler.Allocate();
 
 
   
@@ -191,7 +194,9 @@ void second_loop(void*){
   { 
     Devices::BeginAutoFrame();
     
-
+    if (g_fft.isManaged()){
+      g_fft.update();
+    }
     g_animation.Update(Devices::getAutoDeltaTime());
     vTaskDelay(1);
 
@@ -200,6 +205,7 @@ void second_loop(void*){
       g_leds.Display();
     }
     vTaskDelay(1);
+    
     Devices::EndAutoFrame();
   }
   #endif
@@ -230,6 +236,9 @@ void loop() {
   g_lua.CallFunctionT("onLoop", Devices::getDeltaTime());
 
   #ifdef SINGLE_CORE_RUN
+  if (g_fft.isManaged()){
+    g_fft.update();
+  }
   g_animation.Update(g_frameRepo.takeFile());
   g_frameRepo.freeFile();
   g_leds.Update();

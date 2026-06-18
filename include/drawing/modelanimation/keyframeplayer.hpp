@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <map>
 #include <string>
+#include "tools/psrammap.hpp"
 #include "drawing/rendering/primitives.hpp"
 #include "drawing/rendering/model.hpp"
 
@@ -52,7 +53,12 @@ class Keyframe{
 class KeyframeTrack{
     public:
         KeyframeTrack():startColor(0),colorInterpolationStarted(false){Reserve();};
-        
+        void Clear(){
+            startColor = 0;
+            colorInterpolationStarted = false;
+            currentFrameByType.clear();
+            Reserve();
+        }
         void Reserve();
 
         bool SetResource(std::string resourceName);
@@ -68,8 +74,8 @@ class KeyframeTrack{
         Model *obj;
         uint32_t pointGroup;
         uint32_t frameId;
-        std::vector<int> currentFrameByType;
-        std::vector<Keyframe> keyframes;
+        PSRAMVector<int> currentFrameByType;
+        PSRAMVector<Keyframe> keyframes;
 
         uint16_t startColor;
         bool colorInterpolationStarted;
@@ -131,7 +137,7 @@ class KeyframePlayer{
         int32_t m_currentlyPlaying;
         uint32_t m_extraDtForNextFrame;
         bool m_finishedAnimationInThisFrame;
-        std::vector<KeyframeAnimation*> m_loadedAnimations;
+        PSRAMVector<KeyframeAnimation*> m_loadedAnimations;
 };
 
 extern KeyframePlayer g_kf;

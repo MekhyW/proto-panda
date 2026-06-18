@@ -2,16 +2,17 @@
 #include "tools/oledscreen.hpp"
 #include "tools/devices.hpp"
 #include "tools/compression.hpp"
+#include "tools/hardwareconfig.hpp"
 #include "drawing/framerepository.hpp"
 #include "drawing/modelanimation/keyframeplayer.hpp"
 #include "tools/storage.hpp"
-
+#include "drawing/rendering/shader.hpp"
 
 #include "FS.h"
-unsigned char Animation::buffer[FILE_SIZE];
+unsigned char* Animation::buffer = nullptr;
 
 
-#ifdef ENABLE_HUB75_PANEL
+
 
 
 AnimationFrameAction AnimationSequence::InterruptFrame(int pinRead){ 
@@ -105,70 +106,19 @@ int AnimationSequence::GetFrameId(){
     return m_frames[m_frame];
 }
 
-void reorder_rgb(ColorMode mode, uint8_t *r, uint8_t *g, uint8_t *b){
-    uint8_t auxr = *r;
-    uint8_t auxb = *b;
-    uint8_t auxg = *g;
-    switch (mode)
-    {
-    case COLOR_MODE_RGB:
-        break;
-    case COLOR_MODE_RBG:
-        *b = auxg;
-        *g = auxb;
-        break;
-    case COLOR_MODE_GRB:
-        *r = auxg;
-        *g = auxr;
-        break;
-    case COLOR_MODE_GBR:
-        *g = auxr;
-        *b = auxg;
-        *r = auxb;
-        break;
-    case COLOR_MODE_BRG:
-        *b = auxr;
-        *r = auxg;
-        *g = auxb;
-        break;
-    case COLOR_MODE_BGR:
-        *b = auxr;
-        *r = auxb;
-        break;
-    default:
-        break;
-    }
-}
-
-void Animation::drawPixelAt(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &flip_left, uint8_t &flip_right, int &byteIdOled, ColorMode& modeLeft, ColorMode& modeRight){
+void Animation::drawPixelAt(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, int &byteIdOled, FlipConfig &flipSettings){
     if ((color & 0x8610) != 0) { 
         OledScreen::DisplayFace[0][byteIdOled] = 1;
     }else{
         OledScreen::DisplayFace[0][byteIdOled] = 0;
     }
+    
+
+    Devices::Display->setPixelWithFlip(x,y, r, g, b, flipSettings);
+    if (m_copyToFrameBuffer){
+        m_frameBuffer[byteIdOled] = color;
+    }
     byteIdOled++;
-
-    uint8_t ra = r;
-    uint8_t ga = g;
-    uint8_t ba = b;
-
-    uint8_t rb = r;
-    uint8_t gb = g;
-    uint8_t bb = b;
-
-    reorder_rgb(modeLeft, &rb, &gb, &bb);
-    if (flip_left&1){
-        Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH-1)-x, y, rb, gb, bb);
-    }else{
-        Devices::Display->updateMatrixDMABuffer_2(x, y, rb, gb, bb);
-    }
-
-    reorder_rgb(modeRight, &ra, &ga, &ba);
-    if (flip_right&1){
-        Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH+PANEL_WIDTH-1)-x, y, ra, ga, ba);
-    }else{
-        Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH)+x, y, ra, ga, ba);
-    }
 }
 
 void Animation::adjustColor(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, int16_t &frameId){
@@ -181,6 +131,13 @@ void Animation::adjustColor(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r,
 
     }*/
     ShaderProcessor::UpdateColorByShader(x, y, r, g, b, m_shader, m_shaderStrenght);
+}
+
+void Animation::EnableFrameBuffer(bool enable){
+    if (enable && m_frameBuffer == nullptr){
+        m_frameBuffer = (uint16_t*)ps_malloc(sizeof(uint16_t) * CANVAS_WIDTH * CANVAS_HEIGHT);
+    }
+    m_copyToFrameBuffer = enable;
 }
 
 void Animation::LoadFrameAsTexture(int i){
@@ -227,7 +184,7 @@ void Animation::LoadFrameAsTexture(int i){
     }
 
     if (m_texture == nullptr){
-        m_texture = (uint16_t*)ps_malloc(sizeof(uint16_t) * PANEL_WIDTH * PANEL_HEIGHT);
+        m_texture = (uint16_t*)ps_malloc(sizeof(uint16_t) * CANVAS_WIDTH * CANVAS_HEIGHT);
         ShaderProcessor::SetTextureAddr(m_texture);
     }
 
@@ -259,14 +216,13 @@ void Animation::LoadFrameAsTexture(int i){
                 
                 
                 for (int iddx=0;iddx<lenght;iddx++){
-                    //drawPixelAt(x, y, color, r, g, b, flip_left, flip_right, byteIdOled);
-                    m_texture[y * PANEL_WIDTH + x] = color;
+                    m_texture[y * CANVAS_WIDTH + x] = color;
                     x++;
-                    if (x >= PANEL_WIDTH){
+                    if (x >= CANVAS_WIDTH){
                         x = 0;
                         y++;
                         
-                        if (y >= PANEL_HEIGHT){
+                        if (y >= CANVAS_HEIGHT){
                             g_frameRepo.freeFile();
                             return;
                         }
@@ -290,9 +246,9 @@ void Animation::LoadFrameAsTexture(int i){
         for (int16_t idx=begin;idx<finish;idx++){
             uint16_t color = readBuffer[idx];
             
-            m_texture[y * PANEL_WIDTH + x] = color;
+            m_texture[y * CANVAS_WIDTH + x] = color;
             x++;
-            if (x >= PANEL_WIDTH){
+            if (x >= CANVAS_WIDTH){
                 x = 0;
                 y++;
             }
@@ -300,6 +256,41 @@ void Animation::LoadFrameAsTexture(int i){
     }
     g_frameRepo.freeFile();
     return;
+}
+
+void Animation::Allocate(){
+    Animation::buffer = (unsigned char*)ps_malloc(sizeof(unsigned char) * FILE_SIZE);
+}
+
+void Animation::drawFFTOverlay(FlipConfig flipSettings, int16_t frameId) {
+    const int SCREEN_W = CANVAS_WIDTH;
+    const int SCREEN_H = CANVAS_HEIGHT;
+    const int COUNT    = g_fft.getBandCount(); 
+    const int BAR_W    = SCREEN_W / COUNT; 
+    
+    for (int i = 0; i < COUNT; i++) {
+        int barH = map(g_fft.getBandValue(i), 0, 200000, 0, SCREEN_H);
+        barH = constrain(barH, 0, SCREEN_H);
+        if (barH == 0) continue;
+        
+        uint8_t h = (uint8_t)((float)i / COUNT * 255.0f);
+        uint8_t r, g, b;
+        ShaderProcessor::Hsv2Rgb(h, 255, 255, r, g, b);
+        
+        for (int yOffset = 0; yOffset < barH; yOffset++) {
+            int16_t y = SCREEN_H - barH + yOffset;
+
+            for (int xOffset = 0; xOffset < BAR_W; xOffset++) {
+                int16_t x = i * BAR_W + xOffset;
+
+                uint16_t color = Devices::Display->color565(r, g, b);
+                adjustColor(x, y, color, r, g, b, frameId);
+
+                int byteIdOled = y * CANVAS_WIDTH + x;
+                drawPixelAt(x, y, color, r, g, b, byteIdOled, flipSettings);
+            }
+        }
+    }
 }
 
 void Animation::DrawFrame(int i){
@@ -367,6 +358,8 @@ void Animation::DrawFrame(int i){
     int16_t x=0;
     int16_t y=0;
 
+    FlipConfig flipSettings(flip_left, flip_right, currentModeLeft, currentModeRight);
+
     Devices::Display->startWrite();
     if (compressionMode == 1){
         int compressionReadPos = 0;
@@ -389,13 +382,13 @@ void Animation::DrawFrame(int i){
                 adjustColor(x, y, color, r, g, b, frameId);
                 
                 for (int iddx=0;iddx<lenght;iddx++){
-                    drawPixelAt(x, y, color, r, g, b, flip_left, flip_right, byteIdOled, currentModeLeft, currentModeRight);
+                    drawPixelAt(x, y, color, r, g, b, byteIdOled, flipSettings);
                     x++;
-                    if (x >= PANEL_WIDTH){
+                    if (x >= CANVAS_WIDTH){
                         x = 0;
                         y++;
                         
-                        if (y >= PANEL_HEIGHT){
+                        if (y >= CANVAS_HEIGHT){
                             goto finished;
                         }
                     }
@@ -417,20 +410,24 @@ void Animation::DrawFrame(int i){
         for (int16_t idx=begin;idx<finish;idx++){
             uint16_t color = readBuffer[idx];
             adjustColor(x, y, color, r, g, b, frameId);
-            drawPixelAt(x, y, color, r, g, b, flip_left, flip_right, byteIdOled, currentModeLeft, currentModeRight);
+            drawPixelAt(x, y, color, r, g, b, byteIdOled, flipSettings);
             x++;
-            if (x >= PANEL_WIDTH){
+            if (x >= CANVAS_WIDTH){
                 x = 0;
                 y++;
             }
         }
     }
     finished:
+
+    if (m_fftOverlay && g_fft.isRunning()){
+        drawFFTOverlay(flipSettings, frameId);
+    }
+
     Devices::Display->endWrite();
     m_needFlip = true;
     m_frameDrawDuration = micros()-ld;
     m_cycleDuration =  micros()-begin;
-
 }
 
 bool Animation::PopAnimation(){
@@ -451,6 +448,10 @@ void Animation::MakeFlip(){
     m_needFlip = false;
 }
 
+void Animation::SetFFTOverlay(bool set){
+    m_fftOverlay = set;
+}
+
 void Animation::SetShader(int id, float strenght){
     m_shader = (ShaderType)id;
     m_shaderStrenght = strenght;
@@ -469,11 +470,11 @@ void Animation::Update(uint32_t dt){
     }else{
         if (!m_onBlankScreen){
             Devices::Display->clearScreen();
-            Devices::Display->drawLine(0          , 0            , PANEL_WIDTH    , PANEL_HEIGHT  , Devices::Display->color565(255,255,255));
-            Devices::Display->drawLine(0          ,  PANEL_HEIGHT, PANEL_WIDTH    , 0             , Devices::Display->color565(255,255,255));
+            Devices::Display->drawLine(0          , 0            , CANVAS_WIDTH    , CANVAS_HEIGHT  , Devices::Display->color565(255,255,255));
+            Devices::Display->drawLine(0          ,  CANVAS_HEIGHT, CANVAS_WIDTH    , 0             , Devices::Display->color565(255,255,255));
 
-            Devices::Display->drawLine(PANEL_WIDTH, 0            , PANEL_WIDTH*2  , PANEL_HEIGHT  , Devices::Display->color565(255,255,255));
-            Devices::Display->drawLine(PANEL_WIDTH, PANEL_HEIGHT , PANEL_WIDTH*2  , 0             , Devices::Display->color565(255,255,255));
+            Devices::Display->drawLine(CANVAS_WIDTH, 0            , CANVAS_WIDTH*2  , CANVAS_HEIGHT  , Devices::Display->color565(255,255,255));
+            Devices::Display->drawLine(CANVAS_WIDTH, CANVAS_HEIGHT , CANVAS_WIDTH*2  , 0             , Devices::Display->color565(255,255,255));
             m_needFlip = true;
         }
         xSemaphoreGive(m_mutex);
@@ -508,14 +509,14 @@ bool Animation::internalUpdate(uint32_t dt, AnimationSequence &running){
         }
         break;
     case ANIMATION_NO_CHANGE:
-        if (m_shader != SHADER_NONE){
+        if (m_shader != SHADER_NONE || m_fftOverlay){
             m_lastFace = running.GetFrameId();
             if (managed){
                 DrawFrame(m_lastFace);
             }
         }
         if (m_needRedraw){
-            m_needRedraw = false;
+            //m_needRedraw = false;
             if (managed){
                 DrawFrame(m_lastFace);
             }
@@ -603,4 +604,3 @@ void Animation::SetAnimation( std::vector<int> frames, int duration,int repeatTi
 }
 
 
-#endif

@@ -1,6 +1,7 @@
 #pragma once
 #include "tools/config_default.hpp"
 
+#include "tools/hardwareconfig.hpp"
 /*
     Modify this file with your custom
 */
@@ -109,14 +110,3 @@ Servos
 */
 
 // #define USE_SERVO
-
-/*
-    DMA display, or actual display
-*/
-//#define PANEL_WIDTH 64      // Number of pixels wide of each INDIVIDUAL panel module. 
-//#define PANEL_HEIGHT 32     // Number of pixels tall of each INDIVIDUAL panel module.
-//#define PANEL_CHAIN 2      // Total number of panels chained one to another
-
-//#define FILE_SIZE_BULK_SIZE ( PANEL_WIDTH * PANEL_HEIGHT * sizeof(uint16_t) )
-//#define FILE_SIZE (( FILE_SIZE_BULK_SIZE  + sizeof(uint16_t) ))
-
