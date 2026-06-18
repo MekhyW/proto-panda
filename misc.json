@@ -8,7 +8,12 @@
         "gpio": 48,
         "power_gpio": 13,
         "gpio_state": 1,
-        "enabled": false
+        "enabled": true,
+        "transitionIn": "boop_intro",
+        "transitionOut": "boop_outro",
+        "boopAnimationName": "boop",
+        "transictionOnlyOnAnimation": "normal",
+        "transictionInOnlyOnSpecificFrame": 1
     },
 
     "fft": {
@@ -17,7 +22,7 @@
         "sampling_frequency": 44100,
         "noise_threshold": 2000,
         "band_count": 16,
-        "enabled": true
+        "enabled": false
     },
     "scripts": [
         {
