@@ -91,8 +91,10 @@ float Devices::internalT = 0;
         
 void Devices::Begin(){
     Wire.begin(I2C_SDA, I2C_SLC);
-    Wire.setClock(800000);
-    //SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI, SPI_CS);
+    #if PANDA_SD_MODE == 1
+    Wire.setClock(SPI_MAX_CLOCK);
+    SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI, SPI_CS);
+    #endif
 }
 
 std::vector<int> Devices::I2CScan(){ 
