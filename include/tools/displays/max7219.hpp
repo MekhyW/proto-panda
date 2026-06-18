@@ -4,8 +4,8 @@
 
 class MAX7219Display : public BaseDisplay {
 public:
-    MAX7219Display(uint32_t panels, uint8_t horizontal_panel_count, int csPin, int dataInPin, int clockPin) {
-        if (horizontal_panel_count == 0){
+    MAX7219Display(int panels, int horizontal_panel_count, int csPin, int dataInPin, int clockPin) {
+        if (horizontal_panel_count <= 0){
             horizontal_panel_count = panels;
         }
         m_frameBuffer = new uint8_t[MAX7219_SIZE * MAX7219_SIZE * panels];

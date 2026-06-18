@@ -12,18 +12,22 @@ public:
         int dispX, dispY;
         int srcX,  srcY;
         int w,     h;
+        bool flip_horizontal, flip_vertical;
     };
 
     SectionMap() : m_count(0) {}
 
-    void addView(int dispX, int dispY,
-                    int srcX,  int srcY,
-                    int w,     int h) {
+    void addView(int dispX, int dispY, int srcX,  int srcY, int w, int h, bool fliph, bool flipv) {
         if (m_count < MAX_VIEWS) {
             View& v = m_views[m_count++];
-            v.dispX = dispX;   v.dispY = dispY;
-            v.srcX  = srcX;  v.srcY  = srcY; 
-            v.w     = w;      v.h     = h;
+            v.dispX = dispX;   
+            v.dispY = dispY;
+            v.srcX  = srcX;  
+            v.srcY  = srcY; 
+            v.w     = w;      
+            v.h     = h;
+            v.flip_horizontal = fliph;
+            v.flip_vertical = flipv;
         }
     }
 
@@ -35,10 +39,12 @@ public:
         const View* v   = m_views;
         const View* end = v + m_count;
         for (; v != end; ++v) {
-            int dx = x - v->srcX;   // offset within canvas region
+            int dx = x - v->srcX;
             int dy = y - v->srcY;
             if (dx >= 0 && dy >= 0 && dx < v->w && dy < v->h) {
-                tx = v->dispX + dx;  // map to display position
+                if (v->flip_horizontal) dx = (v->w - 1) - dx;
+                if (v->flip_vertical)   dy = (v->h - 1) - dy;
+                tx = v->dispX + dx;
                 ty = v->dispY + dy;
                 return true;
             }

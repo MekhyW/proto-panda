@@ -163,8 +163,10 @@ void HardwareConfig::loadViews(JsonObject ws2812b, BaseDisplay* display, uint16_
         uint16_t canvas_y = v["canvas_y"];
         uint16_t w        = v.containsKey("width")  ? (uint16_t)v["width"]  : defaultWidth;
         uint16_t h        = v.containsKey("height") ? (uint16_t)v["height"] : defaultHeight;
+        bool flipH        = v.containsKey("flip_horizontal") ? (bool)v["flip_horizontal"] : false;
+        bool flipV        = v.containsKey("flip_vertical") ? (bool)v["flip_vertical"] : false;
         Logger::Info("Added view: %d %d  ->  %d %d   (%d,%d)", x, y, canvas_x, canvas_y, w, h);
-        display->view.addView(x, y, canvas_x, canvas_y, w, h);
+        display->view.addView(x, y, canvas_x, canvas_y, w, h, flipH, flipV);
     }
 }
 

@@ -59,7 +59,7 @@ Cache file version to invalidate cache in case of firmware update
 */
 //If you're using a SD card module, change this to 1.
 //But if you're using a smd assembled version, you can leave it as 2
-#define PANDA_SD_MODE 1
+#define PANDA_SD_MODE 2
 
 /*
     SPI
@@ -122,7 +122,7 @@ Cache file version to invalidate cache in case of firmware update
     Edit mode pin
 */
 #define ENABLE_EDIT_MODE
-#define EDIT_MODE_PIN 0
+#define EDIT_MODE_PIN 39
 #define EDIT_ENABLE_LOGIC_LEVEL LOW
 /* 
 Servos
