@@ -24,7 +24,7 @@ Cache file version to invalidate cache in case of firmware update
     The resistors are R9 and R8 (3k and 10k)
 
 */
-#define USE_PIN_BATTERY_IN
+//#define USE_PIN_BATTERY_IN
 #define PIN_USB_BATTERY_IN 3
 /*
     R8 is 10k
@@ -59,7 +59,7 @@ Cache file version to invalidate cache in case of firmware update
 */
 //If you're using a SD card module, change this to 1.
 //But if you're using a smd assembled version, you can leave it as 2
-#define PANDA_SD_MODE 2
+#define PANDA_SD_MODE 1
 
 /*
     SPI
@@ -69,7 +69,7 @@ Cache file version to invalidate cache in case of firmware update
 #define SPI_MOSI 14
 #define SPI_MISO 47
 #define SPI_SCK 21
-#define SPI_MAX_CLOCK (80 * 1000 * 1000)
+#define SPI_MAX_CLOCK (40 * 1000 * 1000)
 
 /* 
     SD_MMC
@@ -84,7 +84,6 @@ Cache file version to invalidate cache in case of firmware update
 //If using the full range of pins (data1 and 2, set this to false)
 #define MMC_ONE_BIT true  
 
-#define PANDA_SD_MODE 2
 
 
 /*
@@ -123,7 +122,7 @@ Cache file version to invalidate cache in case of firmware update
     Edit mode pin
 */
 #define ENABLE_EDIT_MODE
-#define EDIT_MODE_PIN 39
+#define EDIT_MODE_PIN 0
 #define EDIT_ENABLE_LOGIC_LEVEL LOW
 /* 
 Servos
