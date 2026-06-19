@@ -14,6 +14,8 @@ public:
         m_panels = p;
         m_realWidth = p*w;
         halfPosition = m_realWidth/2;
+
+        m_ledCount = m_width * m_height * m_panels;
     }
     
     ~WS2812BDisplay() {
@@ -31,7 +33,7 @@ public:
 
 private:
     int GetLEDIndex(uint16_t x, uint16_t y);
-    uint32_t m_width, m_height, m_panels, m_realWidth;
+    uint32_t m_width, m_height, m_panels, m_realWidth, m_ledCount;
     CRGB *m_leds;
 };
 

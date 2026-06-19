@@ -8,6 +8,14 @@ bool WS2812BDisplay::begin(){
 
 
 void WS2812BDisplay::flipDma(){
+
+    FlipConfig f = FlipConfig();
+    setPixelWithFlip(31, 7, 255, 0, 0,  f);
+    setPixelWithFlip(16, 0, 0, 255, 0,  f);
+
+    setPixelWithFlip(0, 0, 255, 0, 0,  f);
+    setPixelWithFlip(1, 0, 0, 255, 0,  f);
+
     FastLED.show(); 
     FastLED.delay(5); 
 
@@ -24,37 +32,45 @@ void WS2812BDisplay::setBrightness8(const uint8_t b){
 };
 
 int WS2812BDisplay::GetLEDIndex(uint16_t x, uint16_t y) {
-    int xIn=0; 
-    int yIn=0;
-    if (!view.getPosition(x, y, xIn, yIn)){
+    int xIn = 0;
+    int yIn = 0;
+    if (!view.getPosition(x, y, xIn, yIn)) {
         return -1;
     }
-    if (!mirrorHalf){
-        if (xIn >= m_realWidth){
-            return -1;
-        }
-    }else{
-        if (xIn >= m_realWidth/2){
-            return -1;
-        }
-    }
-    if (yIn >= m_height){
-        return -1;
-    }
-    
 
-    int localX;
+    if (!mirrorHalf) {
+        if (xIn >= m_realWidth) {
+            return -1;
+        }
+    } else {
+        if (xIn >= m_realWidth / 2) {
+            return -1;
+        }
+    }
+    if (yIn >= m_height) {
+        return -1;
+    }
 
     int matrixIndex = xIn / m_width;
-    
-    // Serpentine: even rows go left→right, odd rows go right→left
-    if (yIn % 2 == 0) {
-        localX = xIn;
-    } else {
-        localX = (m_width - 1) - xIn;
+    if (matrixIndex >= m_panels) {   
+        return -1;
     }
-    
-    return (matrixIndex * m_width * m_height) + (yIn * m_width) + localX;
+    int xInPanel = xIn - matrixIndex * m_width;
+
+    int localY;
+    if (xInPanel % 2 == 0) {
+        localY = yIn;
+    } else {
+        localY = (m_height - 1) - yIn;
+    }
+
+    int idx = (matrixIndex * m_width * m_height) + (xInPanel * m_height) + localY;
+
+
+    if (idx < 0 || idx >= m_ledCount) {
+        return -1;
+    }
+    return idx;
 }
 
 void WS2812BDisplay::setPixelWithFlip(uint16_t xIn, uint16_t yIn, uint8_t red, uint8_t green, uint8_t blue,  FlipConfig &flipSettings){
