@@ -78,11 +78,11 @@ class BleServiceHandler{
     SemaphoreHandle_t queueMutex;
     std::stack<BluetoothDeviceHandler*> devicesToNotify;
     std::stack<DisconnectTuple> devicesToDisconnectNotify;
-    std::map<std::string, BleCharacteristicsHandler*> m_characteristics;    
-    std::map<std::string,bool> warnedMap;
-    std::vector<BluetoothDeviceHandler*> m_connectedDevices;
-    std::map<std::string, bool> addrMap;
-    std::map<std::string, bool> nameMap;
+    PSRAMMap<std::string, BleCharacteristicsHandler*> m_characteristics;    
+    PSRAMMap<std::string,bool> warnedMap;
+    PSRAMVector<BluetoothDeviceHandler*> m_connectedDevices;
+    PSRAMMap<std::string, bool> addrMap;
+    PSRAMMap<std::string, bool> nameMap;
 
     LuaFunctionCallback *luaOnConnectCallback;
     LuaFunctionCallback *luaOnDisconnectCallback;

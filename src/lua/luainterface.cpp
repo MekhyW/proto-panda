@@ -918,9 +918,13 @@ bool LuaInterface::Start()
       if (uuid == NimBLEUUID()){
         luaL_error(L, "Malformed service UUID");
         return nullptr;
-    } 
-
-      BleServiceHandler *obj = new BleServiceHandler(uuid.to16());
+      }
+      BleServiceHandler *obj = (BleServiceHandler*)ps_malloc(sizeof(BleServiceHandler));
+      #ifndef __INTELLISENSE__
+      //This code will be compiled. But for some reason intellisense claims its invalid. So i'm using this to avoid visual warning in the IDE
+      new (obj) BleServiceHandler(uuid.to16());
+      #endif
+ 
       g_remoteControls.AddAcceptedService(uuid.to16().toString().c_str(), obj);
       Logger::Info("Accepting service: %s", uuid.to16().toString().c_str());
       return obj;

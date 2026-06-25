@@ -15,7 +15,7 @@ void BleCharacteristicsHandler::AddMessage(int cliID, int id, uint8_t* pData, si
 }
 
 void BleCharacteristicsHandler::processMessageAndPop(){
-    std::vector<uint8_t> vec;
+    PSRAMVector<uint8_t> vec;
     int id = -1;
     int cliId = -1;
             

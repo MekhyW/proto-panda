@@ -68,7 +68,7 @@ void setup() {
   Devices::Begin();
   Serial.begin(115200);
   Serial.printf("Starting proto panda v%s!\n", PANDA_VERSION);
-
+  Devices::CalculateMemmoryUsage(); 
   Logger::Allocate();
 
 
@@ -82,6 +82,8 @@ void setup() {
  
   OledScreen::Start();
   Sensors::Start();
+
+  Devices::CalculateMemmoryUsage(); 
   
   #ifdef ENABLE_EDIT_MODE
   g_editMode.CheckBeginEditMode();
@@ -95,6 +97,8 @@ void setup() {
     return;
   }
   #endif
+
+  Devices::CalculateMemmoryUsage(); 
 
   while (!Storage::Begin()){
     OledScreen::display.clearDisplay();

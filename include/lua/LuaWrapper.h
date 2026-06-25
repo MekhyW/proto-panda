@@ -1503,6 +1503,16 @@ class LuaFunctionCallback{
                 lua_rawseti(_state, -2, static_cast<int>(i + 1)); 
             }
         }
+
+        template<typename T>
+        void pushParamInternal(const PSRAMVector<T>& parameters) {
+            lua_createtable(_state, static_cast<int>(parameters.size()), 0);
+            
+            for (size_t i = 0; i < parameters.size(); ++i) {
+                pushParamInternal(parameters[i]);                  
+                lua_rawseti(_state, -2, static_cast<int>(i + 1)); 
+            }
+        }
 };
 
 template<> struct GenericLuaGetter<LuaFunctionCallback*> {

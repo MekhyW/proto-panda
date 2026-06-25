@@ -16,7 +16,9 @@ void CreateLuaClosure(lua_State *L, const std::function<int(lua_State*)>& f){
         luaL_error(L, "Failed to allocate PSRAM for Lua function");
         return;
     }
+    #ifndef __INTELLISENSE__
     (*baseF) = new (mem) LuaCFunctionLambda(f);
+    #endif
 }
 //Make sure that any lua scripts use the psram instead of the sram
 static void *psram_lua_alloc (void *ud, void *ptr, size_t osize, size_t nsize) {
@@ -185,7 +187,7 @@ LuaWrapper::LuaWrapper() {
   luaopen_math(_state);
   luaopen_table(_state);
 
-  const char* lua_require_code = R"(
+  const char* lua_require_code PROGMEM = R"(
 _G.require = nil
 function require(packageName)
     if not _G.package then 

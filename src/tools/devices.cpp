@@ -332,7 +332,7 @@ void Devices::CalculateMemmoryUsage(){
 
   Devices::percentageHeapFree = Devices::freeHeapBytes * 100.0f / (float)Devices::totalHeapBytes;
   Devices::percentagePsramFree = freePsramBytes* 100.0f / (float)totalPsramBytes;
-  Logger::Info("[Memory] %.1f%% free - %d of %d bytes free (psram: %d / %d  -> %.1f%%)", Devices::percentageHeapFree, Devices::freeHeapBytes, Devices::totalHeapBytes, totalPsramBytes, freePsramBytes,  getFreePsram()) ;
+  Serial.printf("[Memory] %.1f%% free - %d of %d bytes free (psram: %d / %d  -> %.1f%%)\n", Devices::percentageHeapFree, Devices::freeHeapBytes, Devices::totalHeapBytes, totalPsramBytes, freePsramBytes,  getFreePsram()) ;
 }
 
 void Devices::DisplayResetInfo()

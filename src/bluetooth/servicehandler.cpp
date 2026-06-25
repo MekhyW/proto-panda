@@ -20,7 +20,12 @@ BleCharacteristicsHandler* BleServiceHandler::AddCharacteristics(std::string uui
 
     charId = charId.to128();
 
-    auto obj = new BleCharacteristicsHandler(charId);
+    BleCharacteristicsHandler *obj = (BleCharacteristicsHandler*)ps_malloc(sizeof(BleCharacteristicsHandler));
+    #ifndef __INTELLISENSE__
+    //This code will be compiled. But for some reason intellisense claims its invalid. So i'm using this to avoid visual warning in the IDE
+    new (obj) BleCharacteristicsHandler(charId);
+    #endif
+
     m_characteristics[charId.toString()] = obj;
     return obj;
 }
