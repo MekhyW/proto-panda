@@ -2,6 +2,8 @@
 
 #include "config.hpp"
 #include "tools/storage.hpp"
+#include "tools/psrammap.hpp"
+
 
 #include <Arduino.h>
 
@@ -26,7 +28,7 @@ class Logger{
         static File logFile;
         static bool writingLog;
         static bool started;
-        static std::string m_filename;
+        static PSRAMString m_filename;
         static SemaphoreHandle_t mutex;
         static char *buffer;
 };

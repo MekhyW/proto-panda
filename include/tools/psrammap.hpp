@@ -3,6 +3,7 @@
 #include <cstring>
 #include <string>
 #include <map>
+#include <list>
 #include <vector>
 #include <algorithm>
 #include <ArduinoJson.h>
@@ -60,6 +61,9 @@ using PSRAMIntMap = std::map<PSRAMString, int, PSRAMStringComparator, PSRAMAlloc
 
 template <typename T>
 using PSRAMVector = std::vector<T, PSRAMAllocator<T>>;
+
+template <typename T>
+using PSRAMList = std::list<T, PSRAMAllocator<T>>;
 
 
 struct SpiRamAllocator : ArduinoJson::Allocator {

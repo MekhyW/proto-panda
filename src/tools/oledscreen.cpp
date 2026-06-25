@@ -11,13 +11,13 @@
 extern Animation g_animation;
 Adafruit_SSD1306 OledScreen::display(OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT, &Wire, -1, OLED_SCREEN_CLOCK_FREQ);
 bool OledScreen::consoleMode = false;
-std::list<std::string> OledScreen::lines;
+PSRAMList<PSRAMString> OledScreen::lines;
 uint8_t *OledScreen::DisplayFace[2] = {nullptr, nullptr};
 uint8_t OledScreen::screenFlipId = 0;
 
 uint32_t OledScreen::swapTimer = 0;
 
-std::vector<OledIcon> OledScreen::icons;
+PSRAMVector<OledIcon> OledScreen::icons;
 
 bool OledScreen::Start(){
     
