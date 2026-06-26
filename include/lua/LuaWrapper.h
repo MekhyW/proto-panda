@@ -1,6 +1,5 @@
-#ifndef LUA_WRAPPER_H
-#define LUA_WRAPPER_H
-
+#pragma once
+#include "tools/config_default.hpp"
 #include "Arduino.h"
 #include <string>
 #include <type_traits>
@@ -8,10 +7,11 @@
 #include <sstream>
 #include "drawing/rendering/primitives.hpp"
 #include "drawing/modelanimation/keyframeplayer.hpp"
+#ifdef ENABLE_LUA
 #define LUA_USE_C89
 #include "lua/lua.hpp"
 #include "tools/ir.hpp"
-
+#endif
 
 #if defined(ESP_IDF_VERSION_MAJOR)
   #if ESP_IDF_VERSION_MAJOR >= 5
@@ -23,6 +23,17 @@
   #define ALLOW_DUPLICATED_TYPES 1
 #endif
 
+template<typename T>class MultiReturn{
+    public:
+        MultiReturn():success(false),errMessage("error :("){};
+        MultiReturn(std::string errmsg):success(false),errMessage(errmsg){};
+        MultiReturn(bool succ, T elem):success(succ),element(elem){};
+        bool success;
+        T element;
+        std::string errMessage;
+};
+
+#ifdef ENABLE_LUA
 typedef std::function<int(lua_State*)> LuaCFunctionLambda;
 
 void CreateLuaClosure(lua_State *L, const std::function<int(lua_State*)>& f);
@@ -1542,15 +1553,7 @@ template<> struct GenericLuaGetter<LuaFunctionCallback*> {
     }
 };
 
-template<typename T>class MultiReturn{
-    public:
-        MultiReturn():success(false),errMessage("error :("){};
-        MultiReturn(std::string errmsg):success(false),errMessage(errmsg){};
-        MultiReturn(bool succ, T elem):success(succ),element(elem){};
-        bool success;
-        T element;
-        std::string errMessage;
-};
+
 
 
 
@@ -1565,5 +1568,15 @@ template<typename T> struct GenericLuaReturner<MultiReturn<T>>{
    };
 };
 
+
+
+#else
+class LuaFunctionCallback{
+    public:
+        template<typename... Args>
+        bool callLuaFunction(const std::string& functionName, Args&&... args) {
+            return false;
+        }
+};
 
 #endif

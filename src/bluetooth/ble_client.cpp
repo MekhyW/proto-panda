@@ -1,4 +1,5 @@
 #include "bluetooth/ble_client.hpp"
+#ifdef ENABLE_BLE
 #include "tools/logger.hpp"
 #include "tools/devices.hpp"
 #include "tools/ir.hpp"
@@ -384,3 +385,4 @@ bool BleManager::isElementIdConnected(int id){
   xSemaphoreGive(m_mutex);
   return false;
 }
+#endif

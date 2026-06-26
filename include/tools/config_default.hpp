@@ -175,3 +175,6 @@ Servos
 #define PANDA_SD SD_MMC
 #define PANDA_SD_NAME "MMC"
 #endif
+
+#define ENABLE_LUA
+#define ENABLE_BLE

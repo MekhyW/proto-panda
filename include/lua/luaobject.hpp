@@ -1,5 +1,6 @@
 #pragma once 
-
+#include "tools/config_default.hpp"
+#ifdef ENABLE_LUA
 #include "lua/LuaWrapper.h"
 #include "bluetooth/characteristicshandler.hpp"
 #include "bluetooth/servicehandler.hpp"
@@ -483,13 +484,14 @@ template<typename T1> struct MakeLuaObject{
     };
 };
 
-
+#ifdef ENABLE_BLE
 template<> struct GenericLuaReturner<BleCharacteristicsHandler*>{
     static int Ret(BleCharacteristicsHandler* vr,lua_State *L,bool forceTable = false){
         MakeLuaObject<BleCharacteristicsHandler>::Make(L, vr, "BleCharacteristicsHandler");
         return 1;
     };
 };
+#endif
 
 template<> struct GenericLuaReturner<Model*>{
     static int Ret(Model* vr,lua_State *L,bool forceTable = false){
@@ -512,7 +514,7 @@ template<> struct GenericLuaReturner<KeyframeTrack*>{
 };
 
 
-
+#ifdef ENABLE_BLE
 template<> struct GenericLuaGetter<BleCharacteristicsHandler*> {
     static inline BleCharacteristicsHandler* Call(bool &hasArgError, lua_State *L, int stackPos = -1, bool pop = true, int offsetStack = 0) {
 
@@ -552,6 +554,7 @@ template<> struct GenericLuaGetter<BleCharacteristicsHandler*> {
     }
 };
 
+#endif
 
 
 template<> struct GenericLuaGetter<KeyframeTrack> {
@@ -592,3 +595,4 @@ template<> struct GenericLuaGetter<KeyframeTrack> {
         return (*(*sp));
     }
 };
+#endif

@@ -1,4 +1,5 @@
 #include "bluetooth/clientcallbacks.hpp"
+#ifdef ENABLE_BLE
 #include "bluetooth/ble_client.hpp"
 #include "tools/logger.hpp"
 #include "tools/devices.hpp"
@@ -67,3 +68,4 @@ void ClientCallbacks::onAuthenticationComplete(NimBLEConnInfo& connInfo) {
     return;
   }
 }
+#endif

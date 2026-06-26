@@ -1,5 +1,6 @@
 #pragma once
-
+#include "config.hpp"
+#ifdef ENABLE_BLE
 #include <NimBLEDevice.h>
 #include "Arduino.h"
 #include "config.hpp"
@@ -9,6 +10,7 @@
 #include <map> 
 #include "bluetooth/characteristicshandler.hpp"
 #include "bluetooth/clientcallbacks.hpp"
+#include "tools/psrammap.hpp"
 
 
 class DisconnectTuple{
@@ -105,3 +107,5 @@ class ConnectionRequest{
         BleServiceHandler* handler;
         BluetoothDeviceHandler *deviceHandler;
 };
+
+#endif

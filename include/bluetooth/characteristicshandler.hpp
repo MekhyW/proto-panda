@@ -1,5 +1,6 @@
 #pragma once
-
+#include "config.hpp"
+#ifdef ENABLE_BLE
 #include <NimBLEDevice.h>
 #include "Arduino.h"
 #include "config.hpp"
@@ -53,3 +54,4 @@ class BleCharacteristicsHandler{
 
     void processMessageAndPop();
 };
+#endif

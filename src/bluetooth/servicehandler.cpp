@@ -1,6 +1,8 @@
 #include "bluetooth/servicehandler.hpp"
+#ifdef ENABLE_BLE
 #include "lua/luainterface.hpp"
 #include "bluetooth/ble_client.hpp"
+#include "tools/logger.hpp"
 
 
 BluetoothDeviceHandler::~BluetoothDeviceHandler(){
@@ -253,18 +255,22 @@ void BleServiceHandler::SendMessages(){
         m_connectedDevices.emplace_back(dev);
         devicesToNotify.pop();
         xSemaphoreGive(queueMutex);
+        #ifdef ENABLE_LUA
         if (luaOnConnectCallback != nullptr){
             luaOnConnectCallback->callLuaFunction(dev->getId(), dev->m_controllerId, dev->m_deviceAddress, dev->m_deviceName);
         }
+        #endif
     }
     if (devicesToDisconnectNotify.size() > 0){
         xSemaphoreTake(queueMutex, portMAX_DELAY);
         auto msg = devicesToDisconnectNotify.top();
         devicesToDisconnectNotify.pop();
         xSemaphoreGive(queueMutex);
+        #ifdef ENABLE_LUA
         if (luaOnDisconnectCallback != nullptr){
             luaOnDisconnectCallback->callLuaFunction(msg.id, msg.controllerId, msg.reason);
         }
+        #endif
     }
     for (auto &it : m_characteristics){
         it.second->SendMessages();
@@ -283,3 +289,4 @@ void BleServiceHandler::NotifyDisconnect(int conId, int clientId, const char* re
     g_remoteControls.requestClearResults();
     xSemaphoreGive(queueMutex);
 }
+#endif

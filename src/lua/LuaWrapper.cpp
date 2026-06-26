@@ -1,6 +1,6 @@
 #include "lua/LuaWrapper.h"
 #include "esp32-hal.h"
-
+#ifdef ENABLE_LUA
 #if PANDA_SD_MODE == 1
 #include <SD.h>
 #elif PANDA_SD_MODE == 2
@@ -254,3 +254,5 @@ bool LuaWrapper::Lua_dostring(const char *script, int returns) {
 
   return true;
 }
+
+#endif

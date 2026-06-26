@@ -1,4 +1,6 @@
 #pragma once
+#include "tools/config_default.hpp"
+#ifdef ENABLE_LUA
 #include <stdint.h>
 #include <vector>
 #include "lua/luainterface.hpp"
@@ -34,3 +36,4 @@ void composeBulkFile();
 void DrawPanelFaceToScreen(int x, int y);
 void gentlySetPanelBrightness(uint8_t bright, uint8_t rate);
 
+#endif

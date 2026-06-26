@@ -1,4 +1,5 @@
 #include "lua/luainterface.hpp"
+#ifdef ENABLE_LUA
 #include "lua/luaobject.hpp"
 #include "tools/logger.hpp"
 #include "tools/devices.hpp"
@@ -295,7 +296,7 @@ void LuaInterface::luaCallbackError(const char *errMsg, lua_State *L)
     }
   }
 }
-
+#ifdef ENABLE_BLE
 int getConnectedRemoteControls()
 {
   return g_remoteControls.getConnectedClientsCount();
@@ -325,6 +326,7 @@ bool beginRadio(int powerLevel)
   Devices::CalculateMemmoryUsage();
   return true;
 }
+#endif
 
 bool startIR(){
   return g_InfraRed.begin();
@@ -351,7 +353,7 @@ IrCommand getLastIRCommand(){
 }
 
 
-
+#ifdef ENABLE_BLE
 int getClientIdFromControllerId(uint32_t id)
 {
   return g_remoteControls.GetClientIdFromControllerId(id);
@@ -379,6 +381,7 @@ void setMaximumControls(int id)
 {
   g_remoteControls.setMaximumControls(id);
 }
+#endif
 
 
 SizedArray *decodePng(std::string filename)
@@ -542,6 +545,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("oledDrawCircle", DrawCircleScreen);
   m_lua->FuncRegister("oledDrawFilledCircle", DrawFilledCircleScreen);
   //BLE
+  #ifdef ENABLE_BLE
   m_lua->FuncRegister("startBLE", startBLE);
   m_lua->FuncRegister("hasBLEStarted", hasBLEStarted);
   m_lua->FuncRegister("startBLERadio", beginRadio);
@@ -552,6 +556,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("setLogDiscoveredBleDevices", setLogDiscoveredBle);
   m_lua->FuncRegister("getClientIdFromControllerId", getClientIdFromControllerId);
   m_lua->FuncRegister("getRRSI", getRRSI);
+  #endif
 
 
   m_lua->FuncRegister("startIR", startIR);
@@ -837,7 +842,7 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("COLOR_MODE_BRG", (int)COLOR_MODE_BRG);
   m_lua->setConstant("COLOR_MODE_BGR", (int)COLOR_MODE_BGR);
 
-
+  #ifdef ENABLE_BLE
   m_lua->setConstant("ESP_PWR_LVL_N24", (int)ESP_PWR_LVL_N24);
   m_lua->setConstant("ESP_PWR_LVL_N21", (int)ESP_PWR_LVL_N21);
   m_lua->setConstant("ESP_PWR_LVL_N18", (int)ESP_PWR_LVL_N18);
@@ -854,6 +859,7 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("ESP_PWR_LVL_P15", (int)ESP_PWR_LVL_P15);
   m_lua->setConstant("ESP_PWR_LVL_P18", (int)ESP_PWR_LVL_P18);
   m_lua->setConstant("ESP_PWR_LVL_P21", (int)ESP_PWR_LVL_P21);
+  #endif
 
 
   m_lua->setConstant("RISING"   , (int)RISING   );
@@ -904,6 +910,8 @@ bool LuaInterface::Start()
   static LuaCFunctionLambda EmptyGC = [](lua_State* L) -> int{
     return 0;
   };
+
+  #ifdef ENABLE_BLE
   
   ClassRegister<BleServiceHandler>::RegisterClassType(_state,"BleServiceHandler",[](lua_State* L) -> BleServiceHandler*{
     if (lua_gettop(L) == 2){ 
@@ -952,6 +960,7 @@ bool LuaInterface::Start()
   ClassRegister<BleCharacteristicsHandler>::RegisterClassMethod(_state,"BleCharacteristicsHandler","SetRequired",&BleCharacteristicsHandler::SetRequired);
 
   m_lua->FuncRegister("getCharacteristicsFromService", BleServiceHandler::GetCharacteristicsFromService);
+  #endif
 
   //Created only using loadModel(modeldata, name)
   m_lua->FuncRegisterFromObjectOpt("loadModel", &g_models, &ModelDict::LoadModel, "");
@@ -1082,3 +1091,4 @@ bool LuaInterface::CallFunction(const char *functionName)
 {
   return m_lua->callLuaFunction(functionName);
 }
+#endif

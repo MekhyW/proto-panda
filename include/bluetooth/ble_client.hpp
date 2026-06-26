@@ -1,4 +1,6 @@
 #pragma once
+#include "config.hpp"
+#ifdef ENABLE_BLE
 #include <NimBLEDevice.h>
 #include "Arduino.h"
 #include "config.hpp"
@@ -93,3 +95,5 @@ class BleManager{
 };
 
 extern BleManager g_remoteControls;
+
+#endif

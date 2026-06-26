@@ -1,4 +1,5 @@
 #include "lua/luafunctions/drawingfunctions.hpp"
+#ifdef ENABLE_LUA
 #include "drawing/framerepository.hpp"
 #include "drawing/animation.hpp"
 #include "tools/oledscreen.hpp"
@@ -130,3 +131,4 @@ void gentlySetPanelBrightness(uint8_t bright, uint8_t rate){
 }
 
 
+#endif

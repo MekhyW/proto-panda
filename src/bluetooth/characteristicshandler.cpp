@@ -1,5 +1,5 @@
-
 #include "bluetooth/characteristicshandler.hpp"
+#ifdef ENABLE_BLE
 #include "lua/luainterface.hpp"
 #include "bluetooth/ble_client.hpp"
 
@@ -28,9 +28,11 @@ void BleCharacteristicsHandler::processMessageAndPop(){
     cliId = dataQueue.front().m_CliId;
     dataQueue.pop();
     xSemaphoreGive(queueMutex);
+    #ifdef ENABLE_LUA
     if (luaCallback != nullptr){
         luaCallback->callLuaFunction(id, cliId, vec);
     }
+    #endif
 }
 void BleCharacteristicsHandler::SendMessages(){
     if (m_stream){
@@ -43,3 +45,4 @@ void BleCharacteristicsHandler::SendMessages(){
         }
     }
 }
+#endif

@@ -108,10 +108,12 @@ void InfraRedManager::CalculateDifference() {
 }
 
 bool InfraRedManager::begin(){
+    #ifdef ENABLE_BLE
     if (g_remoteControls.IsStarted()){
         Logger::Info("[IR] Cannot start IR while BLE is active");
         return false;
     }
+    #endif
     Logger::Info("[IR] Started IR");
     m_started = true;
     m_steps = new uint32_t[255]; //need to be on ram. We cant afford psram here rn.
