@@ -30,17 +30,17 @@ void ClientCallbacks::onDisconnect(NimBLEClient* pClient, int reason){
 
   xSemaphoreTake(g_remoteControls.m_mutex, portMAX_DELAY);
   
-
-  auto aux = g_remoteControls.clients[pClient->getPeerAddress().toString()];
-  if (aux != nullptr){
-    auto svcs = g_remoteControls.GetAcceptedServices();
-    for (auto &it : svcs){
-      it.second->NotifyDisconnect(aux->getId(), aux->m_controllerId, reasonStr);
-    }
-    if (aux->m_controllerId < 0xff){
-      g_remoteControls.availableIds.push(aux->m_controllerId);
-    }
-    aux->connected = false;
+  auto it = g_remoteControls.clients.find(pClient->getPeerAddress().toString());
+  if (it != g_remoteControls.clients.end() && it->second != nullptr){
+      auto aux = it->second;
+      auto svcs = g_remoteControls.GetAcceptedServices();
+      for (auto &svc : svcs){
+          svc.second->NotifyDisconnect(aux->getId(), aux->m_controllerId, reasonStr);
+      }
+      if (aux->m_controllerId < 0xff){
+          g_remoteControls.availableIds.push(aux->m_controllerId);
+      }
+      aux->connected = false;
   }
   
   xSemaphoreGive(g_remoteControls.m_mutex);
