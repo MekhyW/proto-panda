@@ -42,7 +42,7 @@ float Devices::percentageHeapFree = 1;
 uint8_t Devices::maxBrightness = 0;
 
 
-std::map<byte,bool> Devices::foundDevices;
+PSRAMMap<byte,bool> Devices::foundDevices;
 
 extern Animation g_animation;
 

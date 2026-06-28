@@ -147,7 +147,7 @@ class Devices{
         static float percentageHeapFree;
         static float percentagePsramFree;
 
-        static std::map<byte,bool> foundDevices;
+        static PSRAMMap<byte,bool> foundDevices;
 
         static uint64_t s_frameStart;
         static uint64_t s_frameAutoStart;

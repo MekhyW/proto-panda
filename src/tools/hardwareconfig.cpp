@@ -43,34 +43,6 @@ const uint8_t invalidPins[] = {
     #endif
 };
 
-HUB75_I2S_CFG HardwareConfig::panelConfig(
-    64,  
-    32,   
-    1 
-
-);
-
-void HardwareConfig::loadDefaults(){
-    panelConfig.double_buff = true; // Turn of double buffer
-    panelConfig.clkphase = false;
-    panelConfig.gpio.r1 = DMA_GPIO_R1;
-    panelConfig.gpio.g1 = DMA_GPIO_G1;
-    panelConfig.gpio.b1 = DMA_GPIO_B1;
-    panelConfig.gpio.r2 = DMA_GPIO_R2;
-    panelConfig.gpio.g2 = DMA_GPIO_G2;
-    panelConfig.gpio.b2 = DMA_GPIO_B2;
-    panelConfig.gpio.a = DMA_GPIO_A;
-    panelConfig.gpio.b = DMA_GPIO_B;
-    panelConfig.gpio.c = DMA_GPIO_C;
-    panelConfig.gpio.d = DMA_GPIO_D;
-    panelConfig.gpio.lat = DMA_GPIO_LAT;
-    panelConfig.gpio.oe = DMA_GPIO_OE;
-    panelConfig.gpio.clk = DMA_GPIO_CLK;
-    panelConfig.setPixelColorDepthBits(12);
-    panelConfig.i2sspeed = HUB75_I2S_CFG::HZ_20M;
-    HardwareCanvasWidth = 64;
-    HardwareCanvasHeight = 32;
-}
 
 int HardwareConfig::checkInvalidPin(int pin){
     for (int i=0;i<sizeof(invalidPins);i++){
@@ -300,6 +272,27 @@ void HardwareConfig::loadHub75AndStart(JsonObject hub75, bool compatibilityMode)
             OledScreen::CriticalFail("Missing 'pins' in hub75 display");
         }
     }
+    HUB75_I2S_CFG panelConfig;
+
+    panelConfig.double_buff = true; // Turn of double buffer
+    panelConfig.clkphase = false;
+    panelConfig.gpio.r1 = DMA_GPIO_R1;
+    panelConfig.gpio.g1 = DMA_GPIO_G1;
+    panelConfig.gpio.b1 = DMA_GPIO_B1;
+    panelConfig.gpio.r2 = DMA_GPIO_R2;
+    panelConfig.gpio.g2 = DMA_GPIO_G2;
+    panelConfig.gpio.b2 = DMA_GPIO_B2;
+    panelConfig.gpio.a = DMA_GPIO_A;
+    panelConfig.gpio.b = DMA_GPIO_B;
+    panelConfig.gpio.c = DMA_GPIO_C;
+    panelConfig.gpio.d = DMA_GPIO_D;
+    panelConfig.gpio.lat = DMA_GPIO_LAT;
+    panelConfig.gpio.oe = DMA_GPIO_OE;
+    panelConfig.gpio.clk = DMA_GPIO_CLK;
+    panelConfig.setPixelColorDepthBits(12);
+    panelConfig.i2sspeed = HUB75_I2S_CFG::HZ_20M;
+    HardwareCanvasWidth = 64;
+    HardwareCanvasHeight = 32;
 
     pins = hub75["pins"];
 
@@ -349,7 +342,7 @@ void HardwareConfig::loadHub75AndStart(JsonObject hub75, bool compatibilityMode)
         panelConfig.setPixelColorDepthBits(hub75["colordepth"]);
     }
 
-    StartDmaDisplay();
+    StartDmaDisplay(panelConfig);
 
     if (hub75.containsKey("views") && hub75["views"].is<JsonArray>()) {
         Logger::Info("Loading views!");
@@ -359,8 +352,8 @@ void HardwareConfig::loadHub75AndStart(JsonObject hub75, bool compatibilityMode)
 }
 
 bool HardwareConfig::LoadConfigs(){
-    loadDefaults();
-
+    
+    
     File conf = PANDA_SD.open( "/hardware.json" );
     if( !conf ) {
         OledScreen::CriticalFail("Can't open hardware.jsonn");
@@ -409,7 +402,7 @@ bool HardwareConfig::LoadConfigs(){
     return true;
 }
 
-bool HardwareConfig::StartDmaDisplay(){
+bool HardwareConfig::StartDmaDisplay(HUB75_I2S_CFG &panelConfig){
     if (Devices::Display != nullptr){
         Logger::Info("DMA display is already started.");
         return false;

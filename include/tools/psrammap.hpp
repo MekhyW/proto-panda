@@ -75,7 +75,7 @@ template <typename T>
 using PSRAMList = std::list<T, PSRAMAllocator<T>>;
 
 template <typename T>
-using PSRAMStack = std::stack<T, PSRAMAllocator<T>>;
+using PSRAMStack = std::stack<T, std::deque<T, PSRAMAllocator<T>>>;
 
 
 struct SpiRamAllocator : ArduinoJson::Allocator {
