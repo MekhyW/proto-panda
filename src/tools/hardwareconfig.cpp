@@ -3,6 +3,13 @@
 #include "tools/logger.hpp"
 #include "tools/devices.hpp"
 #include "tools/psrammap.hpp"
+#include "tools/logger.hpp"
+#include "lua/luainterface.hpp"
+#include "drawing/ledstrip.hpp"
+
+#include "tools/displays/hub75.hpp"
+#include "tools/displays/max7219.hpp"
+#include "tools/displays/ws2812.hpp"
 
 #if PANDA_SD_MODE == 1
 #include <SD.h>
@@ -11,6 +18,11 @@
 #else
 #error "NO SD_MODE Mode defined (set PANDA_SD_MODE to 1 for SD or 2 for SD_MMC)"
 #endif
+
+extern LedStrip g_leds;
+
+int HardwareConfig::HardwareCanvasWidth = DEFAULT_CANVAS_WIDTH;
+int HardwareConfig::HardwareCanvasHeight = DEFAULT_CANVAS_HEIGHT;
 
 const uint8_t invalidPins[] = {
     I2C_SDA,
@@ -32,9 +44,9 @@ const uint8_t invalidPins[] = {
 };
 
 HUB75_I2S_CFG HardwareConfig::panelConfig(
-    PANEL_WIDTH,  
-    PANEL_HEIGHT,   
-    PANEL_CHAIN 
+    64,  
+    32,   
+    1 
 
 );
 
@@ -56,6 +68,8 @@ void HardwareConfig::loadDefaults(){
     panelConfig.gpio.clk = DMA_GPIO_CLK;
     panelConfig.setPixelColorDepthBits(12);
     panelConfig.i2sspeed = HUB75_I2S_CFG::HZ_20M;
+    HardwareCanvasWidth = 64;
+    HardwareCanvasHeight = 32;
 }
 
 int HardwareConfig::checkInvalidPin(int pin){
@@ -96,31 +110,251 @@ void HardwareConfig::loadServosAndStart(JsonObject servos){
     }
 }
 
-void HardwareConfig::loadHub75AndStart(JsonObject hub75){
-    if (!hub75["enabled"]) {
-        Devices::Display = new MockDisplay(panelConfig);
+void HardwareConfig::loadAndParseDisplay(JsonObject displayInfo){
+    if (!displayInfo.containsKey("type")){
+        OledScreen::CriticalFail("Display dont have a type");
         return;
     }
 
-    if (hub75.containsKey("dma_r1")) panelConfig.gpio.r1 = checkInvalidPin(hub75["dma_r1"]);
-    if (hub75.containsKey("dma_g1")) panelConfig.gpio.g1 = checkInvalidPin(hub75["dma_g1"]);
-    if (hub75.containsKey("dma_b1")) panelConfig.gpio.b1 = checkInvalidPin(hub75["dma_b1"]);
-    if (hub75.containsKey("dma_r2")) panelConfig.gpio.r2 = checkInvalidPin(hub75["dma_r2"]);
-    if (hub75.containsKey("dma_g2")) panelConfig.gpio.g2 = checkInvalidPin(hub75["dma_g2"]);
-    if (hub75.containsKey("dma_b2")) panelConfig.gpio.b2 = checkInvalidPin(hub75["dma_b2"]);
-    if (hub75.containsKey("dma_a")) panelConfig.gpio.a = checkInvalidPin(hub75["dma_a"]);
-    if (hub75.containsKey("dma_b")) panelConfig.gpio.b = checkInvalidPin(hub75["dma_b"]);
-    if (hub75.containsKey("dma_c")) panelConfig.gpio.c = checkInvalidPin(hub75["dma_c"]);
-    if (hub75.containsKey("dma_d")) panelConfig.gpio.d = checkInvalidPin(hub75["dma_d"]);
-    if (hub75.containsKey("dma_lat")) panelConfig.gpio.lat = checkInvalidPin(hub75["dma_lat"]);
-    if (hub75.containsKey("dma_oe")) panelConfig.gpio.oe = checkInvalidPin(hub75["dma_oe"]);
-    if (hub75.containsKey("dma_clk")) panelConfig.gpio.clk = checkInvalidPin(hub75["dma_clk"]);
-        
+    if (!displayInfo["enabled"]) {
+        Devices::Display = new EmptyDisplay();
+        return;
+    }
+
+    std::string displayType = displayInfo["type"].as<const char*>();
+    if (displayType == "hub75"){
+        loadHub75AndStart(displayInfo["hub75"], false);
+    }else if (displayType == "max7219"){
+        loadMax7219AndStart(displayInfo["max7219"]);
+    }else if (displayType == "ws2812b"){
+        loadWS2812BAndStart(displayInfo["ws2812b"]);
+    }else{
+        OledScreen::CriticalFail("Display type in hardware.json is not supported");
+    }
+    if (!Devices::Display){
+        Devices::Display = new EmptyDisplay();
+    }
+
+    if (displayInfo.containsKey("mirrorOtherHalf")) Devices::Display->mirrorHalf = checkInvalidPin(displayInfo["mirrorOtherHalf"]);
+}
+
+
+
+void HardwareConfig::loadViews(JsonObject ws2812b, BaseDisplay* display, uint16_t defaultWidth, uint16_t defaultHeight) {
+    if (!ws2812b.containsKey("views") || !ws2812b["views"].is<JsonArray>()) {
+        return;
+    }
+
+    JsonArray views = ws2812b["views"].as<JsonArray>();
+
+    for (JsonObject v : views) {
+        if (!v.containsKey("x") || !v.containsKey("y")) {
+            OledScreen::CriticalFail("View missing required 'x' or 'y' field");
+            return;
+        }
+        if (!v.containsKey("canvas_x") || !v.containsKey("canvas_y")) {
+            OledScreen::CriticalFail("View missing required 'canvas_x' or 'canvas_y' field");
+            return;
+        }
+
+        uint16_t x        = v["x"];
+        uint16_t y        = v["y"];
+        uint16_t canvas_x = v["canvas_x"];
+        uint16_t canvas_y = v["canvas_y"];
+        uint16_t w        = v.containsKey("width")  ? (uint16_t)v["width"]  : defaultWidth;
+        uint16_t h        = v.containsKey("height") ? (uint16_t)v["height"] : defaultHeight;
+        bool flipH        = v.containsKey("flip_horizontal") ? (bool)v["flip_horizontal"] : false;
+        bool flipV        = v.containsKey("flip_vertical") ? (bool)v["flip_vertical"] : false;
+        Logger::Info("Added view: %d %d  ->  %d %d   (%d,%d)", x, y, canvas_x, canvas_y, w, h);
+        display->view.addView(x, y, canvas_x, canvas_y, w, h, flipH, flipV);
+    }
+}
+
+
+void HardwareConfig::loadWS2812BAndStart(JsonObject ws2812b){
+
+ 
+
+    uint16_t width,height,brightness, panels, horizontal_panel_count=0;
+    if (ws2812b.containsKey("maxtrix_width")){
+        width = ws2812b["maxtrix_width"];
+    }else{
+        OledScreen::CriticalFail("Missing 'maxtrix_width' in display");
+    }
+    
+    if (ws2812b.containsKey("maxtrix_height")) {
+        height = ws2812b["maxtrix_height"];
+    }else{
+        OledScreen::CriticalFail("Missing 'maxtrix_height' in display");
+    }
+    if (ws2812b.containsKey("panels")) {
+        panels = ws2812b["panels"];
+    }else{
+        OledScreen::CriticalFail("Missing 'panels' in display");
+    }
+    if (ws2812b.containsKey("horizontal_panel_count")) {
+        horizontal_panel_count = ws2812b["horizontal_panel_count"];
+    }else{
+        OledScreen::CriticalFail("Missing 'horizontal_panel_count' in display");
+    }
+
+    if (ws2812b.containsKey("brightness")) {
+        brightness = ws2812b["brightness"];
+    }else{
+        OledScreen::CriticalFail("Missing 'brightness' in display");
+    }
+
+    CRGB *leds = g_leds.BeginScreen(width*panels, height, brightness);
+
+    Devices::Display = new WS2812BDisplay(width, height, panels, leds);
+    if (Devices::Display == nullptr){
+        Logger::Info("Failed to start WS2812BD display");
+        return;
+    }
+
+    Devices::Display->begin();
+    //This will make the pixels from the canvas at 8x8 and draw them at 0x0 in a square of widthXheight
+    Logger::Info("Started WS2812BD display!");
+
+    if (ws2812b.containsKey("views") && ws2812b["views"].is<JsonArray>()) {
+        Logger::Info("Loading views!");
+        loadViews(ws2812b, Devices::Display, width, height);
+    }
+
+}
+
+void HardwareConfig::loadMax7219AndStart(JsonObject max7219){
+    uint32_t panels = 2;
+    int csPin;
+    int dataInPin;
+    int clockPin;
+    int horizontal_panel_count=0;
+
+    if (!max7219.containsKey("pins")){
+        OledScreen::CriticalFail("Missing 'pins' in max7219 display");
+    }
+
+    JsonObject pins = max7219["pins"];
+
+    if (pins.containsKey("cs")){
+        csPin = pins["cs"];
+    }else{
+        OledScreen::CriticalFail("Missing 'cs' in display");
+    }
+
+    if (pins.containsKey("din")){
+        dataInPin = pins["din"];
+    }else{
+        OledScreen::CriticalFail("Missing 'din' in display");
+    }
+
+    if (pins.containsKey("clk")){
+        clockPin = pins["clk"];
+    }else{
+        OledScreen::CriticalFail("Missing 'clk' in display");
+    }
+
+    if (max7219.containsKey("panels")){
+        panels = max7219["panels"];
+    }else{
+        OledScreen::CriticalFail("Missing 'panels' in display");
+    }
+
+    if (max7219.containsKey("horizontal_panel_count")){
+        horizontal_panel_count = max7219["horizontal_panel_count"];
+    }else{
+        OledScreen::CriticalFail("Missing 'horizontal_panel_count' in display");
+    }
+    
+   
+    if (Devices::Display != nullptr){
+        Logger::Info("DMA display is already started.");
+        return;
+    }
+
+    //Todo check avaliable ram
+    Devices::Display = new MAX7219Display(panels, horizontal_panel_count, csPin, dataInPin, clockPin);
+    if (Devices::Display == nullptr){
+        Logger::Info("Failed to start DMA display");
+        return;
+    }
+
+    Devices::Display->begin();
+    Devices::Display->setBrightness8(128);
+    Devices::Display->clearScreen();
+    Devices::Display->flipDma();
+    Logger::Info("Started max7219 display!");
+
+    if (max7219.containsKey("views") && max7219["views"].is<JsonArray>()) {
+        Logger::Info("Loading views!");
+        loadViews(max7219, Devices::Display, 8, 8);
+    }
+}
+
+
+
+void HardwareConfig::loadHub75AndStart(JsonObject hub75, bool compatibilityMode){
+    JsonObject pins = hub75;
+    if (!hub75.containsKey("pins")){
+        if (!hub75.containsKey("dma_r1")){
+            OledScreen::CriticalFail("Missing 'pins' in hub75 display");
+        }
+    }
+
+    pins = hub75["pins"];
+
+    if (pins.containsKey("dma_r1")) panelConfig.gpio.r1 = checkInvalidPin(pins["dma_r1"]);
+    if (pins.containsKey("dma_g1")) panelConfig.gpio.g1 = checkInvalidPin(pins["dma_g1"]);
+    if (pins.containsKey("dma_b1")) panelConfig.gpio.b1 = checkInvalidPin(pins["dma_b1"]);
+    if (pins.containsKey("dma_r2")) panelConfig.gpio.r2 = checkInvalidPin(pins["dma_r2"]);
+    if (pins.containsKey("dma_g2")) panelConfig.gpio.g2 = checkInvalidPin(pins["dma_g2"]);
+    if (pins.containsKey("dma_b2")) panelConfig.gpio.b2 = checkInvalidPin(pins["dma_b2"]);
+    if (pins.containsKey("dma_a")) panelConfig.gpio.a = checkInvalidPin(pins["dma_a"]);
+    if (pins.containsKey("dma_b")) panelConfig.gpio.b = checkInvalidPin(pins["dma_b"]);
+    if (pins.containsKey("dma_c")) panelConfig.gpio.c = checkInvalidPin(pins["dma_c"]);
+    if (pins.containsKey("dma_d")) panelConfig.gpio.d = checkInvalidPin(pins["dma_d"]);
+    if (pins.containsKey("dma_lat")) panelConfig.gpio.lat = checkInvalidPin(pins["dma_lat"]);
+    if (pins.containsKey("dma_oe")) panelConfig.gpio.oe = checkInvalidPin(pins["dma_oe"]);
+    if (pins.containsKey("dma_clk")) panelConfig.gpio.clk = checkInvalidPin(pins["dma_clk"]);
+
+
+    if (hub75.containsKey("width")){
+        panelConfig.mx_width = hub75["width"];
+    }else{
+        if (!compatibilityMode){
+            OledScreen::CriticalFail("Missing 'width' in display");
+        }
+        panelConfig.mx_height = HardwareConfig::HardwareCanvasWidth;
+    }
+    
+    if (hub75.containsKey("height")) {
+        panelConfig.mx_height = hub75["height"];
+    }else{
+        if (!compatibilityMode){
+            OledScreen::CriticalFail("Missing 'height' in display");
+        }
+        panelConfig.mx_height = HardwareConfig::HardwareCanvasHeight;
+    }
+
+    if (hub75.containsKey("panels")) {
+        panelConfig.chain_length = hub75["panels"];
+    }else{
+        if (!compatibilityMode){
+            OledScreen::CriticalFail("Missing 'panels' in display");
+        }
+        panelConfig.chain_length = 2;
+    }
+
     if (hub75.containsKey("colordepth")) {
         panelConfig.setPixelColorDepthBits(hub75["colordepth"]);
     }
 
     StartDmaDisplay();
+
+    if (hub75.containsKey("views") && hub75["views"].is<JsonArray>()) {
+        Logger::Info("Loading views!");
+        loadViews(hub75, Devices::Display, panelConfig.mx_width, panelConfig.mx_height);
+    }
     return;
 }
 
@@ -146,11 +380,28 @@ bool HardwareConfig::LoadConfigs(){
        return false;
     }
 
-    if (hardwareConfigJson.containsKey("hub75")) {
-        loadHub75AndStart(hardwareConfigJson["hub75"]);
+    if (hardwareConfigJson.containsKey("canvas_width")) {
+        HardwareConfig::HardwareCanvasWidth = hardwareConfigJson["canvas_width"].as<int>();
+    }
+    if (hardwareConfigJson.containsKey("canvas_height")) {
+        HardwareConfig::HardwareCanvasHeight = hardwareConfigJson["canvas_height"].as<int>();
+    }
+
+    Logger::Info("Canvas size will be %dx%d", HardwareConfig::HardwareCanvasWidth, HardwareConfig::HardwareCanvasHeight);
+
+    if (hardwareConfigJson.containsKey("display")) {
+        Logger::Info("Loading display info");
+        loadAndParseDisplay(hardwareConfigJson["display"]);
+    }else if (hardwareConfigJson.containsKey("hub75")) { //Backward compatibility
+        loadHub75AndStart(hardwareConfigJson["hub75"], true);
+        Devices::Display->mirrorHalf = true;
+    }else{
+        Devices::Display = new EmptyDisplay();
+        Logger::Info("NO DISPLAY DEFINED!");
     }
 
     if (hardwareConfigJson.containsKey("servos")) {
+        Logger::Info("Loading servos info");
         loadServosAndStart(hardwareConfigJson["servos"]);
     }
 
@@ -159,13 +410,12 @@ bool HardwareConfig::LoadConfigs(){
 }
 
 bool HardwareConfig::StartDmaDisplay(){
-    #ifdef ENABLE_HUB75_PANEL
     if (Devices::Display != nullptr){
         Logger::Info("DMA display is already started.");
         return false;
     }
     //Todo check avaliable ram
-    Devices::Display = new MatrixPanel_I2S_DMA_2(panelConfig);
+    Devices::Display = new Hub75Display(panelConfig);
     if (Devices::Display == nullptr){
         Logger::Info("Failed to start DMA display");
         return false;
@@ -181,7 +431,4 @@ bool HardwareConfig::StartDmaDisplay(){
     Devices::CalculateMemmoryUsageDifference("Dma display");
 
     return true;
-    #else 
-    return false;
-    #endif
 }

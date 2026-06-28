@@ -22,7 +22,7 @@ class DisconnectTuple{
 class BluetoothDeviceHandler{
   public: 
     static int idCounter;
-    BluetoothDeviceHandler():m_device(nullptr),m_callbacks(nullptr),m_client(nullptr),m_controllerId(0xffff),connected(false){m_id = ++idCounter;};
+    BluetoothDeviceHandler():m_device(nullptr),m_callbacks(nullptr),m_client(nullptr),m_controllerId(0xffff),m_deviceAddress(""),m_deviceName(""),connected(false){m_id = ++idCounter;};
     ~BluetoothDeviceHandler();
     int getId(){
       return m_id;
@@ -31,6 +31,8 @@ class BluetoothDeviceHandler{
     ClientCallbacks * m_callbacks;
     NimBLEClient* m_client;
     uint32_t m_controllerId;
+    std::string m_deviceAddress; 
+    std::string m_deviceName; 
     bool connected;
   private:
     int m_id;

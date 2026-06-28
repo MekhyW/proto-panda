@@ -149,7 +149,7 @@ uint16_t* Storage::DecodeBMP(const char *name){
   int height = *(int*)&buff[22];
 
   if (width != 64 || height != 32){
-    Logger::Error("Mismatched image size, expected %d %d but got %d %d", PANEL_WIDTH, PANEL_HEIGHT, width, height);
+    Logger::Error("Mismatched image size, expected %d %d but got %d %d", CANVAS_WIDTH, CANVAS_HEIGHT, width, height);
     heap_caps_free(buff);
     return nullptr;
   }
@@ -210,8 +210,8 @@ uint16_t *Storage::DecodePNGForBuffer(const char *name, int& rcError){
   if (rcError != PNG_SUCCESS) {
     return nullptr;
   }
-  if (png->getWidth() != PANEL_WIDTH && png->getHeight() != PANEL_HEIGHT){
-    Logger::Error("Mismatched image size, expected %d %d but got %d %d", PANEL_WIDTH, PANEL_HEIGHT, png->getWidth(), png->getHeight());
+  if (png->getWidth() != CANVAS_WIDTH && png->getHeight() != CANVAS_HEIGHT){
+    Logger::Error("Mismatched image size, expected %d %d but got %d %d", CANVAS_WIDTH, CANVAS_HEIGHT, png->getWidth(), png->getHeight());
     png->close();
     rcError = 999;
     return nullptr;

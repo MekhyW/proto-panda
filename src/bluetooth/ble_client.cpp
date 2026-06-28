@@ -44,7 +44,9 @@ void AdvertisedDeviceCallbacks::onResult(const NimBLEAdvertisedDevice* advertise
   xSemaphoreGive(bleObj->m_mutex);
 }
 
-void AdvertisedDeviceCallbacks::onScanEnd(const NimBLEScanResults& results, int reason)  {}
+void AdvertisedDeviceCallbacks::onScanEnd(const NimBLEScanResults& results, int reason)  {
+  
+}
 
 
 bool BleManager::connectToServer(){
@@ -66,6 +68,8 @@ bool BleManager::connectToServer(){
     if (pClient) {
       if (!pClient->connect(advDevice, false)) {
         Logger::Info("Failed to reconnect, last error = %d\n", pClient->getLastError());
+        NimBLEDevice::deleteClient(pClient);
+        device->m_client = nullptr;
         return false;
       }
       Logger::Info("Reconnected client\n");
@@ -173,6 +177,9 @@ bool BleManager::connectToServer(){
 
   device->connected = true;
 
+  device->m_deviceAddress = pClient->getPeerAddress().toString();
+  device->m_deviceName = advDevice->getName();      
+
   clients[pClient->getPeerAddress().toString()] = device;
   clientCount++;
 
@@ -215,13 +222,13 @@ void BleManager::setScanningMode(bool mode){
   m_scanStartAt = millis()+2000;
   if (mode == false){
     Logger::Info("[BLE] Scan stoped");
-    NimBLEDevice::getScan()->stop();
     isScanning = false;
     m_canScan = false;
   }else{
-    Logger::Info("[BLE] Scan resumed");
+    Logger::Info("[BLE] Scan resuming");
     NimBLEDevice::getScan()->clearResults();
-    NimBLEDevice::getScan()->start(0, false, false); 
+    Logger::Info("[BLE] Scan resumed");
+    NimBLEDevice::getScan()->start(0, false, true); 
   }
 }
 
@@ -296,6 +303,11 @@ void BleManager::update(){
   if (millis() - lastScanClearTime >= (30*1000) ) {
     if (isScanning){
       setScanningMode(false);
+      if (m_pauseScan){
+        Logger::Info("[BLE] Scaner stopped!");
+        NimBLEDevice::getScan()->stop();
+        m_pauseScan = false;
+      }
       NimBLEDevice::getScan()->clearResults(); // Clear the scan results
       Logger::Info("[BLE] Scan results cleared");
       m_canScan = true;
@@ -303,6 +315,10 @@ void BleManager::update(){
     }
     lastScanClearTime = millis(); // Reset the timer
     Devices::CalculateMemmoryUsage();
+  }
+  if (m_pauseScan){
+    NimBLEDevice::getScan()->stop();
+    m_pauseScan = false;
   }
   
   
@@ -327,6 +343,7 @@ void BleManager::update(){
       for (auto &aux : clients){
         if (!aux.second->connected){
             toErase = aux.first;
+            break;
         }
       }
         

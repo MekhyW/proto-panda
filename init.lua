@@ -7,7 +7,8 @@ local boop = require("boop")
 local configloader = require("configloader")
 local drivers = require("drivers")
 local input = require("input")
-
+local leds = require("leds")
+local fft = require("fft")
 
 function onSetup()
 
@@ -30,14 +31,10 @@ function onSetup()
     expressions.Load() 
     scripts.Load() 
     boop.Load()
-
+    generic.displaySplashMessage("Starting:\nFFT")
+    fft.load()
     generic.displaySplashMessage("Starting:\nLeds")
-    ledsBeginDual(25, 25, 0) 
-    ledsDisplay()
-    ledsSegmentRange(0, 0, 24)
-    ledsSegmentRange(1, 25, 49)
-    ledsSegmentBehavior(0, BEHAVIOR_PRIDE) 
-    ledsSegmentBehavior(1, BEHAVIOR_PRIDE)
+    leds.begin()
     generic.displaySplashMessage("Starting:\nMenu") 
     menu.setup()
 end

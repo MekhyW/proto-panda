@@ -396,8 +396,11 @@ SizedArray *decodePng(std::string filename)
     OledScreen::CriticalFail("Failed to allocate");
     for (;;){}
   }
-
-  SizedArray *aux = new SizedArray();
+  SizedArray *aux = (SizedArray*)ps_malloc(sizeof(SizedArray));
+  #ifndef __INTELLISENSE__
+  //This code will be compiled. But for some reason intellisense claims its invalid. So i'm using this to avoid visual warning in the IDE
+  new (aux) SizedArray();
+  #endif
   aux->data = decodedData;
   aux->size =  x * y;
   aux->deleteAfterInsertion = heap_caps_free;
@@ -521,9 +524,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("dictLoad", dictLoad);
   m_lua->FuncRegister("dictFormat", dictFormat);
   //Oleed display internal
-  #ifdef ENABLE_HUB75_PANEL
   m_lua->FuncRegister("oledFaceToScreen", DrawPanelFaceToScreen);
-  #endif
   m_lua->FuncRegister("oledCreateIcon", OledScreen::CreateIcon);
   m_lua->FuncRegister("oledDrawIcon", OledScreen::DrawIcon);
   m_lua->FuncRegister("oledClearScreen", OledScreen::Clear);
@@ -590,8 +591,7 @@ void LuaInterface::RegisterMethods()
   //Internal sensor
   m_lua->FuncRegister("getInternalButtonStatus", getInternalButtonStatus); 
   //Panels
-  #ifdef ENABLE_HUB75_PANEL
-  //LoadFrameAsTexture(int i)
+
   m_lua->FuncRegisterFromObjectOpt("flipPanelBuffer", &g_animation, &Animation::MakeFlip);
   m_lua->FuncRegisterFromObjectOpt("loadFrameAsTexture", &g_animation, &Animation::LoadFrameAsTexture);
   m_lua->FuncRegister("drawPanelRect", DrawRect);
@@ -607,6 +607,18 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("drawPanelFace", DrawFace);
 
 
+  m_lua->FuncRegisterFromObjectOpt("startFft", &g_fft, &FFT::start);
+  m_lua->FuncRegisterFromObjectOpt("stopFft", &g_fft, &FFT::stop);
+  m_lua->FuncRegisterFromObjectOpt("setManaged", &g_fft, &FFT::setManaged);
+  m_lua->FuncRegisterFromObjectOpt("deinitFft", &g_fft, &FFT::deinit);
+  m_lua->FuncRegisterFromObjectOpt("updateFft", &g_fft, &FFT::update);
+  m_lua->FuncRegisterFromObjectOpt("isManagedFft", &g_fft, &FFT::isManaged);
+  m_lua->FuncRegisterFromObjectOpt("getBandCountFft", &g_fft, &FFT::getBandCount);
+  m_lua->FuncRegisterFromObjectOpt("isRunningFft", &g_fft, &FFT::isRunning);
+  m_lua->FuncRegisterFromObjectOpt("getBandValueFft", &g_fft, &FFT::getBandValue);
+  m_lua->FuncRegisterFromObjectOpt("beginFft", &g_fft, &FFT::begin, 16, 2000, 44100, 512, 1);
+
+
   m_lua->FuncRegisterFromObjectOpt("setPanelAnimation", &g_animation, &Animation::SetAnimation, -1, false, -1, 250);
   m_lua->FuncRegisterFromObjectOpt("setPanelModelAnimation", &g_animation, &Animation::SetModelAnimation, -1, false, -1);
 
@@ -615,6 +627,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegisterFromObjectOpt("setInterruptAnimationPin", &g_animation, &Animation::SetInterruptPin);
 
     
+  m_lua->FuncRegisterFromObjectOpt("setFFTOverlay", &g_animation, &Animation::SetFFTOverlay); 
   m_lua->FuncRegisterFromObjectOpt("setAnimationShader", &g_animation, &Animation::SetShader, 1.0f); 
   m_lua->FuncRegisterFromObjectOpt("getAnimationStackSize", &g_animation, &Animation::getAnimationStackSize);   
   m_lua->FuncRegisterFromObjectOpt("setPanelColorMode", &g_animation, &Animation::setColorMode);   
@@ -637,7 +650,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("color444", color444);
   m_lua->FuncRegister("getFrameOffsetByName", GetOffsetByName);
   m_lua->FuncRegister("getFrameCountByName", GetFrameCountByName);
-  #endif
+
   m_lua->FuncRegister("decodePng", decodePng); 
   //Aarduino
   m_lua->FuncRegister("tone", Devices::BuzzerTone);
@@ -715,10 +728,9 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("formatFFAT", formatFFAT);
 
   m_lua->FuncRegister("listFilesInFolder", Storage::listFolder);
-  #ifdef ENABLE_HUB75_PANEL
+
   m_lua->FuncRegister("composeBulkFile", composeBulkFile);
   m_lua->FuncRegister("deleteBulkFile", deleteBulkFile);
-  #endif
 }
 
 void LuaInterface::RegisterConstants()
@@ -801,8 +813,13 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("VCC_THRESHOLD_HALT", VCC_THRESHOLD_HALT);
   m_lua->setConstant("OLED_SCREEN_WIDTH", OLED_SCREEN_WIDTH);
   m_lua->setConstant("OLED_SCREEN_HEIGHT", OLED_SCREEN_HEIGHT);
-  m_lua->setConstant("PANEL_WIDTH", PANEL_WIDTH);
-  m_lua->setConstant("PANEL_HEIGHT", PANEL_HEIGHT);
+  m_lua->setConstant("CANVAS_WIDTH", CANVAS_WIDTH);
+  m_lua->setConstant("CANVAS_HEIGHT", CANVAS_HEIGHT);
+  m_lua->setConstant("PANEL_WIDTH", CANVAS_WIDTH);
+  m_lua->setConstant("PANEL_HEIGHT", CANVAS_HEIGHT);
+  m_lua->setConstant("DEFAULT_CANVAS_WIDTH", DEFAULT_CANVAS_WIDTH);
+  m_lua->setConstant("DEFAULT_CANVAS_HEIGHT", DEFAULT_CANVAS_HEIGHT);
+
   m_lua->setConstant("MAX_LED_GROUPS", MAX_LED_GROUPS);
   m_lua->setConstant("EDIT_MODE_PIN", EDIT_MODE_PIN);
   #ifdef ENABLE_EDIT_MODE
@@ -811,10 +828,7 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("ENABLE_EDIT_MODE", 0);
   #endif
   m_lua->setConstant("EDIT_ENABLE_LOGIC_LEVEL", EDIT_ENABLE_LOGIC_LEVEL);
-  m_lua->setConstant("PANEL_CHAIN", PANEL_CHAIN);
 
-  #ifdef ENABLE_HUB75_PANEL
-  m_lua->setConstant("ENABLE_HUB75_PANEL", 1);
   m_lua->setConstant("COLOR_MODE_RGB", (int)COLOR_MODE_RGB);
   m_lua->setConstant("COLOR_MODE_RGB", (int)COLOR_MODE_RGB);
   m_lua->setConstant("COLOR_MODE_RBG", (int)COLOR_MODE_RBG);
@@ -822,9 +836,7 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("COLOR_MODE_GBR", (int)COLOR_MODE_GBR);
   m_lua->setConstant("COLOR_MODE_BRG", (int)COLOR_MODE_BRG);
   m_lua->setConstant("COLOR_MODE_BGR", (int)COLOR_MODE_BGR);
-  #else
-  m_lua->setConstant("ENABLE_HUB75_PANEL", 0);
-  #endif
+
 
   m_lua->setConstant("ESP_PWR_LVL_N24", (int)ESP_PWR_LVL_N24);
   m_lua->setConstant("ESP_PWR_LVL_N21", (int)ESP_PWR_LVL_N21);
@@ -852,8 +864,6 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("ONLOW_WE" , (int)ONLOW_WE );
   m_lua->setConstant("ONHIGH_WE", (int)ONHIGH_WE);
 
-
-
   m_lua->setConstant("KEYFRAME_TRANSLATE",       (int)KEYFRAME_TRANSLATE);
   m_lua->setConstant("KEYFRAME_ROTATE",          (int)KEYFRAME_ROTATE);
   m_lua->setConstant("KEYFRAME_SCALE",           (int)KEYFRAME_SCALE);
@@ -862,9 +872,6 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("KEYFRAME_VISIBILITY",      (int)KEYFRAME_VISIBILITY);
   m_lua->setConstant("KEYFRAME_SINE",            (int)KEYFRAME_SINE);
   m_lua->setConstant("KEYFRAME_SHADER",          (int)KEYFRAME_SHADER);
-
-
-
 
   m_lua->setConstant("SHADER_NONE",         (int)SHADER_NONE);
   m_lua->setConstant("SHADER_RAINBOW",      (int)SHADER_RAINBOW);
@@ -882,7 +889,7 @@ void LuaInterface::RegisterConstants()
 
 bool LuaInterface::Start()
 {
-
+  
   m_lua = new (LuaWrapper);
   if (!m_lua)
   {
@@ -978,7 +985,13 @@ bool LuaInterface::Start()
 
   static LuaCFunctionLambda ThisGc = [](lua_State* L) -> int{ return LuaCaller::GC<KeyframeTrack>(L); };
 
-  ClassRegister<KeyframeTrack>::RegisterClassType(_state,"KeyframeTrack", [](lua_State* L) -> KeyframeTrack* { return new KeyframeTrack();}, &ThisGc ); 
+  ClassRegister<KeyframeTrack>::RegisterClassType(_state,"KeyframeTrack", [](lua_State* L) -> KeyframeTrack* { 
+    KeyframeTrack *kt = (KeyframeTrack*)ps_malloc(sizeof(KeyframeTrack));
+    #ifndef __INTELLISENSE__
+    //This code will be compiled. But for some reason intellisense claims its invalid. So i'm using this to avoid visual warning in the IDE
+    new (kt) KeyframeTrack();
+    #endif
+    return new KeyframeTrack();}, &ThisGc ); 
   ClassRegister<KeyframeTrack>::RegisterClassMethod(_state,"KeyframeTrack","Reset", &KeyframeTrack::Reset);
   ClassRegister<KeyframeTrack>::RegisterClassMethod(_state,"KeyframeTrack","SetResource", &KeyframeTrack::SetResource);
   ClassRegister<KeyframeTrack>::RegisterClassMethod(_state,"KeyframeTrack","AddKeyFrame", &KeyframeTrack::AddKeyFrame);

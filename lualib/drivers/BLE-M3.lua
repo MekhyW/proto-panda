@@ -26,15 +26,12 @@ function blem3.processPackets(connectionId, controllerId, data)
             beauty.timeout = millis()+250
             beauty.buttons[3] = 1
         end       
-    elseif data[1] == 7 and data[2] == 244 and data[3] == 3 and data[4] == 116 then
-        if prevPacket[4] == 160 then  
-            --down
-            local beauty = drivers.generic[controllerId]
-            beauty.timeout = millis()+250
-            beauty.buttons[1] = 1
-        end 
-        
-    elseif data[1] == 7 and data[4] == 72 and data[5] == 5 then
+    elseif data[1] == 7 and data[2] == 244 and data[3] == 3 and data[4] == 116 and (prevPacket[4] == 160 or prevPacket[4] == 32) then
+        --down
+        local beauty = drivers.generic[controllerId]
+        beauty.timeout = millis()+250
+        beauty.buttons[1] = 1
+    elseif data[1] == 7 and (data[4] == 72 or data[4] == 120) and data[5] == 5 then
         if prevPacket[5] == 4 then  
             --up
             local beauty = drivers.generic[controllerId]
@@ -48,7 +45,7 @@ function blem3.processPackets(connectionId, controllerId, data)
         beauty.timeout = millis()+250
         beauty.buttons[5] = 1   
 
-    elseif data[1] == 7 and data[2] == 0 and data[3] == 0 then
+    elseif (data[1] == 7 and data[2] == 0 and data[3] == 0) or (data[1] == 6 and data[2] == 0 and data[3] == 0 or data[4] == 0 and data[5] == 0) then
         --back
         local beauty = drivers.generic[controllerId]
         beauty.timeout = millis()+250

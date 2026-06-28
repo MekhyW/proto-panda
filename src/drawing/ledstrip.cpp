@@ -4,6 +4,20 @@
 #include "config.hpp"
 #include <Arduino.h>
 
+CRGB* LedStrip::BeginScreen(uint16_t w, uint16_t h, uint8_t maxbrightness){
+    m_screen = new CRGB[w*h];
+    FastLED.addLeds<LED_STRIP_TYPE,IF_USING_WS2812B_MATRIX_SCREEN_PIN,GRB>(m_screen, w*h).setCorrection(TypicalLEDStrip).setDither(maxbrightness < 255);
+    FastLED.setBrightness(maxbrightness);
+    m_maxBrightness = maxbrightness;
+
+    for (int a=0;a<(w*h);++a){
+        m_screen[a] = CRGB(0,0,0);
+    }
+    m_hasScreen = true;
+    FastLED.show(); 
+    return m_screen;
+}
+
 bool LedStrip::BeginDual(uint16_t ledCount, uint16_t secondLedCount, uint8_t maxbrightness){
     if (m_groups == nullptr){
         m_groups = (LedGroup*)ps_malloc(sizeof(LedGroup) *MAX_LED_GROUPS);
@@ -16,12 +30,20 @@ bool LedStrip::BeginDual(uint16_t ledCount, uint16_t secondLedCount, uint8_t max
         if (m_leds == nullptr){
             return false;
         }
+        if (!m_hasScreen || IF_USING_WS2812B_MATRIX_SCREEN_PIN != LED_STRIP_PIN_1){
+            FastLED.addLeds<LED_STRIP_TYPE,LED_STRIP_PIN_1,GRB>(m_leds, ledCount).setCorrection(TypicalLEDStrip).setDither(m_maxBrightness < 255);
+            Logger::Info("Led started at addr %d to %d", (int)m_leds, ledCount);
+        }else{
+            Logger::Info("Led cant start led strip at pin %d because screen is already using it", LED_STRIP_PIN_1);
+        }
 
-        FastLED.addLeds<LED_STRIP_TYPE,LED_STRIP_PIN_1,GRB>(m_leds, ledCount).setCorrection(TypicalLEDStrip).setDither(m_maxBrightness < 255);
-        Logger::Info("Led started at addr %d to %d", (int)m_leds, ledCount);
         if (secondLedCount > 0){
-            Logger::Info("Second started at addr %d to %d", ((int)m_leds)+ ledCount, secondLedCount);
-            FastLED.addLeds<LED_STRIP_TYPE,LED_STRIP_PIN_2,GRB>(m_leds + ledCount, secondLedCount).setCorrection(TypicalLEDStrip).setDither(m_maxBrightness < 255);
+            if (!m_hasScreen || IF_USING_WS2812B_MATRIX_SCREEN_PIN != LED_STRIP_PIN_2){
+                Logger::Info("Second started at addr %d to %d", ((int)m_leds)+ ledCount, secondLedCount);
+                FastLED.addLeds<LED_STRIP_TYPE,LED_STRIP_PIN_2,GRB>(m_leds + ledCount, secondLedCount).setCorrection(TypicalLEDStrip).setDither(m_maxBrightness < 255);
+            }else{
+                Logger::Info("Led cant start led strip at pin %d because screen is already using it", LED_STRIP_PIN_1);
+            }
         }
 
         FastLED.setBrightness(m_maxBrightness);
@@ -151,6 +173,9 @@ int* LedStrip::getSegmentParameter3(int id){
 }
 
 void LedStrip::setSegmentBehavior(int id, LedBehavior bh, int parameter, int parameter2, int parameter3,  int parameter4){
+    if (!m_enabled){
+        return;
+    }
     if (id < 0 || id > (MAX_LED_GROUPS-1)){
         return;
     }
@@ -164,12 +189,18 @@ void LedStrip::setSegmentBehavior(int id, LedBehavior bh, int parameter, int par
 }
 
 void LedStrip::setSegmentTweenSpeed(int id, int parameter){
+    if (!m_enabled){
+        return;
+    }
     if (id < 0 || id > (MAX_LED_GROUPS-1)){
         return;
     }
     m_groups[id].m_tweenMillisecondsDuration = parameter;
 }
 void LedStrip::setSegmentTweenBehavior(int id, LedBehavior bh, int parameter, int parameter2, int parameter3,  int parameter4){
+    if (!m_enabled){
+        return;
+    }
     if (id < 0 || id > (MAX_LED_GROUPS-1)){
         return;
     }
@@ -177,6 +208,9 @@ void LedStrip::setSegmentTweenBehavior(int id, LedBehavior bh, int parameter, in
 }
 
 int LedStrip::StackBehavior(){
+    if (!m_enabled){
+        return -1;
+    }
     xSemaphoreTake(m_mutex, portMAX_DELAY);
     LedGroup *groups = LedGroup::PsramAllocateLedGroup(MAX_LED_GROUPS);
     for (int i=0;i<MAX_LED_GROUPS;i++){
@@ -194,6 +228,9 @@ int LedStrip::StackBehavior(){
 }
 
 int LedStrip::PopBehavior(){
+    if (!m_enabled){
+        return -1;
+    }
     xSemaphoreTake(m_mutex, portMAX_DELAY);
     if (m_behaviorStack.size() == 0){
         xSemaphoreGive(m_mutex);
@@ -219,7 +256,7 @@ void LedStrip::Display(){
     if (!m_enabled){
         return;
     }
-    if (m_ledAmount > 0){
+    if (m_ledAmount > 0 && !m_hasScreen){
         FastLED.show(); 
     }
 }

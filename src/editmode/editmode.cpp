@@ -205,8 +205,9 @@ void EditMode::DoBegin(bool connectToWifi)
   const char *ftpUser = ftp_conf["user"];
   const char *ftpPassword = ftp_conf["password"];
 
-  if (connectToWifi){
+  String deviceIP;
 
+  if (connectToWifi){
 
     const char *name = wifi_ssid["name"];
     const char *password = wifi_ssid["password"];
@@ -218,22 +219,25 @@ void EditMode::DoBegin(bool connectToWifi)
       Logger::Info("Trying...");
     }
     Logger::Info("Connected!");
+    deviceIP = WiFi.localIP().toString();
   }else{
-  
+
     const char *name = access_point["name"];
     const char *password = access_point["password"];
 
     WiFi.softAP(name, password);
+    delay(500);
+    deviceIP = WiFi.softAPIP().toString();
     Logger::Info("Network: %s", name);
     Logger::Info("Pass: %s", password);
   }
 
   if (editModePort == 80){
-    Logger::Info("http://%s", WiFi.localIP().toString().c_str());
+    Logger::Info("http://%s", deviceIP.c_str());
   }else{
-    Logger::Info("http://%s:%d", WiFi.localIP().toString().c_str(), editModePort);
+    Logger::Info("http://%s:%d", deviceIP.c_str(), editModePort);
   }
-  Logger::Info("FTP: %s:%d", WiFi.localIP().toString().c_str(), ftpPort);
+  Logger::Info("FTP: %s:%d", deviceIP.c_str(), ftpPort);
 
   ftpSrv = new FtpServer(ftpPort);
   luaServer = new WiFiServer(luaConsolePort);

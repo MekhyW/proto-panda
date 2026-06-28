@@ -167,7 +167,7 @@ void ShaderProcessor::ShaderTexture(int16_t &x, int16_t &y, uint8_t &r, uint8_t 
     
     // Simple UV mapping - map screen coordinates directly to texture
     if (ShaderProcessor::Texture != nullptr) {
-        uint16_t textureColor = ShaderProcessor::Texture[y * PANEL_WIDTH + x];
+        uint16_t textureColor = ShaderProcessor::Texture[y * CANVAS_WIDTH + x];
         uint8_t textureR, textureG, textureB;
         Devices::Display->color565to888(textureColor, textureR, textureG, textureB);
         

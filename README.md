@@ -12,31 +12,45 @@ Protopanda is a open source patform (firmware and hardware), for controling prot
 **Telegram chat:** https://t.me/protopandachat
 
 1. [Features](#features)
-2. [Powering](#powering)
-3. [Panels](#panels)
-4. [Face and Expressions](#face-and-expressions)
-5. [LED Strips](#led-strips)
-7. [Bluetooth](#bluetooth)
-7. [Hardware](#hardware)
-8. [DIY](#DIY)
-9. [Printing and assembling guide](./doc/print-guide.md)
-10. [Programming in Lua](#programming-in-lua)
+2. [Guides](#guides)
+3. [Powering](#powering)
+4. [Panels](#panels)
+5. [Face and Expressions](#face-and-expressions)
+6. [Compiling and flashing firmware](./doc/flashing-guide.md)
+7. [LED Strips](#led-strips)
+8. [Bluetooth](#bluetooth)
+9. [Hardware](#hardware)
+10. [DIY](#DIY)
+11. [Printing and assembling guide](./doc/print-guide.md)
+12. [Programming in Lua](#programming-in-lua)
 
 # Features
 
-- Dual 32bit Xtensa LX7 cores running up to 240Mhz
-- 16MB ram
-- Support several HUB75 panels
-- WLED support
-- Can be programmed using Lua
-- Data stored in a SD card
-- Expressions can be shove in to the sd card as a png file
-- Can reach 60fps easily
-- BLE support for remote control
+- Run with a esp32s3 dual core at 240Mhz
+- 16MB Ram
+- RGB 16bit color depth using two HUB75 panels
+- Support WS2812 led stips
+- Customization using Lua
+- Large part of the code and data stored in a SD card
+- Expressions are .png sprites
+- Around 60~80FPS
+- BLE support for remote control with Lua custom drivers
 - USB-C pd trigger support
 - Up to 5V 5A output while on PD mode
 - Supports internal oled 128x64 screen for menu and UI
+- Wifi mode where you can change configurations
 - gay 🏳️‍🌈
+
+# Guides
+
+There are several guides with images and all!
+
+* [Printing and aassembling guide](./doc/print-guide.md)
+* [Building your own protopanda (DIY)](./doc/diy-guide.md)
+* [Flashing and compiling the firmware](./doc/flashing-guide.md)
+* [Assembling the front frame with all parts](./doc/front-frame-guide.md)
+* [Lua function reference](doc/lua-doc.md)
+
 
 # Powering 
 
@@ -222,6 +236,11 @@ It is possible to change the frame using Lua scripts... But it's also wasteful. 
 During managed mode, the frame drawing is handled by Core 0.
 ![alt text](mdoc/managed.png "Title")
 
+
+# Compiling
+
+Full guide here: [Compiling and flashing firmware](./doc/flashing-guide.md)
+
 # LED strips
 
 Protopanda suport the WS2812B adderessable led protocol and it provies a simple crude system to defining a few behaviors for the strip/matrices
@@ -294,31 +313,9 @@ The second core handles non-screen-related tasks. It has the routine that checks
 ## DIY
 
 We know not all of us can build a PCB from scratch, so i'm providing a way you can build your own reduced version of protopanda. 
+Well, we have a [guide for making your own protopanda!](./doc/diy-guide.md)
+
 ![Diagrama](doc/diy-schematic.png "Eletronics schematic")  
-
-### Parts
-
-#### Main board
-* [5v 3A buck converter](https://aliexpress.com/item/1005005505907937.html)
-* [PD trigger](https://aliexpress.com/item/1005007889747084.html)
-* [SD Card module](https://aliexpress.com/item/1005008723789216.html)
-* [Oled screen](https://aliexpress.com/item/1005006141235306.html)
-* [ESP32 N16R9 dev board](https://aliexpress.com/item/1005009906920237.html)
-* [Buzzer 5 or 3.3v](https://aliexpress.com/item/1005006201550296.html)
-* [Connector for the HUB75](https://aliexpress.com/item/1005007851512814.html) (Get the 16 pin one)
-* Some resistors (1k, 3k, 10k ohm)
-* Eletrolytic capacitor between 1500uF to 4700uF at least 6.3v
-* Any push button
-* A perf board
-* Some basic electronic stuff, like soldering iron, solder, wires, pliers...
-
-#### External parts
-* 2x [hub75 screen](https://aliexpress.com/item/4000002686894.html)
-**OPTIONAL**
-* [Adderessable led strip](https://aliexpress.com/item/1005004752499978.html)
-* [Touch sensor for boop (reccomended)](https://aliexpress.com/item/1005006246380749.html)
-* [Lidar infrared sensor for boop](https://pt.aliexpress.com/item/1005008557812009.html)
-* [IR receiver VS1838B if using IR controller](https://pt.aliexpress.com/item/1005009595736688.html)
 
 #### Remote controller
 
@@ -327,7 +324,6 @@ To control you can:
 * Use IR controller and write a driver for it.
 * [Buy one of those BLE devices that are compatible and have a driver already](https://pt.aliexpress.com/item/1005008459884910.html?)
 * Write your own solution vusing the extra two gpios left.
-
 
 
 # Printing and assembly guide

@@ -1,25 +1,17 @@
 #pragma once 
-
+#include "tools/displays.hpp"
 #include <vector>
 #include <stack>
 #include <stdint.h>
 #include <FS.h>
 #include "config.hpp"
 #include "tools/psrammap.hpp"
+
 #include "drawing/rendering/modelhandler.hpp"
 #include "drawing/rendering/shader.hpp"
 
-enum ColorMode{
-    COLOR_MODE_RGB,
-    COLOR_MODE_RBG,
-    COLOR_MODE_GRB,
-    COLOR_MODE_GBR,
-    COLOR_MODE_BRG,
-    COLOR_MODE_BGR,
-    
-};
-
-#ifdef ENABLE_HUB75_PANEL
+#include "tools/fft.hpp"
+extern FFT g_fft;
 
 enum AnimationFrameAction{
     ANIMATION_NO_CHANGE,
@@ -27,6 +19,7 @@ enum AnimationFrameAction{
     ANIMATION_FINISHED,
     ANIMATION_NEED_FLIP,
 };
+
 class FrameRepository;
 extern FrameRepository g_frameRepo;
 
@@ -58,8 +51,8 @@ class AnimationSequence{
 
 class Animation{
     public:
-        Animation():m_animations(),m_shader(SHADER_NONE),m_shaderStrenght(1.0f),m_lastFace(0),m_interruptPin(-1),m_colorMode(COLOR_MODE_RGB),m_needFlip(false),m_isManaged(true),m_needRedraw(false),m_onBlankScreen(false),m_frameDrawDuration(0),m_texture(nullptr),m_frameLoadDuration(0),m_cycleDuration(0),m_mutex(xSemaphoreCreateMutex()){};
-
+        Animation():m_animations(),m_shader(SHADER_NONE),m_shaderStrenght(1.0f),m_lastFace(0),m_interruptPin(-1),m_colorMode(COLOR_MODE_RGB),m_needFlip(false),m_isManaged(true),m_needRedraw(false),m_onBlankScreen(false),m_copyToFrameBuffer(false),m_fftOverlay(false),m_frameDrawDuration(0),m_texture(nullptr),m_frameBuffer(nullptr),m_frameLoadDuration(0),m_cycleDuration(0),m_mutex(xSemaphoreCreateMutex()){};
+        void Allocate();
         void Update(uint32_t dt);
 
         void SetModelAnimation(int animationId, int repeatTimes, bool dropAll, int externalStorageId=-1);
@@ -79,10 +72,13 @@ class Animation{
             DrawFrame(m_lastFace);
         }
 
+        void EnableFrameBuffer(bool enable);
+
 
         bool PopAnimation();
         void MakeFlip();
         void SetShader(int id, float strenght=1.0f);
+        void SetFFTOverlay(bool set);
 
         uint16_t* GetTexture(){
             return m_texture;
@@ -114,12 +110,13 @@ class Animation{
             return m_animations.size();
         }
 
-        static unsigned char buffer[FILE_SIZE];
+        static unsigned char *buffer;
 
         uint32_t getDrawDuration() { return m_frameDrawDuration;};
         uint32_t getLoadDuration() { return m_frameLoadDuration;};
     private:
-        inline void drawPixelAt(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &flip_left, uint8_t &flip_right, int &byteIdOled, ColorMode &colorModeLeft, ColorMode &colorModeRight);
+        void drawFFTOverlay(FlipConfig flipSettings, int16_t frameId);
+        inline void drawPixelAt(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, int &byteIdOled, FlipConfig &flipSettings);
         inline void adjustColor(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, int16_t &frameId);
         std::stack<AnimationSequence> m_animations;
         bool internalUpdate(uint32_t dt, AnimationSequence &seq);
@@ -132,8 +129,10 @@ class Animation{
         bool m_isManaged;
         bool m_needRedraw;
         bool m_onBlankScreen;
+        bool m_copyToFrameBuffer;
+        bool m_fftOverlay;
 
-        uint16_t *m_texture;
+        uint16_t *m_texture,*m_frameBuffer;
         
         uint64_t m_frameDrawDuration;
         uint64_t m_frameLoadDuration;
@@ -143,46 +142,3 @@ class Animation{
 
 
 extern Animation g_animation;
-#else
-class Animation{
-    public:
-        Animation(){};
-
-        void Update(uint32_t)){}
-
-        void SetAnimation(int duration, std::vector<int> frames, int repeatTimes, bool dropAll, int externalStorageId=-1){}
-        void SetInterruptAnimation(int duration, std::vector<int> frames){}
-        void SetInterruptPin(int pin){       }
-        void DrawFrame(int i){}
-        void DrawCurrentFrame(){}
-
-        bool PopAnimation(){return false;}
-        void MakeFlip(){}
-        void SetShader(int id){}
-
-        void setColorMode(ColorMode mode){
-           
-        };
-
-        bool needFlipScreen(){
-            return 0;
-        };
-        void setManaged(bool v){}
-        bool isManaged(){
-            return 0;
-        }
-        int getCurrentFace(){
-            return 0;
-        }
-
-        int getCurrentAnimationStorage(){ return 0;}
-        float getFps(){ return 0; }
-        int getAnimationStackSize(){ return 0; }
-
-        void setRainbowShader(bool enabled){}
-        static unsigned char buffer[FILE_SIZE];
-        uint32_t getDrawDuration() { return 0;};
-        uint32_t getLoadDuration() { return 0;};
-};
-extern Animation g_animation;
-#endif

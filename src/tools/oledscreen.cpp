@@ -21,8 +21,8 @@ std::vector<OledIcon> OledScreen::icons;
 
 bool OledScreen::Start(){
     
-    OledScreen::DisplayFace[0] = (uint8_t*)ps_malloc(sizeof(uint8_t) * PANEL_WIDTH * PANEL_HEIGHT);
-    OledScreen::DisplayFace[1] = (uint8_t*)ps_malloc(sizeof(uint8_t) * PANEL_WIDTH * PANEL_HEIGHT);
+    OledScreen::DisplayFace[0] = (uint8_t*)ps_malloc(sizeof(uint8_t) * CANVAS_WIDTH * CANVAS_HEIGHT);
+    OledScreen::DisplayFace[1] = (uint8_t*)ps_malloc(sizeof(uint8_t) * CANVAS_WIDTH * CANVAS_HEIGHT);
 
     if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)){
         Serial.println(F("SSD1306 allocation failed"));
@@ -87,10 +87,10 @@ void OledScreen::DrawIcon(int x, int y, int iconId){
 }
 
 void OledScreen::DrawPanelFaceToScreen(int xx, int yy){
-    display.drawRect(xx,yy,PANEL_WIDTH+2,PANEL_HEIGHT+2, 1);
+    display.drawRect(xx,yy,CANVAS_WIDTH+2,CANVAS_HEIGHT+2, 1);
     int ptr = 0;
-    for (int y=0;y<PANEL_HEIGHT;y++){
-      for (int x=0;x<PANEL_WIDTH;x++){
+    for (int y=0;y<CANVAS_HEIGHT;y++){
+      for (int x=0;x<CANVAS_WIDTH;x++){
         display.drawPixel(xx+x+1, yy+y+1, OledScreen::DisplayFace[OledScreen::screenFlipId%2][ptr++]);
       }
     }

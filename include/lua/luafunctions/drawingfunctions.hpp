@@ -4,7 +4,7 @@
 #include "lua/luainterface.hpp"
 #include "drawing/rendering/model.hpp"
 
-#ifdef ENABLE_HUB75_PANEL
+
 
 void DrawPixels(std::vector<Pixel> pixels);
 void DrawPixel(int16_t x, int16_t y, uint16_t color);
@@ -34,5 +34,3 @@ void composeBulkFile();
 void DrawPanelFaceToScreen(int x, int y);
 void gentlySetPanelBrightness(uint8_t bright, uint8_t rate);
 
-
-#endif

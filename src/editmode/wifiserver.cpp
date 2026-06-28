@@ -913,7 +913,7 @@ void startWifiServer(int port){
   server = new AsyncWebServer(port);
 
   server->on("/", HTTP_GET, serveDirectoryListing);
-  server->serveStatic("/", SD_MMC, "/", "max-age=0").setCacheControl("max-age=0");
+  server->serveStatic("/", PANDA_SD, "/", "max-age=0").setCacheControl("max-age=0");
   server->on("/mkdir", HTTP_POST, handleMkdir);
   server->on("/upload", HTTP_POST, [](AsyncWebServerRequest *request){ request->send(200); }, handleUpload);
   server->on("/delete", HTTP_DELETE, handleRm);

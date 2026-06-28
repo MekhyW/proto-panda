@@ -11,6 +11,7 @@
 #include "tools/storage.hpp"
 #include "tools/logger.hpp"
 #include "tools/ir.hpp"
+#include "tools/fft.hpp"
 #include "lua/luainterface.hpp"
 
 
@@ -39,7 +40,7 @@ EditMode g_editMode;
 InfraRedManager g_InfraRed;
 ModelDict g_models;
 ModelHandler g_modelHandler;
-
+FFT g_fft;
 KeyframePlayer g_kf;
 
 void second_loop(void*);
@@ -49,13 +50,19 @@ void setup() {
     Startup regulator pins and shoot it low asap.
   */
   #ifdef USE_ENABLE_PIN
-  digitalWrite(PIN_ENABLE_REGULATOR, LOW);
-  pinMode(PIN_ENABLE_REGULATOR, OUTPUT);
-  digitalWrite(PIN_ENABLE_REGULATOR, LOW);
+    digitalWrite(PIN_ENABLE_REGULATOR, LOW);
+    pinMode(PIN_ENABLE_REGULATOR, OUTPUT);
+    digitalWrite(PIN_ENABLE_REGULATOR, LOW);
   #endif
-  pinMode(EDIT_MODE_PIN, INPUT_PULLDOWN);
+  #ifdef ENABLE_EDIT_MODE
+    #if EDIT_ENABLE_LOGIC_LEVEL == 1
+      pinMode(EDIT_MODE_PIN, INPUT_PULLDOWN);
+    #else
+      pinMode(EDIT_MODE_PIN, INPUT_PULLUP);
+    #endif
+  #endif
   #ifdef USE_PIN_BATTERY_IN
-  pinMode(PIN_USB_BATTERY_IN, INPUT);
+    pinMode(PIN_USB_BATTERY_IN, INPUT);
   #endif
 
   Devices::Begin();
@@ -100,8 +107,10 @@ void setup() {
 
   
   Devices::CalculateMemmoryUsage(); 
-
   HardwareConfig::LoadConfigs();
+
+  g_animation.Allocate();
+  g_modelHandler.Allocate();
 
 
   
@@ -185,7 +194,9 @@ void second_loop(void*){
   { 
     Devices::BeginAutoFrame();
     
-
+    if (g_fft.isManaged()){
+      g_fft.update();
+    }
     g_animation.Update(Devices::getAutoDeltaTime());
     vTaskDelay(1);
 
@@ -194,6 +205,7 @@ void second_loop(void*){
       g_leds.Display();
     }
     vTaskDelay(1);
+    
     Devices::EndAutoFrame();
   }
   #endif
@@ -221,14 +233,12 @@ void loop() {
   g_InfraRed.update();
   g_remoteControls.sendUpdatesToLua();
 
-  static int meme = 0;
-  int salada = millis();
   g_lua.CallFunctionT("onLoop", Devices::getDeltaTime());
-  if (meme < millis()){
-    meme = millis()+1000;
-    Serial.printf("FPs: %f (%d)\n", Devices::getFps(), millis()-salada);
-  }
+
   #ifdef SINGLE_CORE_RUN
+  if (g_fft.isManaged()){
+    g_fft.update();
+  }
   g_animation.Update(g_frameRepo.takeFile());
   g_frameRepo.freeFile();
   g_leds.Update();

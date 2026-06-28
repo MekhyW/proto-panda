@@ -28,7 +28,7 @@ void ClientCallbacks::onDisconnect(NimBLEClient* pClient, int reason){
   Logger::Info("[BLE] %s Device disconnected, reason=%s", pClient->getPeerAddress().toString().c_str(), reasonStr);
 
   xSemaphoreTake(g_remoteControls.m_mutex, portMAX_DELAY);
-
+  
 
   auto aux = g_remoteControls.clients[pClient->getPeerAddress().toString()];
   if (aux != nullptr){

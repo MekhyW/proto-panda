@@ -3,10 +3,9 @@
 1. [Lua Functions](#lua-functions)
 2. [Lua Constants](#lua-constants)
 3. [LED Behaviors](#led-behaviors)
-4. [Bluetooth Interface](#bluetooth-interface)  
+4. [Bluetooth Interface](#bluetooth-interface)
 
 # Lua functions
-
 
 - [Power](#power)
 - [System](#system)
@@ -14,21 +13,26 @@
 - [Led panel Drawing](#led-panel-drawing)
 - [Dictionary Functions](#dictionary-functions)
 - [Servo Control](#servo-control)
-- [Drawing](#drawing)
 - [Image Decoding](#image-decoding)
 - [Internal Screen](#internal-screen)
-- [Remote Control](#remote-control)
 - [LED Strips](#led-strips-1)
 - [Arduino Core](#arduino-core)
+- [IR Remote](#ir-remote)
+- [2D Models](#2d-models)
+- [Keyframe Animations](#keyframe-animations)
 
 ## Power
 
+[↑ Back to top](#topics)
+
 #### `panelPowerOn()`
 Turns on the regulator, powering the panel and the 5V output.
+> **⚠️ Requires `PIN_ENABLE_REGULATOR`**: If this pin is not defined in the hardware config, this function does nothing.
 - **Returns**: `nil`
 
 #### `panelPowerOff()`
 Turns off the regulator.
+> **⚠️ Requires `PIN_ENABLE_REGULATOR`**: If this pin is not defined in the hardware config, this function does nothing.
 - **Returns**: `nil`
 
 #### `getBatteryVoltage()`
@@ -63,6 +67,20 @@ Sets the powering mode of the system. The mode can be `POWER_MODE_5V_PD`, `POWER
 
 ## System
 
+[↑ Back to top](#topics)
+
+#### `log(msg)`
+Logs a message to the system logger (appears in serial output and log file).
+- **Parameters**:
+  - `msg` (string): The message to log.
+- **Returns**: `nil`
+
+#### `setHaltOnError(halt)`
+Controls whether the system halts (freezes with error display) when a Lua error occurs. Useful for debugging; disable in production to recover gracefully.
+- **Parameters**:
+  - `halt` (bool): `true` to halt on error (default), `false` to continue.
+- **Returns**: `nil`
+
 ### `getFreePsram()`
 Returns the amount of free PSRAM (Pseudo Static RAM) available in bytes.
 - **Returns**: `int` (The amount of free PSRAM in bytes).
@@ -70,6 +88,14 @@ Returns the amount of free PSRAM (Pseudo Static RAM) available in bytes.
 ### `getFreeHeap()`
 Returns the amount of free heap memory available in bytes.
 - **Returns**: `int` (The amount of free heap memory in bytes).
+
+#### `getLuaFps()`
+Returns the current frames-per-second as seen from the Lua loop (Core 1).
+- **Returns**: `float`
+
+#### `getFps()`
+Returns the auto-measured FPS of the system.
+- **Returns**: `float`
 
 #### `restart()`
 Restarts the ESP32 microcontroller.
@@ -86,30 +112,65 @@ Enables or disables brownout detection.
 - **Returns**: `nil`
 
 #### `listFiles(path, recursive)`
-Lists files in directory.
+Lists files in directory on the SD card.
 - **Parameters**:
   - `path` (string): Directory path
   - `recursive` (bool): Whether to list recursively
 - **Returns**: `string array`
 
+#### `listFilesInFolder(path)`
+Lists files in a folder using the internal storage helper.
+- **Parameters**:
+  - `path` (string): Directory path
+- **Returns**: `string array`
+
 #### `moveFile(src, dest)`
-Moves/renames file.
+Moves/renames a file on the SD card.
 - **Parameters**:
   - `src` (string): Source path
   - `dest` (string): Destination path
 - **Returns**: `bool` (Success)
 
 #### `removeFile(path)`
-Deletes file.
+Deletes a file from the SD card.
 - **Parameters**:
   - `path` (string): File path
 - **Returns**: `bool` (Success)
 
+#### `createDir(path)`
+Creates a directory on the SD card.
+- **Parameters**:
+  - `path` (string): Directory path to create
+- **Returns**: `bool` (Success)
+
+#### `fileExists(path)`
+Checks whether a file or directory exists on the SD card.
+- **Parameters**:
+  - `path` (string): File path
+- **Returns**: `bool`
+
+#### `formatFFAT(full)`
+Formats the internal FFat (flash) filesystem.
+- **Parameters**:
+  - `full` (bool): If `true`, performs a full format.
+- **Returns**: `bool` (Success)
+
 #### `deleteBulkFile()`
-Deletes frames.bulk file.
+Deletes the `frames.bulk` file, forcing a rebuild on next boot.
+- **Returns**: `nil`
+
+#### `composeBulkFile()`
+Manually triggers a rebuild of the `frames.bulk` file from the PNG frames on the SD card.
+- **Returns**: `nil`
+
+#### `dumpStackToSerial()`
+Debug utility. Dumps the current Lua stack contents to the serial port.
 - **Returns**: `nil`
 
 ## Sensors
+
+[↑ Back to top](#topics)
+
 #### `readButtonStatus(int)`
 Reads the status of the remote control button. There are a total of 5 buttons. Possible button states:
 ```
@@ -126,41 +187,41 @@ BUTTON_JUST_RELEASED = 3
 Returns the raw value of the remote control's accelerometer sensor, X axis only.
 - **Parameters**:
   - `device` (int, optional): The ID of the remote control device. Default is `0`.
-- **Returns**: `float` (The raw accelerometer value on the X axis).
+- **Returns**: `float`
 
 #### `readAccelerometerY([device])`
 Returns the raw value of the remote control's accelerometer sensor, Y axis only.
 - **Parameters**:
   - `device` (int, optional): The ID of the remote control device. Default is `0`.
-- **Returns**: `float` (The raw accelerometer value on the Y axis).
+- **Returns**: `float`
 
 #### `readAccelerometerZ([device])`
 Returns the raw value of the remote control's accelerometer sensor, Z axis only.
 - **Parameters**:
   - `device` (int, optional): The ID of the remote control device. Default is `0`.
-- **Returns**: `float` (The raw accelerometer value on the Z axis).
+- **Returns**: `float`
 
 #### `readGyroX([device])`
 Returns the raw value of the remote control's gyroscope sensor, X axis only.
 - **Parameters**:
   - `device` (int, optional): The ID of the remote control device. Default is `0`.
-- **Returns**: `int` (The raw gyroscope value on the X axis).
+- **Returns**: `int`
 
 #### `readGyroY([device])`
 Returns the raw value of the remote control's gyroscope sensor, Y axis only.
 - **Parameters**:
   - `device` (int, optional): The ID of the remote control device. Default is `0`.
-- **Returns**: `int` (The raw gyroscope value on the Y axis).
+- **Returns**: `int`
 
 #### `readGyroZ([device])`
 Returns the raw value of the remote control's gyroscope sensor, Z axis only.
 - **Parameters**:
   - `device` (int, optional): The ID of the remote control device. Default is `0`.
-- **Returns**: `int` (The raw gyroscope value on the Z axis).
+- **Returns**: `int`
 
 #### `hasLidar()`
-Checks for the presence of a lidar.
-- **Returns**: `bool` (True if a lidar is present, otherwise False).
+Checks for the presence of a lidar sensor.
+- **Returns**: `bool` (`true` if a lidar is present, otherwise `false`)
 
 #### `readLidar()`
 Returns the distance in mm from the lidar.
@@ -170,13 +231,19 @@ Returns the distance in mm from the lidar.
 Returns the status of the internal button.
 - **Returns**: `int` (1 is pressed and 0 is released).
 
+#### `i2cScan()`
+Scans the I2C bus and returns addresses of detected devices.
+- **Returns**: `int array` (List of detected I2C addresses)
+
 ## Led panel Drawing
+
+[↑ Back to top](#topics)
 
 #### `flipPanelBuffer()`
 The panels have two buffers. One for drawing and the other for rendering. When the drawing is finished in one buffer, this call flips them so you can draw into the other.
 - **Returns**: `nil`
 
-#### `DrawPixel(x, y, color)`
+#### `drawPanelPixel(x, y, color)`
 Draws a pixel at the specified coordinates with the given color.
 - **Parameters**:
   - `x` (int): The X coordinate.
@@ -184,8 +251,16 @@ Draws a pixel at the specified coordinates with the given color.
   - `color` (int): The color to draw (use `color565` or `color444` to generate the color).
 - **Returns**: `nil`
 
+#### `drawPanelPixels(x, y, pixels)`
+Draws multiple pixels at once starting at the given coordinates.
+- **Parameters**:
+  - `x` (int): Starting X coordinate.
+  - `y` (int): Starting Y coordinate.
+  - `pixels` (int array): Array of color values in `color565` format.
+- **Returns**: `nil`
+
 #### `drawPanelCircle(x, y, radius, color)`
-Draws a circle outline at the specified coordinates with the given radius and color.
+Draws a circle outline at the specified coordinates.
 - **Parameters**:
   - `x` (int): The X coordinate of the center.
   - `y` (int): The Y coordinate of the center.
@@ -193,38 +268,38 @@ Draws a circle outline at the specified coordinates with the given radius and co
   - `color` (int): The color to draw.
 - **Returns**: `nil`
 
-### `drawPanelChar(x, y, c, color, bg, size)`
-Draws a character on the panel at the specified coordinates with the given color and background.
+#### `drawPanelChar(x, y, c, color, [bg, [size]])`
+Draws a character on the panel at the specified coordinates.
 - **Parameters**:
   - `x` (int): The X coordinate.
   - `y` (int): The Y coordinate.
   - `c` (char): The character to draw.
-  - `color` (int): The color of the character (use `color565` or `color444` to generate the color).
-  - `bg` (int): The background color (use `color565` or `color444` to generate the color).
-  - `size` (int): The size of the character (1 for normal size, larger values for scaling).
+  - `color` (int): The color of the character.
+  - `bg` (int, optional): The background color. Default is `0`.
+  - `size` (int, optional): The size multiplier. Default is `1`.
 - **Returns**: `nil`
 
 #### `drawPanelFillCircle(x, y, radius, color)`
-Draws a filled circle at the specified coordinates with the given radius and color.
+Draws a filled circle at the specified coordinates.
 - **Parameters**:
   - `x` (int): The X coordinate of the center.
   - `y` (int): The Y coordinate of the center.
   - `radius` (int): The radius of the circle.
-  - `color` (int): The color to fill.
+  - `color` (int): The fill color.
 - **Returns**: `nil`
 
 #### `drawPanelLine(x0, y0, x1, y1, color)`
-Draws a line between two points with the specified color.
+Draws a line between two points.
 - **Parameters**:
-  - `x0` (int): The X coordinate of the starting point.
-  - `y0` (int): The Y coordinate of the starting point.
-  - `x1` (int): The X coordinate of the ending point.
-  - `y1` (int): The Y coordinate of the ending point.
+  - `x0` (int): Starting X coordinate.
+  - `y0` (int): Starting Y coordinate.
+  - `x1` (int): Ending X coordinate.
+  - `y1` (int): Ending Y coordinate.
   - `color` (int): The color to draw.
 - **Returns**: `nil`
 
 #### `drawPanelRect(x, y, width, height, color)`
-Draws a rectangle outline at the specified position with the given width, height, and color.
+Draws a rectangle outline.
 - **Parameters**:
   - `x` (int): The X coordinate of the top-left corner.
   - `y` (int): The Y coordinate of the top-left corner.
@@ -234,93 +309,145 @@ Draws a rectangle outline at the specified position with the given width, height
 - **Returns**: `nil`
 
 #### `drawPanelFillRect(x, y, width, height, color)`
-Draws a filled rectangle at the specified position with the given width, height, and color.
+Draws a filled rectangle.
 - **Parameters**:
   - `x` (int): The X coordinate of the top-left corner.
   - `y` (int): The Y coordinate of the top-left corner.
   - `width` (int): The width of the rectangle.
   - `height` (int): The height of the rectangle.
-  - `color` (int): The color to fill.
+  - `color` (int): The fill color.
+- **Returns**: `nil`
+
+#### `drawPanelFillTriangle(x0, y0, x1, y1, x2, y2, color)`
+Draws a filled triangle defined by three vertices.
+- **Parameters**:
+  - `x0, y0` (int): First vertex.
+  - `x1, y1` (int): Second vertex.
+  - `x2, y2` (int): Third vertex.
+  - `color` (int): The fill color.
 - **Returns**: `nil`
 
 #### `color444(r, g, b)`
-Converts RGB888 color values to RGB444 format.
+Converts RGB888 values to RGB444 format.
 - **Parameters**:
-  - `r` (int): The red component (0-255).
-  - `g` (int): The green component (0-255).
-  - `b` (int): The blue component (0-255).
-- **Returns**: `int` (The RGB444 color value).
+  - `r` (int): Red (0-255).
+  - `g` (int): Green (0-255).
+  - `b` (int): Blue (0-255).
+- **Returns**: `int` (RGB444 color value)
 
 #### `color565(r, g, b)`
-Converts RGB888 color values to RGB565 format.
+Converts RGB888 values to RGB565 format.
 - **Parameters**:
-  - `r` (int): The red component (0-255).
-  - `g` (int): The green component (0-255).
-  - `b` (int): The blue component (0-255).
-- **Returns**: `int` (The RGB565 color value).
+  - `r` (int): Red (0-255).
+  - `g` (int): Green (0-255).
+  - `b` (int): Blue (0-255).
+- **Returns**: `int` (RGB565 color value)
 
 #### `clearPanelBuffer()`
 Clears the screen buffer.
 - **Returns**: `nil`
 
-#### `drawPanelFace(int)`
-Draws a specific face. This face must already be loaded beforehand.
+#### `drawPanelFace(faceId)`
+Draws a specific face (frame). This face must already be loaded beforehand.
 - **Parameters**:
   - `faceId` (int): The ID of the face to draw.
 - **Returns**: `nil`
 
-#### `setPanelAnimation(frames int_array, duration, [repeat, [drop, [storage]]])`
-If the panel is in managed mode, this will set an animation to run on it.
+#### `setPanelAnimation(frames, duration, [repeat, [drop, [storage]]])`
+If the panel is in managed mode, sets an animation to run on it.
 - **Parameters**:
   - `frames` (int array): The IDs of each frame in the animation.
   - `duration` (int): The duration of each frame in milliseconds.
-  - `repeat` (int, optional): The number of times the animation should repeat. Default is `-1` (infinite).
-  - `drop` (bool, optional): If `true`, all stacked animations will be erased, and this will be the only animation.
-  - `storage` (int, optional): When defined, you can query this sotrage trough `getCurrentAnimationStorage()`. Can be useful when animations share the same frames
+  - `repeat` (int, optional): Number of times the animation repeats. Default is `-1` (infinite).
+  - `drop` (bool, optional): If `true`, all stacked animations are erased and this becomes the only one.
+  - `storage` (int, optional): Storage ID queryable via `getCurrentAnimationStorage()`.
+- **Returns**: `nil`
+
+#### `setPanelModelAnimation(modelAnimId, [repeat, [drop]])`
+If the panel is in managed mode, sets a 3D model animation to run on it.
+- **Parameters**:
+  - `modelAnimId` (int): The ID of the model animation to play.
+  - `repeat` (int, optional): Number of repeats. Default is `-1` (infinite).
+  - `drop` (bool, optional): If `true`, clears the animation stack first.
+- **Returns**: `nil`
+
+#### `setInterruptFrames(frames, frameDuration)`
+Sets frames that play as an interrupt animation (e.g. triggered by a sensor).
+- **Parameters**:
+  - `frames` (int array): Frame IDs to display.
+  - `frameDuration` (int): Duration of each frame in milliseconds.
+- **Returns**: `nil`
+
+#### `setInterruptAnimationPin(pin)`
+Configures the GPIO pin that triggers the interrupt animation.
+- **Parameters**:
+  - `pin` (int): The GPIO pin number.
+- **Returns**: `nil`
+
+#### `setAnimationShader(shader, [intensity])`
+Sets a shader to apply over the panel animation.
+- **Parameters**:
+  - `shader` (int): Shader type (e.g. `SHADER_RAINBOW`, `SHADER_FIRE`).
+  - `intensity` (float, optional): Shader intensity. Default is `1.0`.
+- **Returns**: `nil`
+
+#### `setPanelColorMode(mode)`
+Sets the color channel order for the panel (useful if your panel has a non-standard wiring).
+- **Parameters**:
+  - `mode` (int): One of `COLOR_MODE_RGB`, `COLOR_MODE_RBG`, `COLOR_MODE_GRB`, `COLOR_MODE_GBR`, `COLOR_MODE_BRG`, `COLOR_MODE_BGR`.
+- **Returns**: `nil`
+
+#### `loadFrameAsTexture(frameId)`
+Loads a panel frame into the texture slot for use by the 3D model renderer.
+- **Parameters**:
+  - `frameId` (int): The frame ID to load as texture.
 - **Returns**: `nil`
 
 ### `getCurrentAnimationStorage()`
 Returns the ID of the current animation storage being used.
-- **Returns**: `int` (The current animation storage ID).
+- **Returns**: `int`
 
-#### `setPanelManaged(bomanagedol)`
-Enables or disables managed mode. In managed mode, rendering is handled asynchronously, and you only need to define animations.
+#### `setPanelManaged(managed)`
+Enables or disables managed mode. In managed mode, rendering is handled asynchronously on Core 0.
 - **Parameters**:
-  - `managed` (bool): `true` to enable managed mode, `false` to disable.
+  - `managed` (bool): `true` to enable, `false` to disable.
 - **Returns**: `nil`
 
 #### `isPanelManaged()`
 Returns whether the panel is in managed mode.
-- **Returns**: `bool` (`true` if managed mode is enabled, otherwise `false`).
+- **Returns**: `bool`
 
 #### `getPanelCurrentFace()`
 Returns the current frame ID being displayed.
-- **Returns**: `int` (The current frame ID).
+- **Returns**: `int`
 
 #### `drawPanelCurrentFrame()`
-Draws the current frame.
+Draws the current frame immediately.
 - **Returns**: `nil`
 
 #### `getAnimationStackSize()`
 Returns the number of animations currently stacked.
-- **Returns**: `int` (The number of stacked animations).
+- **Returns**: `int`
 
 #### `popPanelAnimation()`
 Removes the current animation from the stack.
 - **Returns**: `nil`
 
 #### `setPanelBrightness(brightness)`
-Sets the brightness of the panel.
+Sets the brightness of the panel immediately.
 - **Parameters**:
-  - `brightness` (int): The brightness level (0-255, where 255 is 100%).
+  - `brightness` (int): Brightness level (0-255, where 255 is 100%).
 - **Returns**: `nil`
 
+#### `getPanelBrightness()`
+Returns the current panel brightness level.
+- **Returns**: `int` (0-255)
 
-#### `gentlySetPanelBrightness(brightness, rate)`
-Gradually adjusts the panel brightness to the specified level at the given rate. This function is useful for smooth transitions in brightness.
+#### `gentlySetPanelBrightness(brightness, [rate])`
+Gradually adjusts the panel brightness to the specified level.
 - **Parameters**:
-  - `brightness` (int): The target brightness level (0-255).
-  - `rate` (int): The speed at which the brightness changes (higher values mean slower transitions).
+  - `brightness` (int): Target brightness level (0-255).
+  - `rate` (int, optional): Speed of the transition. Default is `4`.
 - **Returns**: `nil`
 
 #### `setSpeakingFrames(frames, frameDuration)`
@@ -340,42 +467,46 @@ Enables or disables the rainbow shader, which converts pixels to a rainbow patte
 Returns the frame offset associated with the given name.
 - **Parameters**:
   - `name` (string): The frame name.
-- **Returns**: `int` (The frame offset).
+- **Returns**: `int`
 
 #### `getFrameCountByName(name)`
-Returns the amount of frames a given frame group has
+Returns the number of frames in a given frame group.
 - **Parameters**:
   - `name` (string): The frame name.
-- **Returns**: `int` (The frame count).
-
-
+- **Returns**: `int`
 
 ## Image Decoding
 
+[↑ Back to top](#topics)
+
 ### `decodePng(filename)`
-Decodes a PNG image file from the SD card and returns the raw pixel data.
+Decodes a PNG image file from the SD card and returns the raw pixel data as an RGB565 table.
 - **Parameters**:
   - `filename` (string): The path to the PNG file on the SD card.
-- **Returns**: `uint16` table 
+- **Returns**: `uint16 table`
 
 ## Dictionary Functions
+
+[↑ Back to top](#topics)
+
 #### `dictGet(key)`
 Gets a value from persistent dictionary storage.
 - **Parameters**:
-  - `key` (string): The key to lookup
-- **Returns**: `string` (The stored value)
+  - `key` (string): The key to lookup.
+- **Returns**: `string`
 
 #### `dictSet(key, value)`
 Sets a value in persistent dictionary storage.
 - **Parameters**:
-  - `key` (string): The key to store
-  - `value` (string): The value to store
+  - `key` (string): The key to store.
+  - `value` (string): The value to store.
 - **Returns**: `nil`
 
-#### `dictDel(key)`
+#### `dictDet(key)`
 Deletes a key from persistent dictionary storage.
+> **Note**: The registered function name is `dictDet` (not `dictDel`).
 - **Parameters**:
-  - `key` (string): The key to delete
+  - `key` (string): The key to delete.
 - **Returns**: `nil`
 
 #### `dictSave()`
@@ -392,55 +523,60 @@ Formats/clears the dictionary storage.
 
 ## Servo Control
 
+[↑ Back to top](#topics)
+
+> **⚠️ Requires `USE_SERVO`**: `servoPause()`, `servoResume()`, and `servoMove()` are only registered when the firmware is compiled with servo support. `hasServo()` is always available.
+
 #### `servoPause(servoId)`
 Pauses the specified servo.
 - **Parameters**:
   - `servoId` (int): The ID of the servo to pause.
-- **Returns**: `bool` (`true` if the servo was paused successfully, otherwise `false`).
+- **Returns**: `bool`
 
 #### `servoResume(servoId)`
 Resumes the specified servo.
 - **Parameters**:
   - `servoId` (int): The ID of the servo to resume.
-- **Returns**: `bool` (`true` if the servo was resumed successfully, otherwise `false`).
+- **Returns**: `bool`
 
 #### `servoMove(servoId, angle)`
 Moves the specified servo to the given angle.
 - **Parameters**:
   - `servoId` (int): The ID of the servo to move.
   - `angle` (float): The target angle for the servo.
-- **Returns**: `bool` (`true` if the servo was moved successfully, otherwise `false`).
+- **Returns**: `bool`
 
 #### `hasServo()`
 Checks if the system has a servo connected.
-- **Returns**: `bool` (`true` if a servo is present, otherwise `false`).
+- **Returns**: `bool`
 
-## Internal screen
+## Internal Screen
 
+[↑ Back to top](#topics)
 
 ### `oledDrawPixel(x, y, color)`
-Draws a single pixel on the OLED screen at the specified coordinates with the given color.
+Draws a single pixel on the OLED screen.
 - **Parameters**:
   - `x` (int): The X coordinate.
   - `y` (int): The Y coordinate.
-  - `color` (int): The color to draw (1 for white, 0 for black).
+  - `color` (int): 1 for white, 0 for black.
 - **Returns**: `nil`
 
 ### `oledDrawBottomBar()`
-Draws the bottom bar
+Draws the bottom bar.
 - **Returns**: `nil`
 
 ### `oledSetTextColor(fg[, bg])`
 Sets the text color for drawing on the OLED screen.
 - **Parameters**:
-  - `fg` (int): The foreground color (1 for white, 0 for black).
-  - `bg` (int, optional): The background color (1 for white, 0 for black).
+  - `fg` (int): Foreground color (1 for white, 0 for black).
+  - `bg` (int, optional): Background color. Default is `1`.
 - **Returns**: `nil`
 
 ### `oledSetFontSize(size)`
-Sets the text size, default is 1
+Sets the text size.
 - **Parameters**:
-  - `size` (int): Default is 1
+  - `size` (int): Text size multiplier. Default is `1`.
 - **Returns**: `nil`
 
 #### `oledSetCursor(x, y)`
@@ -451,7 +587,7 @@ Sets the cursor position on the OLED screen.
 - **Returns**: `nil`
 
 #### `oledFaceToScreen(x, y)`
-Draws the current image being displayed on the outer panels to the internal screen at the specified position.
+Draws the current panel image to the internal OLED screen at the specified position.
 - **Parameters**:
   - `x` (int): The X coordinate.
   - `y` (int): The Y coordinate.
@@ -469,159 +605,211 @@ Clears the OLED screen buffer.
 Sends the buffer to the OLED screen.
 - **Returns**: `nil`
 
-#### `oledDrawText(msg string)`
+#### `oledDrawText(msg)`
 Draws text at the current cursor position.
 - **Parameters**:
   - `msg` (string): The text to draw.
 - **Returns**: `nil`
 
 #### `oledDrawRect(x, y, width, height, color)`
-Draws a rectangle on the OLED screen.
+Draws a rectangle outline on the OLED screen.
 - **Parameters**:
-  - `x` (int): The X coordinate.
-  - `y` (int): The Y coordinate.
-  - `width` (int): The width of the rectangle.
-  - `height` (int): The height of the rectangle.
-  - `color` (int): The color to draw (1 for white, 0 for black).
+  - `x` (int): X coordinate.
+  - `y` (int): Y coordinate.
+  - `width` (int): Width of the rectangle.
+  - `height` (int): Height of the rectangle.
+  - `color` (int): 1 for white, 0 for black.
+- **Returns**: `nil`
+
+#### `oledDrawFilledRect(x, y, width, height, color)`
+Draws a filled rectangle on the OLED screen.
+- **Parameters**:
+  - `x` (int): X coordinate.
+  - `y` (int): Y coordinate.
+  - `width` (int): Width of the rectangle.
+  - `height` (int): Height of the rectangle.
+  - `color` (int): 1 for white, 0 for black.
+- **Returns**: `nil`
+
+#### `oledDrawLine(x, y, x2, y2, color)`
+Draws a line on the OLED screen.
+- **Parameters**:
+  - `x, y` (int): Starting point.
+  - `x2, y2` (int): Ending point.
+  - `color` (int): 1 for white, 0 for black.
+- **Returns**: `nil`
+
+#### `oledDrawFastHLine(x, y, w, color)`
+Draws a fast horizontal line on the OLED screen.
+- **Parameters**:
+  - `x` (int): Starting X coordinate.
+  - `y` (int): Y coordinate.
+  - `w` (int): Width.
+  - `color` (int): 1 for white, 0 for black.
+- **Returns**: `nil`
+
+#### `oledDrawFastVLine(x, y, w, color)`
+Draws a fast vertical line on the OLED screen.
+- **Parameters**:
+  - `x` (int): X coordinate.
+  - `y` (int): Starting Y coordinate.
+  - `w` (int): Height.
+  - `color` (int): 1 for white, 0 for black.
+- **Returns**: `nil`
+
+#### `oledDrawCircle(x, y, r, color)`
+Draws a circle outline on the OLED screen.
+- **Parameters**:
+  - `x` (int): Center X coordinate.
+  - `y` (int): Center Y coordinate.
+  - `r` (int): Radius.
+  - `color` (int): 1 for white, 0 for black.
+- **Returns**: `nil`
+
+#### `oledDrawFilledCircle(x, y, r, color)`
+Draws a filled circle on the OLED screen.
+- **Parameters**:
+  - `x` (int): Center X coordinate.
+  - `y` (int): Center Y coordinate.
+  - `r` (int): Radius.
+  - `color` (int): 1 for white, 0 for black.
 - **Returns**: `nil`
 
 #### `oledCreateIcon(width, height, data)`
-Creates an icon from the provided data and returns its ID.
+Creates an icon from binary data and returns its ID.
 - **Parameters**:
-  - `width` (int): The width of the icon.
-  - `height` (int): The height of the icon.
-  - `data` (int array): The binary data for the icon.
-- **Returns**: `int` (The icon ID).
+  - `width` (int): Width of the icon.
+  - `height` (int): Height of the icon.
+  - `data` (int array): Binary pixel data for the icon.
+- **Returns**: `int` (The icon ID)
 
 #### `oledDrawIcon(x, y, iconId)`
-Draws an icon at the specified position.
+Draws a previously created icon at the specified position.
 - **Parameters**:
-  - `x` (int): The X coordinate.
-  - `y` (int): The Y coordinate.
-  - `iconId` (int): The ID of the icon to draw.
+  - `x` (int): X coordinate.
+  - `y` (int): Y coordinate.
+  - `iconId` (int): The icon ID returned by `oledCreateIcon`.
 - **Returns**: `nil`
 
-## Led strips
+## Led Strips
 
-#### `ledsBegin(led_count, max_brightness])`
-Initializes the LED strip with the specified number of LEDs and optional maximum brightness.
+[↑ Back to top](#topics)
+
+#### `ledsBegin(led_count, [max_brightness])`
+Initializes the LED strip.
 - **Parameters**:
   - `led_count` (int): The number of LEDs in the strip.
-  - `max_brightness` (int, optional): The maximum brightness level (0-255). Default is 128.
-- **Returns**: `bool` (`true` if successful, otherwise `false`).
+  - `max_brightness` (int, optional): Maximum brightness (0-255). Default is `128`.
+- **Returns**: `bool`
 
-#### `ledsBeginDual(led_count, led_count2, max_brightness])`
-Initializes two individual leds strips.
+#### `ledsBeginDual(led_count, led_count2, [max_brightness])`
+Initializes two individual LED strips.
 - **Parameters**:
-  - `led_count` (int): The number of LEDs in the strip.
-  - `led_count2` (int): The number of LEDs in the second strip.
-  - `max_brightness` (int, optional): The maximum brightness level (0-255). Default is 128.
-- **Returns**: `bool` (`true` if successful, otherwise `false`).
+  - `led_count` (int): Number of LEDs in the first strip.
+  - `led_count2` (int): Number of LEDs in the second strip.
+  - `max_brightness` (int, optional): Maximum brightness (0-255). Default is `128`.
+- **Returns**: `bool`
 
 #### `ledsIsManaged()`
-Check if the leds are in managed mode
-- **Returns**: `bool`.
+Checks if the LEDs are in managed mode.
+- **Returns**: `bool`
 
 #### `ledsGentlySeBrightness(brightness, [rate, [startAmount]])`
-Slowly ramp up the brightness to a certain value
+Slowly ramps up the brightness to a target value.
 - **Parameters**:
-  - `brightness` (int): Max brightness to be ramped up
-  - `led_count2` (int, optional): How many units of brightness to be increased every frame. Default is 1
-  - `max_brightness` (int, optional): Starting brigtness. Default is 0
+  - `brightness` (int): Target brightness.
+  - `rate` (int, optional): Units of brightness increased per frame. Default is `1`.
+  - `startAmount` (int, optional): Starting brightness. Default is `0`.
+- **Returns**: `nil`
 
 #### `ledsStackCurrentBehavior()`
-Store current led behavior state in a stack. Is useful to st temporary behaviors
+Saves the current LED behavior state to a stack, useful for temporary behavior changes.
 - **Returns**: `int`
 
 #### `ledsPopBehavior()`
-Update current led behavior with the stored behavior on the stack.
+Restores the LED behavior from the top of the stack.
 - **Returns**: `int`
 
-#### `ledsSegmentRange(id int, from int, to int)`
+#### `ledsSegmentRange(id, from, to)`
 Defines a segment of the LED strip for independent control.
 - **Parameters**:
-  - `id` (int): The segment ID (0-15).
-  - `from` (int): The starting LED index.
-  - `to` (int): The ending LED index.
+  - `id` (int): Segment ID (0-15).
+  - `from` (int): Starting LED index.
+  - `to` (int): Ending LED index.
 - **Returns**: `nil`
 
 #### `ledsSetManaged(managed)`
-Enables or disabled managed mode
+Enables or disables managed mode.
+- **Parameters**:
+  - `managed` (bool): `true` to enable, `false` to disable.
 - **Returns**: `nil`
 
 #### `ledsSetBrightness(brightness)`
+Sets the LED strip brightness.
 - **Parameters**:
-  - `id` (int): Brightness (0-255).
+  - `brightness` (int): Brightness (0-255).
 - **Returns**: `nil`
 
 #### `ledsGetBrightness()`
+Returns the current LED strip brightness.
 - **Returns**: `int`
 
 #### `ledsDisplay()`
-Make the changes on the leds to be displayed on the strip. To be used when managed mode is disabled
-- **Returns**: `int`
-
-#### `ledsSegmentBehavior(id, behavior, [parameter, parameter2, parameter3, parameter4])`
-Sets the behavior for a specific LED segment.
-- **Parameters**:
-  - `id` (int): The segment ID (0-15).
-  - `behavior` (int): The behavior to set (e.g., `BEHAVIOR_PRIDE`, `BEHAVIOR_ROTATE`, etc.).
-  - `parameter` (int, optional): Additional parameter for the behavior.
-  - `parameter2` (int, optional): Additional parameter for the behavior.
-  - `parameter3` (int, optional): Additional parameter for the behavior.
-  - `parameter4` (int, optional): Additional parameter for the behavior.
+Pushes LED changes to the strip. Use when managed mode is disabled.
 - **Returns**: `nil`
 
-#### `ledsSegmentTweenBehavior(id, behavior, [parameter, parameter2, parameter3, parameter4])`
-Sets a tween behavior for a specific LED segment, transitioning smoothly to the new behavior.
+#### `ledsSegmentBehavior(id, behavior, [p1, p2, p3, p4])`
+Sets the behavior for a specific LED segment.
 - **Parameters**:
-  - `id` (int): The segment ID (0-15).
-  - `behavior` (int): The behavior to transition to (e.g., `BEHAVIOR_PRIDE`, `BEHAVIOR_ROTATE`, etc.).
-  - `parameter` (int, optional): Additional parameter for the behavior.
-  - `parameter2` (int, optional): Additional parameter for the behavior.
-  - `parameter3` (int, optional): Additional parameter for the behavior.
-  - `parameter4` (int, optional): Additional parameter for the behavior.
+  - `id` (int): Segment ID (0-15).
+  - `behavior` (int): Behavior constant (e.g. `BEHAVIOR_PRIDE`, `BEHAVIOR_ROTATE`).
+  - `p1..p4` (int, optional): Behavior-specific parameters.
+- **Returns**: `nil`
+
+#### `ledsSegmentTweenBehavior(id, behavior, [p1, p2, p3, p4])`
+Transitions smoothly to a new behavior for a specific LED segment.
+- **Parameters**:
+  - `id` (int): Segment ID (0-15).
+  - `behavior` (int): Target behavior constant.
+  - `p1..p4` (int, optional): Behavior-specific parameters.
 - **Returns**: `nil`
 
 #### `ledsSegmentTweenSpeed(id, speed)`
-Sets the tween speed for a specific LED segment.
+Sets the tween transition speed for a specific LED segment.
 - **Parameters**:
-  - `id` (int): The segment ID (0-15).
-  - `speed` (int): The tween speed (higher values mean slower transitions).
+  - `id` (int): Segment ID (0-15).
+  - `speed` (int): Tween speed (higher = slower transition).
 - **Returns**: `nil`
 
 #### `ledsSetColor(id, r, g, b)`
-Sets the color of a individual LED. Ideally not to be used while on managed mode or when behavior is set to none
+Sets the color of an individual LED. Best used outside managed mode.
 - **Parameters**:
-  - `id` (int): individual led
-  - `r` (int):Color red (0-255).
-  - `g` (int):Color green (0-255).
-  - `b` (int):Color blue (0-255).
+  - `id` (int): Individual LED index.
+  - `r, g, b` (int): RGB color components (0-255).
 - **Returns**: `nil`
 
 #### `ledsSegmentColor(id, r, g, b)`
-Sets the color of a LED group.  Ideally not to be used while on managed mode or when behavior is set to none
+Sets the color of a LED segment. Best used outside managed mode.
 - **Parameters**:
-  - `id` (int): led segment
-  - `r` (int):Color red (0-255).
-  - `g` (int):Color green (0-255).
-  - `b` (int):Color blue (0-255).
+  - `id` (int): Segment ID.
+  - `r, g, b` (int): RGB color components (0-255).
 - **Returns**: `nil`
-
 
 ## Arduino Core
 
+[↑ Back to top](#topics)
+
 #### `tone(frequency)`
-Generates tone on specified pin.
+Generates a tone on the buzzer.
 - **Parameters**:
-  - `frequency` (int): Tone frequency in Hz
+  - `frequency` (int): Tone frequency in Hz.
 - **Returns**: `nil`
 
 #### `toneDuration(frequency, duration)`
-Generates tone with duration.
+Generates a tone with a set duration.
 - **Parameters**:
-  - `frequency` (int): Tone frequency in Hz
-  - `duration` (int): Duration in milliseconds
+  - `frequency` (int): Tone frequency in Hz.
+  - `duration` (int): Duration in milliseconds.
 - **Returns**: `nil`
 
 #### `noTone()`
@@ -630,309 +818,173 @@ Stops tone generation.
 
 #### `millis()`
 Returns the number of milliseconds the system has been running.
-- **Returns**: `int` (The number of milliseconds).
-
-#### `delayMicroseconds(us)`
-Delays execution for the specified number of microseconds.
-- **Parameters**:
-  - `us` (int): The number of microseconds to delay.
-- **Returns**: `nil`
+- **Returns**: `int`
 
 #### `delay(ms)`
 Delays execution for the specified number of milliseconds.
 - **Parameters**:
-  - `ms` (int): The number of milliseconds to delay.
+  - `ms` (int): Milliseconds to delay.
+- **Returns**: `nil`
+
+#### `delayMicroseconds(us)`
+Delays execution for the specified number of microseconds.
+- **Parameters**:
+  - `us` (int): Microseconds to delay.
+- **Returns**: `nil`
+
+#### `vTaskDelay(ticks)`
+Delays using the FreeRTOS task delay (yields to other tasks).
+- **Parameters**:
+  - `ticks` (int): Number of FreeRTOS ticks to delay.
 - **Returns**: `nil`
 
 #### `digitalWrite(pin, value)`
 Writes a digital value to a pin.
 - **Parameters**:
-  - `pin` (int): The pin number.
-  - `value` (int): The value to write (`HIGH` or `LOW`).
-- **Returns**: `nil`
-
-#### `analogRead(pin)`
-Reads an analog value from a pin.
-- **Parameters**:
-  - `pin` (int): The pin number.
-- **Returns**: `int` (The analog value).
-
-#### `pinMode(pin, mode)`
-Sets the mode of a pin (e.g., `INPUT`, `OUTPUT`).
-- **Parameters**:
-  - `pin` (int): The pin number.
-  - `mode` (int): The mode to set.
+  - `pin` (int): Pin number.
+  - `value` (int): `HIGH` or `LOW`.
 - **Returns**: `nil`
 
 #### `digitalRead(pin)`
 Reads a digital value from a pin.
 - **Parameters**:
-  - `pin` (int): The pin number.
-- **Returns**: `int` (The digital value, `HIGH` or `LOW`).
+  - `pin` (int): Pin number.
+- **Returns**: `int` (`HIGH` or `LOW`)
+
+#### `analogRead(pin)`
+Reads an analog value from a pin.
+- **Parameters**:
+  - `pin` (int): Pin number.
+- **Returns**: `int`
+
+#### `pinMode(pin, mode)`
+Sets the mode of a pin.
+- **Parameters**:
+  - `pin` (int): Pin number.
+  - `mode` (int): `INPUT`, `OUTPUT`, `INPUT_PULLUP`, etc.
+- **Returns**: `nil`
 
 ### Serial Communication
-SerialIo means using the pins io1 and io2 as tx and rx
-#### `serialWriteString(data: string)`
-Writes a string to the primary serial port.
 
-- **Parameters**:
-  - `data` (string): The string to write to the serial port.
-- **Returns**: `nil`
+SerialIo uses pins IO1 and IO2 as TX and RX.
 
-#### `serialIoWriteString(data: string)`
-Writes a string to the secondary serial port.
-
-- **Parameters**:
-  - `data` (string): The string to write to the secondary serial port.
-- **Returns**: `nil`
-
-#### `serialIoAvailableForWrite()`
-Returns the number of bytes available for writing in the secondary serial port.
-
-- **Returns**: `int` (The number of bytes available for writing).
-
-#### `serialAvailableForWrite()`
-Returns the number of bytes available for writing in the primary serial port.
-
-- **Returns**: `int` (The number of bytes available for writing).
-
-
-### I2C Communication
-
-#### `wireAvailable()`
-Returns the number of bytes available for reading from the I2C bus.
-
-- **Returns**: `int` (The number of bytes available for reading).
-
-#### `wireBegin(addr: uint8_t)`
-Initializes the I2C bus with the specified address.
-
-- **Parameters**:
-  - `addr` (uint8_t): The I2C address of the device.
-- **Returns**: `bool` (`true` if successful, otherwise `false`).
-
-#### `wireFlush()`
-Flushes the I2C buffer.
-
-- **Returns**: `nil`
-
-#### `wireBeginTransmission(addr: uint8_t)`
-Begins a transmission to the specified I2C address.
-
-- **Parameters**:
-  - `addr` (uint8_t): The I2C address of the device.
-- **Returns**: `nil`
-
-#### `wireEndTransmission(sendStop: bool)`
-Ends the I2C transmission.
-
-- **Parameters**:
-  - `sendStop` (bool): If `true`, a stop condition is sent after the transmission.
-- **Returns**: `uint8_t` (The status of the transmission).
-
-#### `wireRead()`
-Reads a byte from the I2C bus.
-
-- **Returns**: `int` (The byte read from the I2C bus).
-
-#### `wireReadBytes(length: int)`
-Reads a specified number of bytes from the I2C bus.
-
-- **Parameters**:
-  - `length` (int): The number of bytes to read.
-- **Returns**: `std::vector<uint8_t>` (A vector containing the bytes read).
-
-#### `wireRequestFrom(address: uint16_t, size: size_t, sendStop: bool)`
-Requests data from a specified I2C address.
-
-- **Parameters**:
-  - `address` (uint16_t): The I2C address of the device.
-  - `size` (size_t): The number of bytes to request.
-  - `sendStop` (bool): If `true`, a stop condition is sent after the request.
-- **Returns**: `uint8_t` (The number of bytes received).
-
-#### `wirePeek()`
-Peeks at the next byte in the I2C buffer without removing it.
-
-- **Returns**: `int` (The next byte in the buffer).
-
-#### `wireParseFloat()`
-Parses a float from the I2C buffer.
-
-- **Returns**: `float` (The parsed float value).
-
-#### `wireParseInt()`
-Parses an integer from the I2C buffer.
-
-- **Returns**: `int` (The parsed integer value).
-
-#### `wireSetTimeout(timeout: uint32_t)`
-Sets the timeout for I2C operations.
-
-- **Parameters**:
-  - `timeout` (uint32_t): The timeout in milliseconds.
-- **Returns**: `nil`
-
-#### `wireGetTimeout()`
-Returns the current timeout for I2C operations.
-
-- **Returns**: `uint32_t` (The timeout in milliseconds).
-
-
-### Secondary Serial (IO1/IO2)
-
-#### `beginSerialIo(baud)`
+#### `beginSerialIo([baud])`
 Initializes the secondary serial port (IO1/IO2 pins).
 - **Parameters**:
-  - `baud` (int, optional): Baud rate (default: 115200)
+  - `baud` (int, optional): Baud rate. Default is `115200`.
 - **Returns**: `nil`
 
-#### `serialIoAvailable()`
+#### `setTimeoutSerialIo(timeout)`
+Sets the read timeout for the secondary serial port.
+- **Parameters**:
+  - `timeout` (int): Timeout in milliseconds.
+- **Returns**: `nil`
+
+#### `serialIoAvaliable()`
 Returns the number of bytes available to read from the secondary serial port.
-- **Returns**: `int` (Number of bytes available)
+- **Returns**: `int`
+
+#### `serialAvaliable()`
+Returns the number of bytes available to read from the primary serial port.
+- **Returns**: `int`
+
+#### `serialIoReadStringUntil([terminator])`
+Reads characters from the secondary serial port until the terminator is found.
+- **Parameters**:
+  - `terminator` (char, optional): Terminating character. Default is `'\n'`.
+- **Returns**: `string`
+
+#### `serialReadStringUntil([terminator])`
+Reads characters from the primary serial port until the terminator is found.
+- **Parameters**:
+  - `terminator` (char, optional): Terminating character. Default is `'\n'`.
+- **Returns**: `string`
 
 #### `serialIoRead()`
 Reads one byte from the secondary serial port.
-- **Returns**: `int` (The byte read, or -1 if none available)
+- **Returns**: `int` (Byte read, or -1 if none available)
 
-#### `serialIoReadStringUntil(terminator)`
-Reads characters from the secondary serial port until the terminator is found.
-- **Parameters**:
-  - `terminator` (char, optional): The terminating character (default: '\n')
-- **Returns**: `string` (The read string)
-
-#### `serialIoAvailableForWrite()`
-Returns the number of bytes that can be written without blocking to secondary serial.
-- **Returns**: `int` (Available space in output buffer)
+#### `serialRead()`
+Reads one byte from the primary serial port.
+- **Returns**: `int` (Byte read, or -1 if none available)
 
 #### `serialIoWrite(data)`
 Writes a single byte to the secondary serial port.
 - **Parameters**:
-  - `data` (int): The byte to write (0-255)
-- **Returns**: `int` (Number of bytes written)
-
-#### `serialIoWriteString(data)`
-Writes a string to the secondary serial port.
-- **Parameters**:
-  - `data` (string): The string to write
-- **Returns**: `int` (Number of bytes written)
-
-
-### Primary Serial (USB/Console)
-
-#### `serialAvailable()`
-Returns the number of bytes available to read from the primary serial port.
-- **Returns**: `int` (Number of bytes available)
-
-#### `serialRead()`
-Reads one byte from the primary serial port.
-- **Returns**: `int` (The byte read, or -1 if none available)
-
-#### `serialReadStringUntil(terminator)`
-Reads characters from the primary serial port until the terminator is found.
-- **Parameters**:
-  - `terminator` (char, optional): The terminating character (default: '\n')
-- **Returns**: `string` (The read string)
-
-#### `serialAvailableForWrite()`
-Returns the number of bytes that can be written without blocking.
-- **Returns**: `int` (Available space in output buffer)
+  - `data` (int): Byte to write (0-255).
+- **Returns**: `int` (Bytes written)
 
 #### `serialWrite(data)`
 Writes a single byte to the primary serial port.
 - **Parameters**:
-  - `data` (int): The byte to write (0-255)
-- **Returns**: `int` (Number of bytes written)
-
-#### `serialWriteString(data)`
-Writes a string to the primary serial port.
-- **Parameters**:
-  - `data` (string): The string to write
-- **Returns**: `int` (Number of bytes written)
-
-### Secondary Serial (IO1/IO2)
-
-#### `beginSerialIo(baud)`
-Initializes the secondary serial port (IO1/IO2 pins).
-- **Parameters**:
-  - `baud` (int, optional): Baud rate (default: 115200)
-- **Returns**: `nil`
-
-#### `serialIoAvailable()`
-Returns the number of bytes available to read from the secondary serial port.
-- **Returns**: `int` (Number of bytes available)
-
-#### `serialIoRead()`
-Reads one byte from the secondary serial port.
-- **Returns**: `int` (The byte read, or -1 if none available)
-
-#### `serialIoReadStringUntil(terminator)`
-Reads characters from the secondary serial port until the terminator is found.
-- **Parameters**:
-  - `terminator` (char, optional): The terminating character (default: '\n')
-- **Returns**: `string` (The read string)
-
-#### `serialIoAvailableForWrite()`
-Returns the number of bytes that can be written without blocking to secondary serial.
-- **Returns**: `int` (Available space in output buffer)
-
-#### `serialIoWrite(data)`
-Writes a single byte to the secondary serial port.
-- **Parameters**:
-  - `data` (int): The byte to write (0-255)
-- **Returns**: `int` (Number of bytes written)
+  - `data` (int): Byte to write (0-255).
+- **Returns**: `int` (Bytes written)
 
 #### `serialIoWriteString(data)`
 Writes a string to the secondary serial port.
 - **Parameters**:
-  - `data` (string): The string to write
-- **Returns**: `int` (Number of bytes written)
+  - `data` (string): The string to write.
+- **Returns**: `int` (Bytes written)
 
-## I2C Communication
-
-#### `wireBegin(address)`
-Initializes I2C communication as a master or slave.
+#### `serialWriteString(data)`
+Writes a string to the primary serial port.
 - **Parameters**:
-  - `address` (uint8_t): 7-bit slave address (0 for master mode)
-- **Returns**: `bool` (true if successful)
+  - `data` (string): The string to write.
+- **Returns**: `int` (Bytes written)
+
+#### `serialIoAvailableForWrite()`
+Returns the number of bytes that can be written without blocking to the secondary serial port.
+- **Returns**: `int`
+
+#### `serialAvailableForWrite()`
+Returns the number of bytes that can be written without blocking to the primary serial port.
+- **Returns**: `int`
+
+### I2C Communication
+
+#### `wireBegin(addr)`
+Initializes the I2C bus. Pass `0` for master mode.
+- **Parameters**:
+  - `addr` (uint8_t): 7-bit slave address, or `0` for master mode.
+- **Returns**: `bool`
 
 #### `wireAvailable()`
-Returns the number of bytes available for reading.
-- **Returns**: `int` (Number of bytes available)
+Returns the number of bytes available for reading from the I2C bus.
+- **Returns**: `int`
 
-#### `wireBeginTransmission(address)`
-Begins a transmission to the specified I2C device.
+#### `wireBeginTransmission(addr)`
+Begins a transmission to the specified I2C address.
 - **Parameters**:
-  - `address` (uint8_t): 7-bit device address
+  - `addr` (uint8_t): 7-bit device address.
 - **Returns**: `nil`
 
 #### `wireEndTransmission([sendStop])`
-Ends a transmission to the I2C device.
+Ends the I2C transmission.
 - **Parameters**:
-  - `sendStop` (bool, optional): Whether to send stop condition (default: true)
-- **Returns**: `uint8_t` (Transmission status code)
+  - `sendStop` (bool, optional): Send stop condition. Default is `true`.
+- **Returns**: `uint8_t` (Transmission status)
 
-#### `wireRequestFrom(address, size, [sendStop])`
-Requests bytes from an I2C slave device.
+#### `wireRequestFrom(address, size, sendStop)`
+Requests bytes from a specific I2C device.
 - **Parameters**:
-  - `address` (uint16_t): 7-bit device address
-  - `size` (size_t): Number of bytes to request
-  - `sendStop` (bool, optional): Whether to send stop condition (default: true)
+  - `address` (uint16_t): 7-bit device address.
+  - `size` (int): Number of bytes to request.
+  - `sendStop` (bool): Whether to send stop condition.
 - **Returns**: `uint8_t` (Number of bytes received)
 
 #### `wireRead()`
 Reads one byte from the I2C buffer.
-- **Returns**: `int` (The byte read)
+- **Returns**: `int`
 
 #### `wireReadBytes(length)`
 Reads multiple bytes from the I2C buffer.
 - **Parameters**:
-  - `length` (int): Number of bytes to read
-- **Returns**: `table` (Array of bytes read)
+  - `length` (int): Number of bytes to read.
+- **Returns**: `table` (Array of bytes)
 
 #### `wirePeek()`
-Peeks at the next byte in the I2C buffer without removing it.
-- **Returns**: `int` (The next byte)
+Peeks at the next byte in the I2C buffer without consuming it.
+- **Returns**: `int`
 
 #### `wireFlush()`
 Flushes the I2C buffer.
@@ -949,91 +1001,370 @@ Parses an integer from the I2C buffer.
 #### `wireSetTimeout(timeout)`
 Sets the I2C operation timeout.
 - **Parameters**:
-  - `timeout` (uint32_t): Timeout in milliseconds
+  - `timeout` (uint32_t): Timeout in milliseconds.
 - **Returns**: `nil`
 
 #### `wireGetTimeout()`
 Gets the current I2C operation timeout.
-- **Returns**: `uint32_t` (Timeout in milliseconds)
+- **Returns**: `uint32_t`
+
+## IR Remote
+
+[↑ Back to top](#topics)
+
+These functions allow receiving commands from infrared remote controls via a VS1838B or compatible receiver.
+
+#### `startIR()`
+Initializes the IR receiver.
+- **Returns**: `bool` (`true` if successful)
+
+#### `hasIRStarted()`
+Returns whether the IR receiver has been initialized.
+- **Returns**: `bool`
+
+#### `setIRInterruptPin(pin)`
+Sets the GPIO pin connected to the IR receiver.
+- **Parameters**:
+  - `pin` (uint16_t): The GPIO pin number.
+- **Returns**: `nil`
+
+#### `enableIRInterrupt([mode])`
+Enables the interrupt on the IR receiver pin.
+- **Parameters**:
+  - `mode` (int, optional): Interrupt mode (e.g. `CHANGE`, `RISING`, `FALLING`). Default is `CHANGE`.
+- **Returns**: `nil`
+
+#### `disableIRInterrupt()`
+Disables the interrupt on the IR receiver pin.
+- **Returns**: `nil`
+
+#### `hasIRCommand()`
+Returns whether a new IR command has been received.
+- **Returns**: `bool`
+
+#### `getLastIRCommand()`
+Returns the last received IR command as an `IrCommand` object.
+- **Returns**: `IrCommand`
+
+## 2D Models
+
+[↑ Back to top](#topics)
+
+These functions expose the 2D model rendering system added in v3.0.0. Models are rendered on the panel using the keyframe animation system. Model frame IDs start at `MODEL_FRAME_ID_OFFSET`.
+
+#### `loadModel(modelData, name)`
+Loads a 2D model from a JSON data string or from a file and registers it under the given name.
+- **Parameters**:
+  - `modelData` (string): Model data or file path.
+  - `name` (string, optional): Identifier name for the model. Default is `""`.
+- **Returns**: `Model` object
+
+### `Model` Class
+
+Model objects are returned by `loadModel()`. They cannot be created directly.
+
+#### `model:Recalculate()`
+Recalculates the model's geometry (e.g. after modifying points).
+- **Returns**: `nil`
+
+#### `model:Reset()`
+Resets the model to its original state.
+- **Returns**: `nil`
+
+#### `model:GetId()`
+Returns the internal ID of the model.
+- **Returns**: `int`
+
+#### `model:CopyToRaster()`
+Copies the current model state to the rasterizer for rendering.
+- **Returns**: `nil`
+
+#### `model:AddPointGroup()`
+Adds a new point group to the model.
+- **Returns**: `nil`
+
+#### `model:SetTriangle(index, p1, p2, p3)`
+Defines a triangle by referencing three point indices.
+- **Parameters**:
+  - `index` (int): Triangle index.
+  - `p1, p2, p3` (int): Point indices.
+- **Returns**: `nil`
+
+#### `model:GetTriangle(index)`
+Gets the triangle data at the given index.
+- **Parameters**:
+  - `index` (int): Triangle index.
+- **Returns**: `table`
+
+#### `model:SetBatchOperations(enabled)`
+Enables or disables batch operations mode for faster bulk transformations.
+- **Parameters**:
+  - `enabled` (bool)
+- **Returns**: `nil`
+
+#### `model:SetAccumulativeOperations(enabled)`
+Enables or disables accumulative mode, where transforms stack rather than replace.
+- **Parameters**:
+  - `enabled` (bool)
+- **Returns**: `nil`
+
+#### `model:SetPointPosition(pointId, x, y, z)`
+Sets the absolute position of a single point.
+- **Parameters**:
+  - `pointId` (int): Point index.
+  - `x, y, z` (float): New position.
+- **Returns**: `nil`
+
+#### `model:TranslatePoint(pointId, x, y, z)`
+Moves a single point by a delta.
+- **Parameters**:
+  - `pointId` (int): Point index.
+  - `x, y, z` (float): Translation delta.
+- **Returns**: `nil`
+
+#### `model:SetPointsPosition(x, y, z)`
+Sets all points to the given position.
+- **Parameters**:
+  - `x, y, z` (float): Position.
+- **Returns**: `nil`
+
+#### `model:ScalePoints(x, y, z)`
+Scales all points by the given factors.
+- **Parameters**:
+  - `x, y, z` (float): Scale factors.
+- **Returns**: `nil`
+
+#### `model:TranslatePoints(x, y, z)`
+Translates all points by a delta.
+- **Parameters**:
+  - `x, y, z` (float): Translation delta.
+- **Returns**: `nil`
+
+#### `model:Scale(x, y, z)`
+Scales the whole model.
+- **Parameters**:
+  - `x, y, z` (float): Scale factors.
+- **Returns**: `nil`
+
+#### `model:Rotate(x, y, z)`
+Rotates the model.
+- **Parameters**:
+  - `x, y, z` (float): Rotation angles.
+- **Returns**: `nil`
+
+#### `model:Translate(x, y, z)`
+Translates the model.
+- **Parameters**:
+  - `x, y, z` (float): Translation delta.
+- **Returns**: `nil`
+
+#### `model:GetCenter()`
+Returns the center point of the model.
+- **Returns**: `float, float, float` (x, y, z)
+
+## Keyframe Animations
+
+[↑ Back to top](#topics)
+
+Keyframe animations drive 2D model transformations over time. They are created with `newKeyframeAnimation()` and played via `setPanelModelAnimation()`.
+
+#### `newKeyframeAnimation(duration)`
+Creates a new keyframe animation of the given duration.
+- **Parameters**:
+  - `duration` (int): Total duration in milliseconds.
+- **Returns**: `KeyframeAnimation` object
+
+### `KeyframeAnimation` Class
+
+#### `anim:Reset()`
+Resets the animation to the beginning.
+- **Returns**: `nil`
+
+#### `anim:GetId()`
+Returns the internal ID of this animation (used with `setPanelModelAnimation`).
+- **Returns**: `int`
+
+#### `anim:AddTrack(track)`
+Adds a `KeyframeTrack` to this animation.
+- **Parameters**:
+  - `track` (KeyframeTrack): The track to add.
+- **Returns**: `nil`
+
+### `KeyframeTrack` Class
+
+KeyframeTrack objects can be created directly with `KeyframeTrack()`.
+
+#### `KeyframeTrack()`
+Creates a new, empty keyframe track.
+- **Returns**: `KeyframeTrack` object
+
+#### `track:Reset()`
+Resets the track.
+- **Returns**: `nil`
+
+#### `track:SetResource(modelId)`
+Associates this track with a model by ID.
+- **Parameters**:
+  - `modelId` (int): The model ID to control.
+- **Returns**: `nil`
+
+#### `track:AddKeyFrame(keyframe)`
+Adds a keyframe to this track.
+- **Parameters**:
+  - `keyframe` (Keyframe): The keyframe to add.
+- **Returns**: `nil`
+
+### `KeyFrame(time, value)`
+Creates a new keyframe. Parameters depend on the type of operation being animated.
+- **Parameters**:
+  - `time` (uint16): Time offset in ms.
+  - `value` (Vec2f or similar): The value at this keyframe.
+- **Returns**: `Keyframe` object
+
+---
 
 # Lua Constants
+
+[↑ Back to top](#topics)
 
 - [Engine Related](#engine-related)
 - [Input](#input)
 - [LED Behavior](#led-behavior)
-- [Pins](#pins)
+- [Pins and GPIO](#pins-and-gpio)
+- [Color Modes](#color-modes)
+- [Shaders](#shaders)
+- [Keyframe Types](#keyframe-types)
+- [BLE Power Levels](#ble-power-levels)
+- [Interrupt Modes](#interrupt-modes)
 - [ESP32 Reset Reason](#esp32-reset-reason)
 
-## Engine related
+## Engine Related
 
-- `PANDA_VERSION`: A string constant representing the current version of the Protopanda firmware.
-- `VCC_THRESHOLD_START`: The minimum voltage threshold required for the system to start.
-- `VCC_THRESHOLD_HALT`: The minimum voltage threshold below which the system will halt to prevent damage.
-- `OLED_SCREEN_WIDTH`: The width of the internal OLED screen in pixels.
-- `OLED_SCREEN_HEIGHT`: The height of the internal OLED screen in pixels.
-- `PANEL_WIDTH`: The width of the HUB75 panel in pixels.
-- `PANEL_HEIGHT`: The height of the HUB75 panel in pixels.
-- `POWER_MODE_NONE`: Power mode for USB 5V input.
+- `PANDA_VERSION`: String representing the current firmware version.
+- `VCC_THRESHOLD_START`: Minimum voltage required for the system to start.
+- `VCC_THRESHOLD_HALT`: Voltage below which the system halts to prevent damage.
+- `OLED_SCREEN_WIDTH`: Width of the internal OLED screen in pixels.
+- `OLED_SCREEN_HEIGHT`: Height of the internal OLED screen in pixels.
+- `CANVAS_WIDTH`: Width of the HUB75 panel in pixels.
+- `CANVAS_HEIGHT`: Height of the HUB75 panel in pixels.
+- `POWER_MODE_NONE`: Ignore any powering behavior.
 - `POWER_MODE_USB_5V`: Power mode for USB 5V input.
 - `POWER_MODE_USB_9V`: Power mode for USB 9V PD input.
 - `POWER_MODE_BATTERY`: Power mode for battery input.
-- `POWER_MODE_5V_PD`: Power mode for USB 5V 3A 
-- `POWER_MODE_NONE`: Ignore any powering behavior 
+- `BUILT_IN_POWER_MODE`: The power mode set at compile time.
 - `SERVO_COUNT`: The number of servos.
+- `MODEL_FRAME_ID_OFFSET`: Frame ID offset used for model-based frames. Model frame IDs start at this value.
+- `EDIT_MODE_PIN`: The GPIO pin number used for entering edit mode.
+- `EDIT_ENABLE_LOGIC_LEVEL`: The logic level that triggers edit mode.
+- `ENABLE_EDIT_MODE`: `1` if edit mode is compiled in.
+- `PIN_ENABLE_REGULATOR`: GPIO pin that controls the voltage regulator (`-1` if not defined).
+- `PIN_USB_BATTERY_IN`: GPIO pin for battery/USB voltage reading (`-1` if not defined).
+- `USE_PIN_BATTERY_IN`: `1` if battery voltage sensing is enabled.
+- `RESISTOR_DIVIDER_R8`, `RESISTOR_DIVIDER_R9`: Resistor values for the voltage divider.
+- `V_REF`: ADC reference voltage.
+- `BLACK`: OLED color constant (`1`).
+- `WHITE`: OLED color constant (`0`).
+- `MAX_LED_GROUPS`: Number of available LED groups/segments.
 
 ## Input
 
-- `BUTTON_RELEASED`: Indicates that a button is in the released state (not pressed).
-- `BUTTON_JUST_PRESSED`: Indicates that a button has just been pressed (transition from released to pressed).
-- `BUTTON_PRESSED`: Indicates that a button is currently pressed.
-- `BUTTON_JUST_RELEASED`: Indicates that a button has just been released (transition from pressed to released).
-- `DEVICE_X_BUTTON_LEFT`: Button mapping for left button on device (0 to `MAX_BLE_CLIENTS`).
-- `DEVICE_X_BUTTON_RIGHT`: Button mapping for right button on device (0 to  `MAX_BLE_CLIENTS`).
-- `DEVICE_X_BUTTON_UP`: Button mapping for up button on device (0 to `MAX_BLE_CLIENTS`).
-- `DEVICE_X_BUTTON_DOWN`: Button mapping for down button on device (0 to `MAX_BLE_CLIENTS`).
-- `DEVICE_X_BUTTON_CONFIRM`: Button mapping for confirm button on device (0 to `MAX_BLE_CLIENTS`).
-- `DEVICE_X_BUTTON_AUX_A`: Button mapping for auxiliar function A button on device (0 to `MAX_BLE_CLIENTS`).
-- `DEVICE_X_BUTTON_AUX_B`: Button mapping for auxiliar function B button on device (0 to `MAX_BLE_CLIENTS`).
-- `DEVICE_X_BUTTON_BACK`: Button mapping for back button on device (0 to `MAX_BLE_CLIENTS`).
-- `BUTTON_LEFT`: Same as DEVICE_0_BUTTON_LEFT
-- `BUTTON_RIGHT`: Same as DEVICE_0_BUTTON_RIGHT
-- `BUTTON_UP`: Same as DEVICE_0_BUTTON_UP
-- `BUTTON_CONFIRM`: Same as DEVICE_0_BUTTON_CONFIRM
-- `BUTTON_DOWN`: Same as DEVICE_0_BUTTON_DOWN
-- `BUTTON_AUX_A`: Same as DEVICE_0_BUTTON_AUX_A
-- `BUTTON_AUX_B`: Same as DEVICE_0_BUTTON_AUX_B
-- `BUTTON_BACK`: Same as DEVICE_0_BUTTON_BACK
-
-
+- `BUTTON_RELEASED`: Button is not pressed.
+- `BUTTON_JUST_PRESSED`: Button was just pressed this frame.
+- `BUTTON_PRESSED`: Button is currently held.
+- `BUTTON_JUST_RELEASED`: Button was just released this frame.
+- `DEVICE_X_BUTTON_LEFT/RIGHT/UP/DOWN/CONFIRM/AUX_A/AUX_B/BACK`: Button mappings for device X (0 to `MAX_BLE_CLIENTS`).
+- `BUTTON_LEFT/RIGHT/UP/DOWN/CONFIRM/AUX_A/AUX_B/BACK`: Shorthand aliases for device 0 buttons.
 
 ## Led Behavior
 
-- `BEHAVIOR_PRIDE`: Displays a rainbow color pattern on the LED strip.
-- `BEHAVIOR_ROTATE`: Rotates colors along the LED strip.
-- `BEHAVIOR_RANDOM_COLOR`: Randomly changes the color of LEDs.
-- `BEHAVIOR_FADE_CYCLE`: Cycles through colors with a fading effect.
-- `BEHAVIOR_ROTATE_FADE_CYCLE`: Combines rotation and fading effects for a dynamic display.
-- `BEHAVIOR_STATIC_RGB`: Sets a static RGB color for the LEDs.
-- `BEHAVIOR_STATIC_HSV`: Sets a static HSV color for the LEDs.
-- `BEHAVIOR_RANDOM_BLINK`: Randomly blinks LEDs on and off.
-- `BEHAVIOR_ROTATE_SINE_V`: Rotates colors with a sine wave effect on the V (value) component of HSV.
-- `BEHAVIOR_ROTATE_SINE_S`: Rotates colors with a sine wave effect on the S (saturation) component of HSV.
-- `BEHAVIOR_ROTATE_SINE_H`: Rotates colors with a sine wave effect on the H (hue) component of HSV.
-- `BEHAVIOR_FADE_IN`: Gradually fades in the LEDs from off to a specified color.
-- `MAX_LED_GROUPS`: Number os avaliable led groups
+- `BEHAVIOR_NONE`: No behavior; LEDs remain off or unchanged.
+- `BEHAVIOR_PRIDE`: Rainbow cycling color pattern.
+- `BEHAVIOR_ROTATE`: Rotates a color along the segment.
+- `BEHAVIOR_RANDOM_COLOR`: Each LED gets a random color.
+- `BEHAVIOR_FADE_CYCLE`: Fades brightness in a cycle.
+- `BEHAVIOR_ROTATE_FADE_CYCLE`: Combines rotation and fading.
+- `BEHAVIOR_STATIC_RGB`: Static RGB color.
+- `BEHAVIOR_STATIC_HSV`: Static HSV color.
+- `BEHAVIOR_RANDOM_BLINK`: Randomly blinks LEDs.
+- `BEHAVIOR_ROTATE_SINE_V`: Sine wave on brightness (V in HSV).
+- `BEHAVIOR_ROTATE_SINE_S`: Sine wave on saturation (S in HSV).
+- `BEHAVIOR_ROTATE_SINE_H`: Sine wave on hue (H in HSV).
+- `BEHAVIOR_FADE_IN`: Fades LEDs in from off to a specified color.
+- `BEHAVIOR_NOISE`: Noise/static effect.
+- `BEHAVIOR_ICON_X`: Displays an X icon pattern on the segment.
+- `BEHAVIOR_ICON_I`: Displays an I icon pattern on the segment.
+- `BEHAVIOR_ICON_V`: Displays a V icon pattern on the segment.
+- `MAX_LED_GROUPS`: Total number of available LED groups.
 
-## Pins
-- `D1`, `D2`: The external io, io1 and io2
-- `HIGH`, `LOW`: Constants representing high and low states for digital pins.
-- `INPUT`, `OUTPUT`: Constants representing pin modes.
-- `INPUT_PULLUP`, `INPUT_PULLDOWN`: Constants representing pull-up and pull-down modes for input pins.
-- `ANALOG`: Constant representing analog pin mode.
-- `OUTPUT_OPEN_DRAIN`, `OPEN_DRAIN`: Constants representing open-drain output mode.
-- `PULLDOWN`: Constant representing pull-down mode.
+## Pins and GPIO
 
-## ESP32 reset reason
+- `D1`, `D2`: External IO pins (IO1 and IO2).
+- `HIGH`, `LOW`: Digital pin states.
+- `INPUT`, `OUTPUT`: Pin modes.
+- `INPUT_PULLUP`, `INPUT_PULLDOWN`: Input modes with internal resistors.
+- `ANALOG`: Analog pin mode.
+- `OUTPUT_OPEN_DRAIN`, `OPEN_DRAIN`: Open-drain output mode.
+- `PULLDOWN`: Pull-down mode.
+
+## Color Modes
+
+Used with `setPanelColorMode()` to handle panels with non-standard RGB channel wiring.
+
+- `COLOR_MODE_RGB`
+- `COLOR_MODE_RBG`
+- `COLOR_MODE_GRB`
+- `COLOR_MODE_GBR`
+- `COLOR_MODE_BRG`
+- `COLOR_MODE_BGR`
+
+## Shaders
+
+Used with `setAnimationShader()`.
+
+- `SHADER_NONE`: No shader.
+- `SHADER_RAINBOW`: Rainbow overlay.
+- `SHADER_FIRE`: Fire effect.
+- `SHADER_TEXTURE`: Texture-based shader.
+- `SHADER_TRANS`: Transgender flag color shader 🏳️‍⚧️
+- `SHADER_LAST`: Alias for the last available shader.
+
+## Keyframe Types
+
+Used when building `KeyframeTrack` animations.
+
+- `KEYFRAME_TRANSLATE`: Translation keyframe.
+- `KEYFRAME_ROTATE`: Rotation keyframe.
+- `KEYFRAME_SCALE`: Scale keyframe.
+- `KEYFRAME_RESET`: Resets the model transform.
+- `KEYFRAME_COLOR`: Color change keyframe.
+- `KEYFRAME_VISIBILITY`: Visibility toggle keyframe.
+- `KEYFRAME_SINE`: Sine wave motion keyframe.
+- `KEYFRAME_SHADER`: Shader change keyframe.
+
+## BLE Power Levels
+
+Used with `startBLERadio(powerLevel)`.
+
+- `ESP_PWR_LVL_N24` through `ESP_PWR_LVL_P21`: BLE TX power levels in dBm, from -24 dBm (lowest) to +21 dBm (highest).
+
+## Interrupt Modes
+
+Used with `enableIRInterrupt([mode])` and `attachInterrupt`.
+
+- `RISING`: Trigger on rising edge.
+- `FALLING`: Trigger on falling edge.
+- `CHANGE`: Trigger on any change.
+- `ONLOW`: Trigger when pin is low.
+- `ONHIGH`: Trigger when pin is high.
+- `ONLOW_WE`: Trigger when low (wake-up capable).
+- `ONHIGH_WE`: Trigger when high (wake-up capable).
+
+## ESP32 Reset Reason
+
+Returned by `getResetReason()`.
+
 - `ESP_RST_UNKNOWN`
-- `ESP_RST_POWERON` 
+- `ESP_RST_POWERON`
 - `ESP_RST_EXT`
 - `ESP_RST_SW`
 - `ESP_RST_PANIC`
@@ -1044,291 +1375,339 @@ Gets the current I2C operation timeout.
 - `ESP_RST_BROWNOUT`
 - `ESP_RST_SDIO`
 
-#### Power Modes
-- `BUILT_IN_POWER_MODE`
+---
 
-# Led behaviors
+# Led Behaviors
+
+[↑ Back to top](#topics)
+
+## Parameter Truth Table
+
+All parameter values are in the range 0–255 unless marked as **ms** (milliseconds).
+
+| Mode                  | param1       | param2         | param3          | param4         |
+|-----------------------|--------------|----------------|-----------------|----------------|
+| `none`                | -            | -              | -               | -              |
+| `pride`               | -            | -              | -               | -              |
+| `rotate`              | -            | -              | -               | speed (ms)     |
+| `random_color`        | -            | -              | -               | -              |
+| `fade_cycle`          | hue          | speed (ms)     | min_brightness  | -              |
+| `rotate_fade_cycle`   | hue          | speed (ms)     | min_brightness  | rotate_speed (ms) |
+| `color_rgb`           | red          | green          | blue            | -              |
+| `color_hsv`           | hue          | saturation     | value           | -              |
+| `random_blink`        | base_hue     | hue_variance   | brightness      | blink_speed (ms) |
+| `icon_x`              | -            | -              | -               | -              |
+| `icon_i`              | -            | -              | -               | -              |
+| `icon_v`              | -            | -              | -               | -              |
+| `rotate_sine_v`       | hue          | saturation     | speed (ms)      | -              |
+| `rotate_sine_s`       | hue          | brightness     | speed (ms)      | -              |
+| `rotate_sine_h`       | saturation   | brightness     | speed (ms)      | -              |
+| `fade_in`             | hue          | saturation     | step            | delay (ms)     |
+| `noise`               | -            | -              | step            | delay (ms)     |
+
+Parameters are passed positionally to `ledsSegmentBehavior(id, behavior, param1, param2, param3, param4)`. Unused positions should be `0`.
+
+---
 
 * `BEHAVIOR_PRIDE`
-  - **Description**: A rainbow effect that cycles through colors in a smooth, pride-flag-like pattern.
+  - **Description**: Rainbow cycling pattern.
   - **Parameters**: None.
 
 * `BEHAVIOR_ROTATE`
-  - **Description**: Rotates a single color through the segment, creating a moving light effect.
-  - **Parameters**: 
-    - `1`: Red (0-255).
-    - `2`: Green (0-255).
-    - `3`: Blue (0-255).
-    - `4`: Speed of rotation (delay in milliseconds).
+  - **Description**: Rotates a single color through the segment.
+  - **Parameters**:
+    - `4`: Speed of rotation (delay in ms).
 
 * `BEHAVIOR_RANDOM_COLOR`
-  - **Description**: Sets each LED in the segment to a random color.
+  - **Description**: Each LED gets a random color.
   - **Parameters**: None.
 
 * `BEHAVIOR_FADE_CYCLE`
-  - **Description**: Fades the brightness of the LEDs in the segment up and down in a cycle.
-  - **Parameters**: 
+  - **Description**: Fades brightness up and down in a cycle.
+  - **Parameters**:
     - `1`: Hue value (0-255).
-    - `2`: Controls the speed of the fade cycle.
+    - `2`: Speed of the fade cycle.
     - `3`: Minimum brightness value.
 
 * `BEHAVIOR_ROTATE_FADE_CYCLE`
-  - **Description**: Combines rotation and fading, creating a moving light effect with fading brightness.
-  - **Parameters**: 
+  - **Description**: Combines rotation and fading.
+  - **Parameters**:
     - `1`: Hue value (0-255).
-    - `2`: Controls the speed of the fade cycle.
+    - `2`: Speed of the fade cycle.
     - `3`: Minimum brightness value.
-    - `4`: Speed of rotation (delay in milliseconds).
+    - `4`: Speed of rotation (delay in ms).
 
 * `BEHAVIOR_STATIC_RGB`
   - **Description**: Sets all LEDs in the segment to a static RGB color.
-  - **Parameters**: 
-    - `1`: Red value (0-255).
-    - `2`: Green value (0-255).
-    - `3`: Blue value (0-255).
+  - **Parameters**:
+    - `1`: Red (0-255).
+    - `2`: Green (0-255).
+    - `3`: Blue (0-255).
 
 * `BEHAVIOR_STATIC_HSV`
   - **Description**: Sets all LEDs in the segment to a static HSV color.
-  - **Parameters**: 
-    - `1`: Hue value (0-255).
-    - `2`: Saturation value (0-255).
-    - `3`: Brightness value (0-255).
+  - **Parameters**:
+    - `1`: Hue (0-255).
+    - `2`: Saturation (0-255).
+    - `3`: Brightness (0-255).
 
 * `BEHAVIOR_RANDOM_BLINK`
-  - **Description**: Randomly blinks LEDs in the segment with random colors and brightness.
-  - **Parameters**: 
-    - `1`: Base hue value (0-255).
-    - `2`: Range of hue variation.
-    - `3`: Maximum brightness value.
-    - `4`: Delay between blinks (in milliseconds).
+  - **Description**: Randomly blinks LEDs with random colors and brightness.
+  - **Parameters**:
+    - `1`: Base hue (0-255).
+    - `2`: Hue variation range.
+    - `3`: Maximum brightness.
+    - `4`: Delay between blinks (ms).
 
 * `BEHAVIOR_ROTATE_SINE_V`
-  - **Description**: Rotates a sine wave effect through the segment, varying brightness.
-  - **Parameters**: 
-    - `1`: Base hue value (0-255).
-    - `2`: Base brightness value (0-255).
-    - `3`: Controls the speed of the sine wave.
+  - **Description**: Sine wave varying brightness rotates through the segment.
+  - **Parameters**:
+    - `1`: Base hue (0-255).
+    - `2`: Base saturation (0-255).
+    - `3`: Speed of the sine wave (ms).
 
 * `BEHAVIOR_ROTATE_SINE_S`
-  - **Description**: Rotates a sine wave effect through the segment, varying saturation.
-  - **Parameters**: 
-    - `1`: Base hue value (0-255).
-    - `2`: Base brightness value (0-255).
-    - `3`: Controls the speed of the sine wave.
+  - **Description**: Sine wave varying saturation rotates through the segment.
+  - **Parameters**:
+    - `1`: Base hue (0-255).
+    - `2`: Base brightness (0-255).
+    - `3`: Speed of the sine wave (ms).
 
 * `BEHAVIOR_ROTATE_SINE_H`
-  - **Description**: Rotates a sine wave effect through the segment, varying hue.
-  - **Parameters**: 
-    - `1`: Base saturation value (0-255).
-    - `2`: Base brightness value (0-255).
-    - `3`: Controls the speed of the sine wave.
+  - **Description**: Sine wave varying hue rotates through the segment.
+  - **Parameters**:
+    - `1`: Base saturation (0-255).
+    - `2`: Base brightness (0-255).
+    - `3`: Speed of the sine wave (ms).
 
 * `BEHAVIOR_FADE_IN`
-  - **Description**: Gradually fades in the LEDs in the segment to a specified HSV color.
-  - **Parameters**: 
-    - `1`: Hue value (0-255).
-    - `2`: Saturation value (0-255).
-    - `3`: Controls the speed of the fade-in.
-    - `4`: Delay between fade steps (in milliseconds).
+  - **Description**: Gradually fades LEDs in to a specified HSV color.
+  - **Parameters**:
+    - `1`: Hue (0-255).
+    - `2`: Saturation (0-255).
+    - `3`: Step size.
+    - `4`: Delay between steps (ms).
 
-* `BEHAVIOR_NONE`
-  - **Description**: No behavior is applied. The LEDs in the segment will remain off or unchanged.
+* `BEHAVIOR_NOISE`
+  - **Description**: Noise/static flickering effect across the segment.
+  - **Parameters**:
+    - `3`: Step size.
+    - `4`: Delay between steps (ms).
+
+* `BEHAVIOR_ICON_X`, `BEHAVIOR_ICON_I`, `BEHAVIOR_ICON_V`
+  - **Description**: Display a simple icon pattern (X, I, or V shape) on the segment.
   - **Parameters**: None.
 
+* `BEHAVIOR_NONE`
+  - **Description**: No behavior applied. LEDs remain off or unchanged.
+  - **Parameters**: None.
+
+---
 
 # Bluetooth Interface
 
+[↑ Back to top](#topics)
 
 ## Radio and BLE functions
 
 #### `startBLE()`
-Starts the envoriment for, but dont start the radio yet. Bluetooth Low Energy (BLE).
-- **Returns**: `bool` (`true` if successful, otherwise `false`).
+Initializes the BLE environment but does not start the radio yet.
+- **Returns**: `bool`
+
+#### `hasBLEStarted()`
+Returns whether BLE has been initialized.
+- **Returns**: `bool`
 
 #### `startBLERadio(powerLevel)`
-Starts the radio.
-- **Returns**: `bool` (`true` if successful, otherwise `false`).
+Starts the BLE radio at the specified power level.
+- **Parameters**:
+  - `powerLevel` (int): One of the `ESP_PWR_LVL_*` constants.
+- **Returns**: `bool`
 
 #### `getRRSI(connId)`
-Return the RSSI from a given connection
-- **Returns**: `int` 
+Returns the RSSI of a given connection.
+- **Parameters**:
+  - `connId` (int): The connection ID.
+- **Returns**: `int`
 
 #### `getClientIdFromControllerId(id)`
-Given the client ID, return the id of its connection
-- **Returns**: `int` 
+Returns the connection ID for a given controller ID.
+- **Parameters**:
+  - `id` (int): Controller ID.
+- **Returns**: `int`
 
 #### `getConnectedRemoteControls()`
-Returns the number of connected remote controls.
-- **Returns**: `int` (The number of connected devices).
+Returns the number of currently connected remote controls.
+- **Returns**: `int`
 
 #### `isElementIdConnected(id)`
 Checks if a remote control with the given ID is connected.
 - **Parameters**:
-  - `id` (int): The ID of the remote control.
-- **Returns**: `bool` (`true` if connected, otherwise `false`).
+  - `id` (int): The controller ID.
+- **Returns**: `bool`
 
 #### `beginBleScanning()`
 Starts scanning for BLE devices.
 - **Returns**: `nil`
 
-#### `setLogDiscoveredBleDevices(bool)`  
-When true, each scanned device will be saved on the log filew
-- **Retorna**: `nil`  
+#### `setLogDiscoveredBleDevices(bool)`
+When `true`, each scanned device will be saved to the log file.
+- **Returns**: `nil`
 
 #### `setMaximumControls(count)`
-Sets the maximum number of connected remote controls.
+Sets the maximum number of simultaneously connected remote controls.
 - **Parameters**:
-  - `count` (int): The maximum number of devices.
+  - `count` (int): Maximum number of devices.
 - **Returns**: `nil`
 
 #### `getCharacteristicsFromService(connectionId, uuid, refresh)`
-Get all characteristics a certain service has
+Gets all characteristics of a given service on a connected device.
 - **Parameters**:
-  - `connectionId` (int): connection id.
-  - `uuid` (string): uuid.
-  - `refresh` (bool): refresh information?
+  - `connectionId` (int): Connection ID.
+  - `uuid` (string): Service UUID.
+  - `refresh` (bool): Whether to re-query the device.
 - **Returns**: `nil`
-
-
 
 ## Handling BLE connections
 
 Here's an example of how we accept connections from a mouse/keyboard/joystick:
 ```lua
-  drivers.mouseHandler = BleServiceHandler("00001812-0000-1000-8000-00805f9b34fb")
-  drivers.mouseHandler:SetOnConnectCallback(drivers.onConnectHID)
-  drivers.mouseHandler:SetOnDisconnectCallback(drivers.onDisconnectHID)
-  drivers.mouseListener = drivers.mouseHandler:AddCharacteristics("2a4d")
-  drivers.mouseListener:SetSubscribeCallback(drivers.onMouseCallback) 
-  drivers.mouseListener:SetCallbackModeStream(false)
+drivers.mouseHandler = BleServiceHandler("00001812-0000-1000-8000-00805f9b34fb")
+drivers.mouseHandler:SetOnConnectCallback(drivers.onConnectHID)
+drivers.mouseHandler:SetOnDisconnectCallback(drivers.onDisconnectHID)
+drivers.mouseListener = drivers.mouseHandler:AddCharacteristics("2a4d")
+drivers.mouseListener:SetSubscribeCallback(drivers.onMouseCallback) 
+drivers.mouseListener:SetCallbackModeStream(false)
 ```
-First we create a service handler and we pass a UUID. That specific uuid is from a Human Interface Device generic. So any device that has mouse/keyboard/josystick capabilities will have thi service on them.
-The moment we register it, any scanned device that is advertising and have this specific service UUID will be attempted to connect.
 
-The next function we create a callback when the device is connected. Here's an example of the callback:
+First we create a service handler and pass a UUID. That specific UUID belongs to a Human Interface Device service, so any device advertising mouse/keyboard/joystick capabilities will match.
+
+The moment it is registered, any scanned device advertising that service UUID will be attempted to connect.
+
+Connect callback:
 ```lua
 function drivers.onConnectHID(connectionId, controllerId, address, name)
     log("Connected conId="..connectionId.." controller="..controllerId.." addr=\""..address.."\" name=["..name.."]")
 end
 ```
-The connectionId can be used to get information about the device. It is unique for each connection. 
-ControllerId is the ID used by the protopanda. The first device connected will have id 0, and the second one is 1. But the moment one of them disconnect, that ID will be free'd, so next connection will be able to reuse the same ID.
-Address is just a string with the address and name is the name if present.
 
-Same goes to `SetOnDisconnectCallback`, but instead of address and name, we get the reason of it beeing disconnected.
+The `connectionId` is unique per connection. The `controllerId` is assigned by Protopanda — the first connected device is `0`, the second is `1`, etc. IDs are freed on disconnect and can be reused.
+
+Disconnect callback:
 ```lua
 function drivers.onDisconnectHID(connectionId, controllerId, reason)
     log("Disconnected "..connectionId.." due ".. reason)
 end
 ``` 
 
-Once we defined those callbacks (opitional), we can attach a listener to each of the characteristics we want:
+Attaching a listener to a characteristic:
 ```lua
 drivers.mouseListener = drivers.mouseHandler:AddCharacteristics("2a4d")
 drivers.mouseListener:SetSubscribeCallback(drivers.onMouseCallback) 
 drivers.mouseListener:SetRequired(true)
 drivers.mouseListener:SetCallbackModeStream(false)
 ```
-Once the charcteristics is defined, we can set it as  a required (if not present, the connection is dropped) and a callback if there is a subscribe in the service.
-The callback goes as follow:
+
+Characteristics callback:
 ```lua
 function drivers.onMouseCallback(connectionId, controllerId, data)
---handling
+  -- data is an array of integers 0-255
 end
 ```
-
-There we can find the connectionId, the controllerId and a array containing the data. The data will come as valeus from 0 to 255
 
 ## Handling BLE functions
 
 ### `BleServiceHandler(uuid)`
-Create a handler object. Try to keep this object in to a global or stored envoriment. Because GC wont delete the cpp reference but it will do the lua reference.
+Creates a service handler object. Keep this in a global or long-lived variable — the Lua GC won't destroy the C++ reference but will destroy the Lua reference if it goes out of scope.
 - **Parameters**:
-  - `uuid` (string): uuid.
+  - `uuid` (string): Full 128-bit UUID string.
 - **Returns**: `BleServiceHandlerObject`
 
-### `BleServiceHandler::ReadFromCharacteristics(clientId, characteristicsUuid)`
-Reads data from a certain client and certain characteristics.
+### `BleServiceHandler::ReadFromCharacteristics(clientId, uuid)`
+Reads data from a specific characteristic on a connected client.
 - **Parameters**:
-  - `clientId` (int): connectionId.
-  - `uuid` (string): can be the 16bit uuid.
+  - `clientId` (int): Connection ID.
+  - `uuid` (string): 16-bit or full UUID.
 - **Returns**: `int array`
 
 ### `BleServiceHandler::GetServices(clientId)`
-Get avaliable services in client
+Returns the available services on the connected client.
 - **Parameters**:
-  - `clientId` (int): connectionId.
+  - `clientId` (int): Connection ID.
 - **Returns**: `string array`
 
-### `BleServiceHandler::AddAddressRequired(address)`
-When set for the first time, it enforces the connection to accept only if the address was previously inserted.
-Example would be:
-```lua
-Handler = BleServiceHandler("00001812-0000-1000-8000-00805f9b34fb")
-Handler:AddAddressRequired("AA:BB:CC:DD:EE")
-Handler:AddAddressRequired("FF:00:11:22:3")
-```
-That way, only devices with the specific service and those two specific addresses can connect.
-If both `AddAddressRequired` and `AddNameRequired` defined. The condition is an "and". Need to match any of the address and any of the name
+### `BleServiceHandler::GetRSSI(clientId)`
+Returns the RSSI for a specific connected client.
 - **Parameters**:
-  - `address` (string): address.
+  - `clientId` (int): Connection ID.
+- **Returns**: `int`
+
+### `BleServiceHandler::GetClientIdFromControllerId(id)`
+Returns the connection ID for a given controller ID.
+- **Parameters**:
+  - `id` (int): Controller ID.
+- **Returns**: `int`
+
+### `BleServiceHandler::AddAddressRequired(address)`
+Restricts connections to only devices with this MAC address. Can be called multiple times to allow a list of addresses. If both `AddAddressRequired` and `AddNameRequired` are set, both conditions must match.
+```lua
+Handler:AddAddressRequired("AA:BB:CC:DD:EE")
+Handler:AddAddressRequired("FF:00:11:22:33")
+```
+- **Parameters**:
+  - `address` (string): MAC address string.
 
 ### `BleServiceHandler::AddNameRequired(name)`
-When set for the first time, it enforces the connection to accept only if the name was previously defined
-Example would be:
+Restricts connections to only devices with this advertised name. Can be called multiple times.
 ```lua
-Handler = BleServiceHandler("00001812-0000-1000-8000-00805f9b34fb")
 Handler:AddNameRequired("VR-PARK")
 Handler:AddNameRequired("Beauty-r1")
 ```
-That way, only devices with the specific service and those two specific names can connect.
-If both `AddAddressRequired` and `AddNameRequired` defined. The condition is an "and". Need to match any of the address and any of the name
 - **Parameters**:
-  - `name` (string): address.
-
+  - `name` (string): Device name.
 
 ### `BleServiceHandler::GetCharacteristics(clientId)`
-Get avaliable characteristics in current service
+Returns the available characteristics in the current service for the connected client.
 - **Parameters**:
-  - `clientId` (int): connectionId.
+  - `clientId` (int): Connection ID.
 - **Returns**: `string array`
 
-### `BleServiceHandler::WriteToCharacteristics(message, clientId, characteristics[, reply])`
-Write a message to the characteristics specified
+### `BleServiceHandler::WriteToCharacteristics(message, clientId, uuid[, reply])`
+Writes a message to a specific characteristic.
 - **Parameters**:
-  - `message` (int array): messaage bytes.
-  - `clientId` (int): connectionId.
-  - `uuid` (string): can be the 16bit uuid.
-  - `reply` (bool): wait for reply.
+  - `message` (int array): Bytes to write.
+  - `clientId` (int): Connection ID.
+  - `uuid` (string): 16-bit or full UUID.
+  - `reply` (bool, optional): If `true`, waits for a response.
 - **Returns**: `bool`
 
 ### `BleServiceHandler::SetOnDisconnectCallback(callback)`
-Define a callback to when a device disconnects
+Sets the callback for when a device disconnects.
 - **Parameters**:
-  - `callback` (lua function): callback.
+  - `callback` (function): `function(connectionId, controllerId, reason)`
 
 ### `BleServiceHandler::SetOnConnectCallback(callback)`
-Define a callback to when a device connects
+Sets the callback for when a device connects.
 - **Parameters**:
-  - `callback` (lua function): callback.
+  - `callback` (function): `function(connectionId, controllerId, address, name)`
 
-### `BleServiceHandler::AddCharacteristics(callback)`
-Returns a handler for the specified characteristics
+### `BleServiceHandler::AddCharacteristics(uuid)`
+Returns a handler for the specified characteristic UUID.
 - **Parameters**:
-  - `uuid` (string): can be the 16bit uuid.
+  - `uuid` (string): 16-bit or full UUID.
 - **Returns**: `BleCharacteristicsHandlerObject`
 
 ### `BleCharacteristicsHandler::SetSubscribeCallback(callback)`
-Returns a handler for when a message oif the specified characterists arrive
+Sets the callback for incoming messages on this characteristic.
 - **Parameters**:
-  - `uuid` (string): can be the 16bit uuid.
+  - `callback` (function): `function(connectionId, controllerId, data)`
 
 ### `BleCharacteristicsHandler::SetCallbackModeStream(stream)`
-When this is enabled, each message is handled on each loop. This way, messages can pile up, but one message per loop. When false, all messages are processed on the loop until the queue is empty.
+When `true`, processes one message per loop (messages queue up). When `false`, processes all queued messages per loop.
 - **Parameters**:
-  - `stream` (bool): true or false
+  - `stream` (bool)
 
 ### `BleCharacteristicsHandler::SetRequired(req)`
-If set as required, when the device connects and there is not the characteristics specificed present, a disconnect is issued.
+If `true`, a device is disconnected if this characteristic is not present.
 - **Parameters**:
-  - `req` (bool): true or false
+  - `req` (bool)

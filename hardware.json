@@ -1,24 +1,123 @@
 {
-    "hub75": {
+    "_comment": "Any images loaded must have this exact size.",
+    "canvas_width": 64, 
+    "canvas_height": 32, 
+
+    "enableAnimation": true,
+    
+    "display": {
+        "type": "hub75",
         "enabled": true,
-        "colordepth": 12,
-        "dma_r1": 12,
-        "dma_r2": 20,
-        "dma_g1": 10,
-        "dma_g2": 18,
-        "dma_b1": 11,
-        "dma_b2": 19,
-        "dma_a": 17,
-        "dma_b": 16,
-        "dma_c": 15,
-        "dma_d": 7,
-        "dma_lat": 5,
-        "dma_oe": 4,
-        "dma_clk": 6
-    },
+        "mirrorOtherHalf": true,
+        "hub75": {
+            "width": 64,
+            "height": 32,
+            "panels": 2,
+            "horizontal_panel_count": 2,
+            "colordepth": 12,
+            "pins": {
+                "dma_r1": 12,
+                "dma_r2": 20,
+                "dma_g1": 10,
+                "dma_g2": 18,
+                "dma_b1": 11,
+                "dma_b2": 19,
+                "dma_a": 17,
+                "dma_b": 16,
+                "dma_c": 15,
+                "dma_d": 7,
+                "dma_lat": 5,
+                "dma_oe": 4,
+                "dma_clk": 6
+            }
+        },
+        "max7219": { 
+            "panels": 16, 
+            "horizontal_panel_count": 4, 
+            "pins": {
+                "cs": 10,
+                "din": 11,
+                "clk": 12 
+            },
+            "views": [
+                {
+                    "x": 0,
+                    "y": 0,
+                    "canvas_x": 0,
+                    "canvas_y": 0,
+                    "width": 32,
+                    "height": 8
+                },
+                {
+                    "x": 0,
+                    "y": 8,
+                    "canvas_x": 0,
+                    "canvas_y": 8,
+                    "width": 32,
+                    "height": 8
+                },
+                {
+                    "x": 0,
+                    "y": 16,
+                    "canvas_x": 16,
+                    "canvas_y": 18,
+                    "width": 32,
+                    "height": 8
+                }
+            ]  
+        },
+        "ws2812b":{
+            "maxtrix_width": 8,
+            "maxtrix_height": 8,
+            "panels": 8,
+            "horizontal_panel_count": 8,
+            "brightness": 32,
+            "views": [
+                {
+                    "x": 0,
+                    "y": 0,
+                    "canvas_x": 0,
+                    "canvas_y": 0,
+                    "width": 32,
+                    "height": 8
+                },
+                {
+                    "x": 32,
+                    "y": 0,
+                    "canvas_x": 0,
+                    "canvas_y": 8,
+                    "width": 32,
+                    "height": 8,
+                    "flip_vertical": true,
+                    "flip_horizontal": true
+                }
+            ]
+        }
+        
+    }, 
+
     "servos": {
         "enabled": false,
         "pins": [1,2]
+    },
+    "leds": { 
+        "pin_mode": "double",
+        "_comment": "Modes allowed are: 'double' and 'single'. If using extra led strips, they'll all attach at the right led pin if double is set",
+
+        "groups":[
+            {
+                "_comment": "If pin_side is undefined, it defaults to 'left'",
+                "pin_side": "left",
+                "led_count": 64,
+                "mode": "pride"
+            },
+            {
+                "pin_side": "right",
+                "led_count": 64,
+                "mode": "pride"
+            }
+        ]
+
     }
 }
 

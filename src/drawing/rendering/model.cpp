@@ -478,21 +478,20 @@ void Model::RasterTriangleWithBitmap(ModelHandler *scene, int i, uint8_t *target
         if (a < 0){
             a = 0;
         }
-        if (y0 < 0 || y0 >= PANEL_HEIGHT){
+        if (y0 < 0 || y0 >= CANVAS_HEIGHT){
             return;
         }
         for (;a <= b; a++) {
-            if (a >= PANEL_WIDTH){
+            if (a >= CANVAS_WIDTH){
                 break;
             }
             if (!scene->MarkPixel(a, y0)) {
                 uint8_t rr=r, gg=g, bbl=bl;
                 ShaderProcessor::UpdateColorByShader(a, y0, rr, gg, bbl, m_shader, shaderStrenght);
-                Devices::Display->updateMatrixDMABuffer_2(a, y0, rr, gg, bbl);
-                Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH+PANEL_WIDTH-1) - a, y0, rr, gg, bbl);
+                Devices::Display->setPixelWithFlip(a, y0, rr, gg, bbl, FlipConfig::DefaultFlipConfig);
                 if (targetBitmap != nullptr){
                     if ((color & 0x8610) != 0) { 
-                        int byteIdOled = a + y0*PANEL_WIDTH;
+                        int byteIdOled = a + y0*CANVAS_WIDTH;
                         targetBitmap[byteIdOled] = 1;
                     }
                 }
@@ -534,21 +533,20 @@ void Model::RasterTriangleWithBitmap(ModelHandler *scene, int i, uint8_t *target
         if (a < 0){
             a = 0;
         }
-        if (y < 0 || y >= PANEL_HEIGHT){
+        if (y < 0 || y >= CANVAS_HEIGHT){
             continue;
         }
         for (int16_t xx = a; xx <= b; xx++) {
-            if (xx >= PANEL_WIDTH){
+            if (xx >= CANVAS_WIDTH){
                 break;
             }
             if (!scene->MarkPixel(xx, y)) {
                 uint8_t rr=r, gg=g, bbl=bl;
                 ShaderProcessor::UpdateColorByShader(a, y0, rr, gg, bbl, m_shader, shaderStrenght);
-                Devices::Display->updateMatrixDMABuffer_2(xx, y, rr, gg, bbl);
-                Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH+PANEL_WIDTH-1) - xx, y, rr, gg, bbl);
+                Devices::Display->setPixelWithFlip(xx, y, rr, gg, bbl, FlipConfig::DefaultFlipConfig);
                 if (targetBitmap != nullptr){
                     if ((color & 0x8610) != 0) { 
-                        int16_t byteIdOled = xx + y*PANEL_WIDTH;
+                        int16_t byteIdOled = xx + y*CANVAS_WIDTH;
                         targetBitmap[byteIdOled] = 1;
                     }
                 }
@@ -574,21 +572,20 @@ void Model::RasterTriangleWithBitmap(ModelHandler *scene, int i, uint8_t *target
         if (a < 0){
             a = 0;
         }
-        if (y < 0 || y >= PANEL_HEIGHT){
+        if (y < 0 || y >= CANVAS_HEIGHT){
             continue;
         }
         for (int16_t xx = a; xx <= b; xx++) {
-            if (xx >= PANEL_WIDTH){
+            if (xx >= CANVAS_WIDTH){
                 break;
             }
             if (!scene->MarkPixel(xx, y)) {
                 uint8_t rr=r, gg=g, bbl=bl;
                 ShaderProcessor::UpdateColorByShader(a, y0, rr, gg, bbl, m_shader, shaderStrenght);
-                Devices::Display->updateMatrixDMABuffer_2(xx, y, rr, gg, bbl);
-                Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH+PANEL_WIDTH-1) - xx, y, rr, gg, bbl);
+                Devices::Display->setPixelWithFlip(xx, y, rr, gg, bbl, FlipConfig::DefaultFlipConfig);
                 if (targetBitmap != nullptr){
                     if ((color & 0x8610) != 0) { 
-                        int16_t byteIdOled = xx + y*PANEL_WIDTH;
+                        int16_t byteIdOled = xx + y*CANVAS_WIDTH;
                         targetBitmap[byteIdOled] = 1;
                     }
                 }
@@ -643,8 +640,11 @@ Model* ModelDict::LoadModel(ModelData modelInfo, std::string name){
     if (m_modelsMap[name] != nullptr){
         return nullptr;
     }
-
-    Model *mem = new Model();
+    Model *mem = (Model*)ps_malloc(sizeof(Model));
+    #ifndef __INTELLISENSE__
+    //This code will be compiled. But for some reason intellisense claims its invalid. So i'm using this to avoid visual warning in the IDE
+    new (mem) Model();
+    #endif
     int tsize = modelInfo.color.size();
     mem->Begin(tsize);
     for (int i=0;i<tsize;i++){

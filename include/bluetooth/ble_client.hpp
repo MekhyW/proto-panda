@@ -12,7 +12,8 @@ class BleManager;
 
 class AdvertisedDeviceCallbacks: public NimBLEScanCallbacks {
   void onResult(const NimBLEAdvertisedDevice* advertisedDevice) override;
-  void onScanEnd(const NimBLEScanResults& results, int reason) override ;
+  //void onDiscovered(const NimBLEAdvertisedDevice* advertisedDevice) override;
+  void onScanEnd(const NimBLEScanResults& scanResults, int reason) override ;
   public:
     BleManager *bleObj;
 };
@@ -20,7 +21,7 @@ class AdvertisedDeviceCallbacks: public NimBLEScanCallbacks {
 
 class BleManager{
   public:
-    BleManager():clientCount(0), maxClients(2),lastScanClearTime(0),m_scanStartAt(0),m_started(false),m_canScan(false),m_logDiscoveredClients(false),isScanning(false),nextId(0),m_mutex(xSemaphoreCreateMutex()){}
+    BleManager():clientCount(0), maxClients(2),lastScanClearTime(0),m_scanStartAt(0),m_started(false),m_canScan(false),m_pauseScan(false),m_clearAndRestart(false),m_logDiscoveredClients(false),isScanning(false),nextId(0),m_mutex(xSemaphoreCreateMutex()){}
     bool begin();
     bool beginRadio(int powerLevel=ESP_PWR_LVL_P9);
     void update();
@@ -43,6 +44,10 @@ class BleManager{
 
     bool canLogDiscoveredClients(){
       return m_logDiscoveredClients;
+    }
+
+    void requestClearResults(){
+      lastScanClearTime = millis() + 30 * 1000;
     }
 
 
@@ -73,7 +78,7 @@ class BleManager{
     uint16_t clientCount;
   
     uint32_t  maxClients, lastScanClearTime, m_scanStartAt;
-    bool m_started, m_canScan, m_logDiscoveredClients, isScanning;
+    bool m_started, m_canScan, m_pauseScan, m_clearAndRestart, m_logDiscoveredClients, isScanning;
     std::stack<uint8_t> availableIds;
     uint8_t nextId;
 

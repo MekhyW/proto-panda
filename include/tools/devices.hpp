@@ -11,7 +11,7 @@
 #endif
 
 #include "tools/s3servo.hpp"
-#include "tools/dma_display.hpp"
+#include "tools/displays.hpp"
 
 
 #include <vector>
@@ -136,7 +136,7 @@ class Devices{
             return internalGZ;
         };
 
-        static MatrixPanel_I2S_DMA_2 *Display ;
+        static BaseDisplay *Display;
         
     private:
         static uint8_t maxBrightness;

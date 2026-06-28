@@ -249,7 +249,7 @@ void BleServiceHandler::SendMessages(){
         devicesToNotify.pop();
         xSemaphoreGive(queueMutex);
         if (luaOnConnectCallback != nullptr){
-            luaOnConnectCallback->callLuaFunction(dev->getId(), dev->m_controllerId, dev->m_device->getAddress().toString(), dev->m_device->getName().c_str());
+            luaOnConnectCallback->callLuaFunction(dev->getId(), dev->m_controllerId, dev->m_deviceAddress, dev->m_deviceName);
         }
     }
     if (devicesToDisconnectNotify.size() > 0){
@@ -273,5 +273,8 @@ void BleServiceHandler::NotifyDisconnect(int conId, int clientId, const char* re
     tp.id = conId;
     tp.controllerId = clientId;
     tp.reason = reason;
+    xSemaphoreTake(queueMutex, portMAX_DELAY);
     devicesToDisconnectNotify.push(tp);
+    g_remoteControls.requestClearResults();
+    xSemaphoreGive(queueMutex);
 }
