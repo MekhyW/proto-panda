@@ -438,23 +438,6 @@ void Animation::DrawFrame(int i){
     m_cycleDuration =  micros()-begin;
 }
 
-Sprite* Animation::LoadOverlaySprite(std::string name){
-    Sprite* mem = (Sprite*)ps_malloc(sizeof(Sprite));
-    if (!mem) {
-        return nullptr;
-    }
-    #ifndef __INTELLISENSE__
-    new (mem) Sprite(f);
-    #endif
-
-    if (!mem->LoadSpriteFromPng(name)){
-        heap_caps_free(mem);
-        return nullptr;
-    }
-
-    IncludeSpriteInPool(mem);
-    return mem;
-}
 
 void Animation::IncludeSpriteInPool(Sprite *s){
     int id = m_overlaySprites.size();
@@ -479,7 +462,7 @@ bool Animation::setOverlaySprite(int id)
         xSemaphoreGive(m_SpriteMutex);
         return false;
     }
-
+    Serial.printf("Added ID: %d\n", id);
     m_spritesInScene.push_back(id);
     xSemaphoreGive(m_SpriteMutex);
     return true;

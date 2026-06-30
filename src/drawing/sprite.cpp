@@ -3,58 +3,92 @@
 #include "tools/devices.hpp"
 
 
-bool Sprite::Init(uint16_t sizeX, uint16_t sizeY){
+BasicTexture::BasicTexture(uint16_t sizeX, uint16_t sizeY){
     width = sizeX;
     height = sizeY;
+    transparentColor = 0;
     pixels = (uint16_t*)ps_malloc(sizeof(uint16_t) * width * height);
     if (!pixels){
-        return false;
+        return;
     }
-    return true;
 }
 
-bool Sprite::LoadSpriteFromPng(std::string name){
-    if (pixels){
-        heap_caps_free(pixels);
-        pixels = nullptr;
-    } 
+int Sprite::CreateEmptySprite(uint16_t sizeX, uint16_t sizeY){
+    BasicTexture* mem = (BasicTexture*)ps_malloc(sizeof(BasicTexture));
+    if (!mem) {
+        return -1;
+    }
+    #ifndef __INTELLISENSE__
+    new (mem) BasicTexture(sizeX, sizeY);
+    #endif
+
+    if (mem->pixels == nullptr){
+        heap_caps_free(mem);
+        return -1;
+    }
+    int len = frames.size();
+    frames.emplace_back(mem);
+    return len;
+}
+
+int Sprite::LoadFromPng(std::string name){
     int rcError;
     size_t width_p, height_p;
-    pixels = Storage::DecodePNG(name.c_str(), rcError, width_p, height_p);
+    uint16_t *pixels = Storage::DecodePNG(name.c_str(), rcError, width_p, height_p);
     if (rcError != 0){
-        return false;
+        return -1;
     }
 
-    width = width_p; 
-    height = height_p;
+    BasicTexture* mem = (BasicTexture*)ps_malloc(sizeof(BasicTexture));
+    if (!mem) {
+        heap_caps_free(mem);
+        return -1;
+    }
+    #ifndef __INTELLISENSE__
+    new (mem) BasicTexture();
+    #endif
 
-    return true;
+    mem->width = width_p;
+    mem->height = height_p;
+    mem->pixels = pixels;
+
+    int len = frames.size();
+    frames.emplace_back(mem);
+    return len;
 }
 
-void Sprite::SetPixelColor(uint16_t x, uint16_t y, uint16_t color){
-    if (x >= width){
+void Sprite::SetPixelColor(int idx, uint16_t x, uint16_t y, uint16_t color){
+    if (idx < 0 || idx > frames.size()){
         return;
     }
-    if (y >= height){
+    BasicTexture *tx = frames[idx];
+    if (x >= tx->width){
         return;
     }
-    pixels[x + y*width] = color;
+    if (y >= tx->height){
+        return;
+    }
+    tx->pixels[x + y*tx->width] = color;
 }
 
 void Sprite::Draw(FlipConfig& flipSettings){
+    if (currentFrame < 0 || currentFrame > frames.size()){
+        return;
+    }
+    BasicTexture *tx = frames[currentFrame];
     int pixelId = 0;
-    for (int dy=0;dy<width;dy++){
-        for (int dx=0;dx<width;dx++){
-            uint16_t color = pixels[pixelId];
+    for (int dy=0;dy<tx->height;dy++){
+        for (int dx=0;dx<tx->width;dx++){
+            uint16_t color = tx->pixels[pixelId];
             pixelId++;
-            if (color == transparentColor){
+            if (color == tx->transparentColor){
                 continue;
             }
             uint8_t r;
             uint8_t g;
             uint8_t b;
             BaseDisplay::color565to888(color, r,g,b);
-            Devices::Display->setPixelWithFlip(dx, dy, r,g,b, flipSettings);            
+            Devices::Display->setPixelWithFlip(x+dx, y+dy, r,g,b, flipSettings);            
         }
     }
 }

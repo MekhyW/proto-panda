@@ -969,41 +969,19 @@ bool LuaInterface::Start()
   #endif
 
 
-  ClassRegister<Sprite>::RegisterClassType(_state,"BleServiceHandler",[](lua_State* L) -> Sprite*{
-    if (lua_gettop(L) == 2){ 
-      bool hasErr;
-      std::string path = GenericLuaGetter<std::string>::Call(hasErr, L);
-      if (path.length() == 0 ) {
-        luaL_error(L, "No sprite defined");
-        return nullptr;
-      }
-      Logger::Info("Loading sprite: %s", path.c_str());
-      Sprite *s = g_animation.LoadOverlaySprite(path);
-      if (!s){
-        luaL_error(L, "Failed to load sprite");
-        return nullptr;
-      }
-      return s;
-    }else if (lua_gettop(L) == 2){ 
-      bool hasErr;
-      uint16_t height = GenericLuaGetter<uint16_t>::Call(hasErr, L);
-      uint16_t width = GenericLuaGetter<uint16_t>::Call(hasErr, L);
+  ClassRegister<Sprite>::RegisterClassType(_state,"Sprite",[](lua_State* L) -> Sprite*{
+    if (lua_gettop(L) == 1){ 
       Sprite* mem = (Sprite*)ps_malloc(sizeof(Sprite));
       if (!mem) {
           return nullptr;
       }
       #ifndef __INTELLISENSE__
-      new (mem) Sprite(f);
+      new (mem) Sprite();
       #endif
-      if (!mem->Init(width, height)){
-        heap_caps_free(mem);
-        luaL_error(L, "Failed to allocate sprite");
-        return nullptr;
-      }
       g_animation.IncludeSpriteInPool(mem);
       return mem;
     }else{
-      luaL_error(L, "Missing sprite path");
+      luaL_error(L, "Invalid parameters.");
       return nullptr;
     }
   }, &EmptyGC);
@@ -1012,6 +990,13 @@ bool LuaInterface::Start()
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","GetId",&Sprite::GetId);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetPixelColor",&Sprite::SetPixelColor);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetPosition",&Sprite::SetPosition);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","GetWidth",&Sprite::GetWidth);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","GetHeight",&Sprite::GetHeight);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetFrameId",&Sprite::SetFrameId);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","GetFrameId",&Sprite::GetFrameId);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","GetFrameCount",&Sprite::GetFrameCount);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","CreateEmptySprite",&Sprite::CreateEmptySprite);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","LoadFromPng",&Sprite::LoadFromPng);
 
 
   //Created only using loadModel(modeldata, name)

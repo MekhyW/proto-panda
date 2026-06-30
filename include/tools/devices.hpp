@@ -12,7 +12,7 @@
 
 #include "tools/s3servo.hpp"
 #include "tools/displays.hpp"
-
+#include "tools/psrammap.hpp"
 
 #include <vector>
 #include <map>
@@ -147,7 +147,7 @@ class Devices{
         static float percentageHeapFree;
         static float percentagePsramFree;
 
-        static PSRAMMap<byte,bool> foundDevices;
+        static std::map<byte,bool> foundDevices;
 
         static uint64_t s_frameStart;
         static uint64_t s_frameAutoStart;
