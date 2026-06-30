@@ -424,21 +424,93 @@ void Animation::DrawFrame(int i){
         drawFFTOverlay(flipSettings, frameId);
     }
 
+    if (m_spritesInScene.size() > 0){
+        xSemaphoreTake(m_SpriteMutex, portMAX_DELAY);
+        for (auto &sp : m_spritesInScene){
+            m_overlaySprites[sp]->Draw(flipSettings);
+        }
+        xSemaphoreGive(m_SpriteMutex);
+    }
+
     Devices::Display->endWrite();
     m_needFlip = true;
     m_frameDrawDuration = micros()-ld;
     m_cycleDuration =  micros()-begin;
 }
 
+Sprite* Animation::LoadOverlaySprite(std::string name){
+    Sprite* mem = (Sprite*)ps_malloc(sizeof(Sprite));
+    if (!mem) {
+        return nullptr;
+    }
+    #ifndef __INTELLISENSE__
+    new (mem) Sprite(f);
+    #endif
+
+    if (!mem->LoadSpriteFromPng(name)){
+        heap_caps_free(mem);
+        return nullptr;
+    }
+
+    IncludeSpriteInPool(mem);
+    return mem;
+}
+
+void Animation::IncludeSpriteInPool(Sprite *s){
+    int id = m_overlaySprites.size();
+    s->id = id;
+    m_overlaySprites.emplace_back(s);
+}
+
+int Animation::clearAllOverlaySprites()
+{
+    xSemaphoreTake(m_SpriteMutex, portMAX_DELAY);
+    int count = (int)m_spritesInScene.size();
+    m_spritesInScene.clear();
+    xSemaphoreGive(m_SpriteMutex);
+    return count;
+}
+
+bool Animation::setOverlaySprite(int id)
+{
+    xSemaphoreTake(m_SpriteMutex, portMAX_DELAY);
+    if (id < 0 || id >= (int)m_overlaySprites.size())
+    {
+        xSemaphoreGive(m_SpriteMutex);
+        return false;
+    }
+
+    m_spritesInScene.push_back(id);
+    xSemaphoreGive(m_SpriteMutex);
+    return true;
+}
+
+bool Animation::clearOverlaySprite(int id){
+    xSemaphoreTake(m_SpriteMutex, portMAX_DELAY);
+
+    for (auto it = m_spritesInScene.begin(); it != m_spritesInScene.end(); ++it)
+    {
+        if (*it == id)
+        {
+            m_spritesInScene.erase(it);
+            xSemaphoreGive(m_SpriteMutex);
+            return true;
+        }
+    }
+
+    xSemaphoreGive(m_SpriteMutex);
+    return false;
+}
+
 bool Animation::PopAnimation(){
-    xSemaphoreTake(m_mutex, portMAX_DELAY);
+    xSemaphoreTake(m_SpriteMutex, portMAX_DELAY);
     if (m_animations.size() > 0){
-        xSemaphoreGive(m_mutex);
+        xSemaphoreGive(m_SpriteMutex);
         m_animations.top().ResetIfNeeded();
         m_animations.pop();
         return true;
     }else{
-        xSemaphoreGive(m_mutex);
+        xSemaphoreGive(m_SpriteMutex);
         return false;
     }
     
@@ -509,14 +581,14 @@ bool Animation::internalUpdate(uint32_t dt, AnimationSequence &running){
         }
         break;
     case ANIMATION_NO_CHANGE:
-        if (m_shader != SHADER_NONE || m_fftOverlay){
+        if (m_shader != SHADER_NONE || m_fftOverlay || m_forceRedraw){
             m_lastFace = running.GetFrameId();
             if (managed){
                 DrawFrame(m_lastFace);
             }
         }
         if (m_needRedraw){
-            //m_needRedraw = false;
+            m_needRedraw = false;
             if (managed){
                 DrawFrame(m_lastFace);
             }

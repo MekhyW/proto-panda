@@ -631,6 +631,12 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegisterFromObjectOpt("setInterruptFrames", &g_animation, &Animation::SetInterruptAnimation);
   m_lua->FuncRegisterFromObjectOpt("setInterruptAnimationPin", &g_animation, &Animation::SetInterruptPin);
 
+
+  m_lua->FuncRegisterFromObjectOpt("clearAllOverlaySprites", &g_animation, &Animation::clearAllOverlaySprites);
+  m_lua->FuncRegisterFromObjectOpt("setOverlaySprite", &g_animation, &Animation::setOverlaySprite);
+  m_lua->FuncRegisterFromObjectOpt("clearOverlaySprite", &g_animation, &Animation::clearOverlaySprite);
+  m_lua->FuncRegisterFromObjectOpt("forceRedrawEachFrame", &g_animation, &Animation::forceRedrawEachFrame);
+
     
   m_lua->FuncRegisterFromObjectOpt("setFFTOverlay", &g_animation, &Animation::SetFFTOverlay); 
   m_lua->FuncRegisterFromObjectOpt("setAnimationShader", &g_animation, &Animation::SetShader, 1.0f); 
@@ -961,6 +967,52 @@ bool LuaInterface::Start()
 
   m_lua->FuncRegister("getCharacteristicsFromService", BleServiceHandler::GetCharacteristicsFromService);
   #endif
+
+
+  ClassRegister<Sprite>::RegisterClassType(_state,"BleServiceHandler",[](lua_State* L) -> Sprite*{
+    if (lua_gettop(L) == 2){ 
+      bool hasErr;
+      std::string path = GenericLuaGetter<std::string>::Call(hasErr, L);
+      if (path.length() == 0 ) {
+        luaL_error(L, "No sprite defined");
+        return nullptr;
+      }
+      Logger::Info("Loading sprite: %s", path.c_str());
+      Sprite *s = g_animation.LoadOverlaySprite(path);
+      if (!s){
+        luaL_error(L, "Failed to load sprite");
+        return nullptr;
+      }
+      return s;
+    }else if (lua_gettop(L) == 2){ 
+      bool hasErr;
+      uint16_t height = GenericLuaGetter<uint16_t>::Call(hasErr, L);
+      uint16_t width = GenericLuaGetter<uint16_t>::Call(hasErr, L);
+      Sprite* mem = (Sprite*)ps_malloc(sizeof(Sprite));
+      if (!mem) {
+          return nullptr;
+      }
+      #ifndef __INTELLISENSE__
+      new (mem) Sprite(f);
+      #endif
+      if (!mem->Init(width, height)){
+        heap_caps_free(mem);
+        luaL_error(L, "Failed to allocate sprite");
+        return nullptr;
+      }
+      g_animation.IncludeSpriteInPool(mem);
+      return mem;
+    }else{
+      luaL_error(L, "Missing sprite path");
+      return nullptr;
+    }
+  }, &EmptyGC);
+
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetTransparent",&Sprite::SetTransparent);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","GetId",&Sprite::GetId);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetPixelColor",&Sprite::SetPixelColor);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetPosition",&Sprite::SetPosition);
+
 
   //Created only using loadModel(modeldata, name)
   m_lua->FuncRegisterFromObjectOpt("loadModel", &g_models, &ModelDict::LoadModel, "");
