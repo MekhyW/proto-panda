@@ -23,6 +23,9 @@
   #define ALLOW_DUPLICATED_TYPES 1
 #endif
 
+const char* StringToPsram(const std::string &str);
+
+
 template<typename T>class MultiReturn{
     public:
         MultiReturn():success(false),errMessage("error :("){};
@@ -991,22 +994,22 @@ Ret apply(bool &hasArgError, Tupler &arglist,lua_State *L2,int k1,int k2, const 
 //#define PRINT_LUA_CALLS
 
 
-template <typename ... Types,typename ... Opt> void LambdaRegisterOpt(lua_State *L,std::string str, void func(Types ... args), Opt ... optionalArgs ){
+template <typename ... Types,typename ... Opt> void LambdaRegisterOpt(lua_State *L,const char *str, void func(Types ... args), Opt ... optionalArgs ){
     std::tuple<Opt...> tup(optionalArgs...);
     LuaCFunctionLambda f = [func,str,tup](lua_State *L2) -> int {
         int argNecessary = int(sizeof...(Types)) - int(sizeof...(Opt));
         int argMax = int(sizeof...(Types));
         int argCount = lua_gettop(L2);
         #ifdef PRINT_LUA_CALLS
-        Serial.printf("Calling %s\n", str.c_str());
+        Serial.printf("Calling %s\n", str);
         #endif
         if (argCount > argMax){
-            luaL_error(L2, "Too much arguments on function %s. Expected %d-%d but got %d\n",str.c_str(),argNecessary, argMax, argCount);
+            luaL_error(L2, "Too much arguments on function %s. Expected %d-%d but got %d\n",str,argNecessary, argMax, argCount);
             return 1;
         }
 
         if (argCount < argNecessary){
-            luaL_error(L2, "Too few arguments on function %s. Expected %d-%d but got %d",str.c_str(),argNecessary, argMax, argCount);
+            luaL_error(L2, "Too few arguments on function %s. Expected %d-%d but got %d",str,argNecessary, argMax, argCount);
             return 1;
         }
         std::tuple<Types ...> ArgumentList;
@@ -1018,28 +1021,28 @@ template <typename ... Types,typename ... Opt> void LambdaRegisterOpt(lua_State 
         expander<sizeof...(Types),void>::expand(ArgumentList,L2,func);
         return 0;
     };
-    lua_pushstring(L, str.c_str());
+    lua_pushstring(L, str);
     CreateLuaClosure(L, f);
     lua_pushcclosure(L, BaseLuaClosureHandler<2>,2);
-    lua_setglobal(L, str.c_str());
+    lua_setglobal(L, str);
 };
 
-template <typename T1,typename ... Types,typename ... Opt> void LambdaRegisterOpt(lua_State *L,std::string str, T1 func(Types ... args), Opt ... optionalArgs ){
+template <typename T1,typename ... Types,typename ... Opt> void LambdaRegisterOpt(lua_State *L,const char *str, T1 func(Types ... args), Opt ... optionalArgs ){
     std::tuple<Opt...> tup(optionalArgs...);
     LuaCFunctionLambda f = [func,str,tup](lua_State *L2) -> int {
         int argNecessary = int(sizeof...(Types)) - int(sizeof...(Opt));
         int argMax = int(sizeof...(Types));
         int argCount = lua_gettop(L2);
         #ifdef PRINT_LUA_CALLS
-        Serial.printf("Calling %s\n", str.c_str());
+        Serial.printf("Calling %s\n", str);
         #endif
         if (argCount > argMax){
-            luaL_error(L2, "Too much arguments on function %s. Expected %d-%d but got %d\n",str.c_str(),argNecessary, argMax, argCount);
+            luaL_error(L2, "Too much arguments on function %s. Expected %d-%d but got %d\n",str,argNecessary, argMax, argCount);
             return 1;
         }
 
         if (argCount < argNecessary){
-            luaL_error(L2, "Too few arguments on function %s. Expected %d-%d but got %d\n",str.c_str(),argNecessary, argMax, argCount);
+            luaL_error(L2, "Too few arguments on function %s. Expected %d-%d but got %d\n",str,argNecessary, argMax, argCount);
             return 1;
         }
         std::tuple<Types ...> ArgumentList;
@@ -1054,28 +1057,28 @@ template <typename T1,typename ... Types,typename ... Opt> void LambdaRegisterOp
         T1 rData = expander<sizeof...(Types),T1>::expand(ArgumentList,L2,func);
         return GenericLuaReturner<T1>::Ret(rData,L2);
     };
-    lua_pushstring(L, str.c_str());
+    lua_pushstring(L, str);
     CreateLuaClosure(L, f);
     lua_pushcclosure(L, BaseLuaClosureHandler<2>,2);
-    lua_setglobal(L, str.c_str());
+    lua_setglobal(L, str);
 };
 
-template<typename ObjectType, typename ... Types, typename ... Opt> void LambdaRegisterClassOpt(lua_State *L,std::string str, ObjectType *obj, void (ObjectType::*func)(Types ... args), Opt ... optionalArgs){
+template<typename ObjectType, typename ... Types, typename ... Opt> void LambdaRegisterClassOpt(lua_State *L,const char *str, ObjectType *obj, void (ObjectType::*func)(Types ... args), Opt ... optionalArgs){
     std::tuple<Opt...> tup(optionalArgs...);
     LuaCFunctionLambda f = [obj,func,str,tup](lua_State *L2) -> int {
         int argNecessary = int(sizeof...(Types)) - int(sizeof...(Opt));
         int argMax = int(sizeof...(Types));
         int argCount = lua_gettop(L2);
         #ifdef PRINT_LUA_CALLS
-        Serial.printf("Calling %s\n", str.c_str());
+        Serial.printf("Calling %s\n", str);
         #endif
         if (argCount > argMax){
-            luaL_error(L2, "Too much arguments on function %s. Expected %d-%d but got %d\n",str.c_str(),argNecessary, argMax, argCount);
+            luaL_error(L2, "Too much arguments on function %s. Expected %d-%d but got %d\n",str,argNecessary, argMax, argCount);
             return 1;
         }
 
         if (argCount < argNecessary){
-            luaL_error(L2, "Too few arguments on function %s. Expected %d-%d but got %d\n",str.c_str(),argNecessary, argMax, argCount);
+            luaL_error(L2, "Too few arguments on function %s. Expected %d-%d but got %d\n",str,argNecessary, argMax, argCount);
             return 1;
         }
         std::tuple<Types ...> ArgumentList;
@@ -1087,29 +1090,29 @@ template<typename ObjectType, typename ... Types, typename ... Opt> void LambdaR
         expander<sizeof...(Types),void>::expandClass(ArgumentList,L2,obj,func);
         return 0;
     };
-    lua_pushstring(L, str.c_str());
+    lua_pushstring(L, str);
     CreateLuaClosure(L, f);
     lua_pushcclosure(L, BaseLuaClosureHandler<2>,2);
-    lua_setglobal(L, str.c_str());
+    lua_setglobal(L, str);
 };
 
 
-template<typename T1, typename ObjectType, typename ... Types, typename ... Opt> void LambdaRegisterClassOpt(lua_State *L,std::string str, ObjectType *obj, T1 (ObjectType::*func)(Types ... args), Opt ... optionalArgs){
+template<typename T1, typename ObjectType, typename ... Types, typename ... Opt> void LambdaRegisterClassOpt(lua_State *L,const char *str, ObjectType *obj, T1 (ObjectType::*func)(Types ... args), Opt ... optionalArgs){
     std::tuple<Opt...> tup(optionalArgs...);
     LuaCFunctionLambda f = [obj,func,str,tup](lua_State *L2) -> int {
         int argNecessary = int(sizeof...(Types)) - int(sizeof...(Opt));
         int argMax = int(sizeof...(Types));
         int argCount = lua_gettop(L2);
         #ifdef PRINT_LUA_CALLS
-        Serial.printf("Calling %s\n", str.c_str());
+        Serial.printf("Calling %s\n", str);
         #endif
         if (argCount > argMax){
-            luaL_error(L2, "Too much arguments on function %s. Expected %d-%d but got %d\n",str.c_str(),argNecessary, argMax, argCount);
+            luaL_error(L2, "Too much arguments on function %s. Expected %d-%d but got %d\n",str,argNecessary, argMax, argCount);
             return 1;
         }
 
         if (argCount < argNecessary){
-            luaL_error(L2, "Too few arguments on function %s. Expected %d-%d but got %d\n",str.c_str(),argNecessary, argMax, argCount);
+            luaL_error(L2, "Too few arguments on function %s. Expected %d-%d but got %d\n",str,argNecessary, argMax, argCount);
             return 1;
         }
         std::tuple<Types ...> ArgumentList;
@@ -1121,26 +1124,26 @@ template<typename T1, typename ObjectType, typename ... Types, typename ... Opt>
         T1 rData = expander<sizeof...(Types),T1>::expandClass(ArgumentList,L2,obj,func);
         return GenericLuaReturner<T1>::Ret(rData,L2);
     };
-    lua_pushstring(L, str.c_str());
+    lua_pushstring(L, str);
     CreateLuaClosure(L, f);
     lua_pushcclosure(L, BaseLuaClosureHandler<2>,2);
-    lua_setglobal(L, str.c_str());
+    lua_setglobal(L, str);
 };
 
 
-template<typename ObjectType, typename ... Types> void LambdaRegisterClass(lua_State *L,std::string str, ObjectType *obj, void (ObjectType::*func)(Types ... args)){
+template<typename ObjectType, typename ... Types> void LambdaRegisterClass(lua_State *L,const char *str, ObjectType *obj, void (ObjectType::*func)(Types ... args)){
     LuaCFunctionLambda f = [obj,func,str](lua_State *L2) -> int {
         int argCount = sizeof...(Types);
         int top = lua_gettop(L2);
         #ifdef PRINT_LUA_CALLS
-        Serial.printf("Calling %s\n", str.c_str());
+        Serial.printf("Calling %s\n", str);
         #endif
         if (argCount > top){
-            luaL_error(L2, "Too few arguments on function %s. Expected %d got %d\n",str.c_str(),argCount,top);
+            luaL_error(L2, "Too few arguments on function %s. Expected %d got %d\n",str,argCount,top);
             return 1;
         }
         if (argCount < top){
-            luaL_error(L2, "Too much arguments on function %s. Expected %d got %d\n",str.c_str(),argCount,top);
+            luaL_error(L2, "Too much arguments on function %s. Expected %d got %d\n",str,argCount,top);
             return 1;
         }
 
@@ -1153,25 +1156,25 @@ template<typename ObjectType, typename ... Types> void LambdaRegisterClass(lua_S
         expander<sizeof...(Types),void>::expandClass(ArgumentList,L2,obj,func);
         return 0;
     };
-    lua_pushstring(L, str.c_str());
+    lua_pushstring(L, str);
     CreateLuaClosure(L, f);
     lua_pushcclosure(L, BaseLuaClosureHandler<2>,2);
-    lua_setglobal(L, str.c_str());
+    lua_setglobal(L, str);
 };
 
-template<typename ObjectType, typename T1,typename ... Types> void LambdaRegisterClass(lua_State *L,std::string str, ObjectType *obj, T1 (ObjectType::*func)(Types ... args)){
+template<typename ObjectType, typename T1,typename ... Types> void LambdaRegisterClass(lua_State *L,const char *str, ObjectType *obj, T1 (ObjectType::*func)(Types ... args)){
     LuaCFunctionLambda f = [obj,func,str](lua_State *L2) -> int {
         int argCount = sizeof...(Types);
         int top = lua_gettop(L2);
         #ifdef PRINT_LUA_CALLS
-        Serial.printf("Calling %s\n", str.c_str());
+        Serial.printf("Calling %s\n", str);
         #endif
         if (argCount > top){
-            luaL_error(L2, "Too few arguments on function %s. Expected %d got %d\n",str.c_str(),argCount,top);
+            luaL_error(L2, "Too few arguments on function %s. Expected %d got %d\n",str,argCount,top);
             return 1;
         }
         if (argCount < top){
-            luaL_error(L2, "Too much arguments on function %s. Expected %d got %d\n",str.c_str(),argCount,top);
+            luaL_error(L2, "Too much arguments on function %s. Expected %d got %d\n",str,argCount,top);
             return 1;
         }
 
@@ -1184,25 +1187,25 @@ template<typename ObjectType, typename T1,typename ... Types> void LambdaRegiste
         T1 rData = expander<sizeof...(Types),T1>::expandClass(ArgumentList,L2,obj,func);
         return GenericLuaReturner<T1>::Ret(rData,L2);
     };
-    lua_pushstring(L, str.c_str());
+    lua_pushstring(L, str);
     CreateLuaClosure(L, f);
     lua_pushcclosure(L, BaseLuaClosureHandler<2>,2);
-    lua_setglobal(L, str.c_str());
+    lua_setglobal(L, str);
 };
 
-template<typename T1,typename ... Types> void LambdaRegister(lua_State *L,std::string str, T1 func(Types ... args) ){
+template<typename T1,typename ... Types> void LambdaRegister(lua_State *L,const char *str, T1 func(Types ... args) ){
     LuaCFunctionLambda f = [func,str](lua_State *L2) -> int {
         int argCount = sizeof...(Types);
         int top = lua_gettop(L2);
         #ifdef PRINT_LUA_CALLS
-        Serial.printf("Calling %s\n", str.c_str());
+        Serial.printf("Calling %s\n", str);
         #endif
         if (argCount > top){
-            luaL_error(L2, "Too few arguments on function %s. Expected %d got %d\n",str.c_str(),argCount,top);
+            luaL_error(L2, "Too few arguments on function %s. Expected %d got %d\n",str,argCount,top);
             return 1;
         }
         if (argCount < top){
-            luaL_error(L2, "Too much arguments on function %s. Expected %d got %d\n",str.c_str(),argCount,top);
+            luaL_error(L2, "Too much arguments on function %s. Expected %d got %d\n",str,argCount,top);
             return 1;
         }
 
@@ -1215,26 +1218,26 @@ template<typename T1,typename ... Types> void LambdaRegister(lua_State *L,std::s
         T1 rData = expander<sizeof...(Types),T1>::expand(ArgumentList,L2,func);
         return GenericLuaReturner<T1>::Ret(rData,L2);
     };
-    lua_pushstring(L, str.c_str());
+    lua_pushstring(L, str);
     CreateLuaClosure(L, f);
     lua_pushcclosure(L, BaseLuaClosureHandler<2>,2);
-    lua_setglobal(L, str.c_str());
+    lua_setglobal(L, str);
 };
 
 
-template<typename ... Types> void LambdaRegister(lua_State *L,std::string str, void func(Types ... args) ){
+template<typename ... Types> void LambdaRegister(lua_State *L,const char *str, void func(Types ... args) ){
     LuaCFunctionLambda f = [func,str](lua_State *L2) -> int {
         int argCount = sizeof...(Types);
         int top = lua_gettop(L2);
         #ifdef PRINT_LUA_CALLS
-        Serial.printf("Calling %s\n", str.c_str());
+        Serial.printf("Calling %s\n", str);
         #endif
         if (argCount > top){
-            luaL_error(L2, "Too few arguments on function %s. Expected %d got %d\n",str.c_str(),argCount,top);
+            luaL_error(L2, "Too few arguments on function %s. Expected %d got %d\n",str,argCount,top);
             return 1;
         }
         if (argCount < top){
-            luaL_error(L2, "Too much arguments on function %s. Expected %d got %d\n",str.c_str(),argCount,top);
+            luaL_error(L2, "Too much arguments on function %s. Expected %d got %d\n",str,argCount,top);
             return 1;
         }
 
@@ -1247,10 +1250,10 @@ template<typename ... Types> void LambdaRegister(lua_State *L,std::string str, v
         expander<sizeof...(Types),void>::expand(ArgumentList,L2,func);
         return 0;
     };
-    lua_pushstring(L, str.c_str());
+    lua_pushstring(L, str);
     CreateLuaClosure(L, f);
     lua_pushcclosure(L, BaseLuaClosureHandler<2>,2);
-    lua_setglobal(L, str.c_str());
+    lua_setglobal(L, str);
 };
 
 /*
@@ -1301,21 +1304,21 @@ class LuaWrapper {
 
 
     template<typename T1,typename ... Types>void FuncRegister(std::string str, T1 func(Types ... args)){
-      LambdaRegister(_state,str, func );
+      LambdaRegister(_state, StringToPsram(str), func );
     }
 
     template<typename T1,typename ... Types, typename ... Opt>void FuncRegisterOptional(std::string str, T1 func(Types ... args), Opt ... optionalArgs){
-      LambdaRegisterOpt(_state, str, func , optionalArgs... );
+      LambdaRegisterOpt(_state, StringToPsram(str), func , optionalArgs... );
     }
     
 
 
     template<typename ObjectName, typename T1,typename ... Types, typename ... Opt>void FuncRegisterFromObjectOpt(std::string str, ObjectName *obj, T1 (ObjectName::*func)(Types ... args), Opt ... optionalArgs){
-      LambdaRegisterClassOpt(_state,str, obj, func, optionalArgs... );
+      LambdaRegisterClassOpt(_state, StringToPsram(str), obj, func, optionalArgs... );
     }
 
     template<typename ObjectName, typename T1,typename ... Types>void FuncRegisterFromObject(std::string str, ObjectName *obj, T1 (ObjectName::*func)(Types ... args)){
-      LambdaRegisterClass(_state,str, obj, func);
+      LambdaRegisterClass(_state, StringToPsram(str), obj, func);
     }
     
     std::string getLuaStackTrace(lua_State* L, int level = 1) {

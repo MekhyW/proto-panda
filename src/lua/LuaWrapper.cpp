@@ -255,4 +255,17 @@ bool LuaWrapper::Lua_dostring(const char *script, int returns) {
   return true;
 }
 
+const char* StringToPsram(const std::string &str){
+    size_t len = str.size() + 1;
+
+    char* buffer = (char*)heap_caps_malloc(len, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    if (buffer == nullptr)
+    {
+        return nullptr;
+    }
+
+    memcpy(buffer, str.c_str(), len);
+    return buffer;
+}
+
 #endif

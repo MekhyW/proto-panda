@@ -8,6 +8,7 @@
 #include <Arduino.h>
 
 
+
 class LuaCaller{
     public:
         template <typename T> static T* GetSelf(lua_State * L, int pos = -1){
@@ -108,7 +109,7 @@ template<typename Ctype,typename Ret> struct expanderClass <0,Ctype,Ret> {
 
 template<typename T1,typename ClassObj,typename ... Types> struct internal_register{
 
-    template <typename ... Opt> static void LambdaRegisterStackOpt(lua_State *L,std::string str,int stackPos,T1 (ClassObj::*func)(Types ... args),Opt ... optionalArgs ){
+    template <typename ... Opt> static void LambdaRegisterStackOpt(lua_State *L,const char *str,int stackPos,T1 (ClassObj::*func)(Types ... args),Opt ... optionalArgs ){
         std::tuple<Opt...> tup(optionalArgs...);
         LuaCFunctionLambda f = [func,str,tup](lua_State *L2) -> int {
             int argNecessary = int(sizeof...(Types)) - int(sizeof...(Opt));
@@ -116,11 +117,11 @@ template<typename T1,typename ClassObj,typename ... Types> struct internal_regis
             int argCount = lua_gettop(L2)-1; //Ignore the first one that is the table!
 
             if (argCount > argMax){
-                luaL_error(L2, "Too much arguments on function %s. Expected %d-%d but got %d\n",str.c_str(),argNecessary, argMax, argCount);
+                luaL_error(L2, "Too much arguments on function %s. Expected %d-%d but got %d\n",str,argNecessary, argMax, argCount);
                 return 1;
             }
             if (argCount < argNecessary){
-                luaL_error(L2, "Too few arguments on function %s. Expected %d-%d but got %d",str.c_str(),argNecessary, argMax, argCount);
+                luaL_error(L2, "Too few arguments on function %s. Expected %d-%d but got %d",str,argNecessary, argMax, argCount);
                 return 1;
             }
             std::tuple<Types ...> ArgumentList;
@@ -137,7 +138,7 @@ template<typename T1,typename ClassObj,typename ... Types> struct internal_regis
         };
         CreateLuaClosure(L, f);
         lua_pushcclosure(L, LuaCaller::Base<1>,1);
-        lua_setfield(L, -2, str.c_str());
+        lua_setfield(L, -2, str);
         lua_pop(L, 1);
 
     };
@@ -145,18 +146,18 @@ template<typename T1,typename ClassObj,typename ... Types> struct internal_regis
 
 template<typename ClassObj,typename ... Types> struct internal_register<void,ClassObj,Types...>{
 
-    template <typename ... Opt> static void LambdaRegisterStackOpt(lua_State *L,std::string str,int stackPos,void (ClassObj::*func)(Types ... args),Opt ... optionalArgs ){
+    template <typename ... Opt> static void LambdaRegisterStackOpt(lua_State *L,const char *str,int stackPos,void (ClassObj::*func)(Types ... args),Opt ... optionalArgs ){
         std::tuple<Opt...> tup(optionalArgs...);
         LuaCFunctionLambda f = [func,str,tup](lua_State *L2) -> int {
             int argNecessary = int(sizeof...(Types)) - int(sizeof...(Opt));
             int argMax = int(sizeof...(Types));
             int argCount = lua_gettop(L2)-1; //-1 because of the table thats the root
             if (argCount > argMax){
-                luaL_error(L2, "Too much arguments on function %s. Expected %d-%d but got %d\n",str.c_str(),argNecessary, argMax, argCount);
+                luaL_error(L2, "Too much arguments on function %s. Expected %d-%d but got %d\n",str,argNecessary, argMax, argCount);
                 return 1;
             }
             if (argCount < argNecessary){
-                luaL_error(L2, "Too few arguments on function %s. Expected %d-%d but got %d",str.c_str(),argNecessary, argMax, argCount);
+                luaL_error(L2, "Too few arguments on function %s. Expected %d-%d but got %d",str,argNecessary, argMax, argCount);
                 return 1;
             }
             std::tuple<Types ...> ArgumentList;
@@ -174,7 +175,7 @@ template<typename ClassObj,typename ... Types> struct internal_register<void,Cla
         };
         CreateLuaClosure(L, f);
         lua_pushcclosure(L, LuaCaller::Base<1>,1);
-        lua_setfield(L, -2,  str.c_str());
+        lua_setfield(L, -2,  str);
 
     };
 };
@@ -432,14 +433,15 @@ template<typename T1> struct ClassRegister{
             return;
         }
         int top = lua_gettop (L);
-        internal_register<RetType,ClassObj,Types...>::LambdaRegisterStackOpt(L,methodName,top,func);
+
+        internal_register<RetType,ClassObj,Types...>::LambdaRegisterStackOpt(L,StringToPsram(methodName),top,func);
     };
 
 
     template<typename RetType,typename ClassObj,typename ... Types,typename ... Otps> static void RegisterClassMethod(lua_State *L,std::string name,std::string methodName,RetType (ClassObj::*func)(Types ... args),Otps ...optArgs){
         lua_getglobal(L, name.c_str());
         int top = lua_gettop (L);
-        internal_register<RetType,ClassObj,Types...>::LambdaRegisterStackOpt(L,methodName,top,func,optArgs...);
+        internal_register<RetType,ClassObj,Types...>::LambdaRegisterStackOpt(L,StringToPsram(methodName),top,func,optArgs...);
         lua_pop(L, 1);
     };
 
