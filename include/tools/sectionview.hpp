@@ -5,7 +5,7 @@
 
 #define MAX_VIEWS 32
 
-class SectionMap {
+template<int V> class SectionMap {
 public:
 
     struct View {
@@ -18,8 +18,22 @@ public:
     SectionMap() : m_count(0) {}
 
     void addView(int dispX, int dispY, int srcX,  int srcY, int w, int h, bool fliph, bool flipv) {
-        if (m_count < MAX_VIEWS) {
+        if (m_count < V) {
             View& v = m_views[m_count++];
+            v.dispX = dispX;   
+            v.dispY = dispY;
+            v.srcX  = srcX;  
+            v.srcY  = srcY; 
+            v.w     = w;      
+            v.h     = h;
+            v.flip_horizontal = fliph;
+            v.flip_vertical = flipv;
+        }
+    }
+    
+    void setView(int id, int dispX, int dispY, int srcX,  int srcY, int w, int h, bool fliph, bool flipv) {
+        if (m_count > id) {
+            View& v = m_views[id];
             v.dispX = dispX;   
             v.dispY = dispY;
             v.srcX  = srcX;  
@@ -56,6 +70,6 @@ public:
     int  count() const { return m_count; }
 
 private:
-    View m_views[MAX_VIEWS];
+    View m_views[V];
     int  m_count;
 };

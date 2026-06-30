@@ -138,7 +138,7 @@ public:
 
     
     bool mirrorHalf;
-    SectionMap view;
+    SectionMap<MAX_VIEWS> view;
             
 protected:
     uint32_t halfPosition;

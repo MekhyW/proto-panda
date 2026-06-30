@@ -28,6 +28,13 @@ int Sprite::CreateEmptySprite(uint16_t sizeX, uint16_t sizeY){
     }
     int len = frames.size();
     frames.emplace_back(mem);
+
+    if (w == 0){
+        w = mem->width;
+    }
+    if (h == 0){
+        h = mem->height;
+    }
     return len;
 }
 
@@ -52,6 +59,13 @@ int Sprite::LoadFromPng(std::string name){
     mem->height = height_p;
     mem->pixels = pixels;
 
+    if (w == 0){
+        w = mem->width;
+    }
+    if (h == 0){
+        h = mem->height;
+    }
+
     int len = frames.size();
     frames.emplace_back(mem);
     return len;
@@ -75,12 +89,29 @@ void Sprite::Draw(FlipConfig& flipSettings){
     if (currentFrame < 0 || currentFrame > frames.size()){
         return;
     }
+
+    int targetW = w;
+    int targetH = h;
     BasicTexture *tx = frames[currentFrame];
-    int pixelId = 0;
-    for (int dy=0;dy<tx->height;dy++){
-        for (int dx=0;dx<tx->width;dx++){
-            uint16_t color = tx->pixels[pixelId];
-            pixelId++;
+    if (targetW > tx->width){
+        targetW = tx->width;
+    }
+    if (targetH > tx->height){
+        targetH = tx->height;
+    }
+    for (int dy=0;dy<targetH;dy++){
+        for (int dx=0;dx<targetW;dx++){
+
+            int xIn;
+            int yIn;
+            if (!view.getPosition(dx, dy, xIn, yIn)){
+                return;
+            }
+            if (xIn < 0 || xIn >= tx->width || yIn >= tx->height || yIn < 0){
+                continue;
+            }
+
+            uint16_t color = tx->pixels[yIn * tx->width + xIn];
             if (color == tx->transparentColor){
                 continue;
             }
@@ -88,7 +119,7 @@ void Sprite::Draw(FlipConfig& flipSettings){
             uint8_t g;
             uint8_t b;
             BaseDisplay::color565to888(color, r,g,b);
-            Devices::Display->setPixelWithFlip(x+dx, y+dy, r,g,b, flipSettings);            
+            Devices::Display->setPixelWithFlip(x+xIn, y+yIn, r,g,b, flipSettings);            
         }
     }
 }

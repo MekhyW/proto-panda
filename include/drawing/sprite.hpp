@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "tools/psrammap.hpp"
 #include "tools/displays.hpp"
+#include "tools/sectionview.hpp"
 
 class BasicTexture{
     public:
@@ -14,8 +15,10 @@ class BasicTexture{
 
 class Sprite{
     public:
-        Sprite():x(0),y(0),frames(),id(0),currentFrame(-1){};
+        Sprite():x(0),y(0),w(0),h(0),frames(),id(0),currentFrame(-1){};
         uint16_t x,y;
+        uint16_t w,h;
+        SectionMap<1> view;
         
         std::vector<BasicTexture*> frames;
         
@@ -63,6 +66,16 @@ class Sprite{
                 return;
             }
             frames[id]->transparentColor = c;
+        }
+
+        void CropSprite(int srcX,  int srcY, int pw, int ph, bool fliph, bool flipv){
+            w = w;
+            h = h;
+            if (view.count() == 0){
+                view.addView(0, 0, srcX,  srcY, pw, ph, fliph, flipv);
+                return;
+            }
+            view.setView(0, 0, 0, srcX,  srcY, pw, ph, fliph, flipv);
         }
 
         int CreateEmptySprite(uint16_t sizeX, uint16_t sizeY);
