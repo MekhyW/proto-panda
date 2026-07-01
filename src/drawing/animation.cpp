@@ -427,7 +427,7 @@ void Animation::DrawFrame(int i){
     if (m_spritesInScene.size() > 0){
         xSemaphoreTake(m_SpriteMutex, portMAX_DELAY);
         for (auto &sp : m_spritesInScene){
-            m_overlaySprites[sp]->Draw(flipSettings);
+            m_overlaySprites[sp]->Draw(flipSettings, m_shader, m_shaderStrenght);
         }
         xSemaphoreGive(m_SpriteMutex);
     }
@@ -454,8 +454,12 @@ int Animation::clearAllOverlaySprites()
     return count;
 }
 
-bool Animation::setOverlaySprite(int id)
+bool Animation::setOverlaySprite(Sprite *s)
 {
+    if (s == nullptr){
+        return false;
+    }
+    int id = s->GetId();
     xSemaphoreTake(m_SpriteMutex, portMAX_DELAY);
     if (id < 0 || id >= (int)m_overlaySprites.size())
     {
@@ -468,7 +472,11 @@ bool Animation::setOverlaySprite(int id)
     return true;
 }
 
-bool Animation::clearOverlaySprite(int id){
+bool Animation::clearOverlaySprite(Sprite *s){
+    if (s == nullptr){
+        return false;
+    }
+    int id = s->GetId();
     xSemaphoreTake(m_SpriteMutex, portMAX_DELAY);
 
     for (auto it = m_spritesInScene.begin(); it != m_spritesInScene.end(); ++it)

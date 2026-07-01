@@ -73,7 +73,7 @@ int WS2812BDisplay::GetLEDIndex(uint16_t x, uint16_t y) {
     return idx;
 }
 
-void WS2812BDisplay::setPixelWithFlip(uint16_t xIn, uint16_t yIn, uint8_t red, uint8_t green, uint8_t blue,  FlipConfig &flipSettings){
+void WS2812BDisplay::setPixelWithFlip(int16_t xIn, int16_t yIn, uint8_t red, uint8_t green, uint8_t blue,  FlipConfig &flipSettings){
     int idx;
 
     uint8_t ra = red;

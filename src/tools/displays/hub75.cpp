@@ -1,7 +1,7 @@
 
 #include "tools/displays/hub75.hpp"
 
-void Hub75Display::setPixelWithFlip(uint16_t x, uint16_t y, uint8_t red, uint8_t green, uint8_t blue, FlipConfig& flipSettings) {
+void Hub75Display::setPixelWithFlip(int16_t x, int16_t y, uint8_t red, uint8_t green, uint8_t blue, FlipConfig& flipSettings) {
     if (!mirrorHalf){
         int xIn;
         int yIn;

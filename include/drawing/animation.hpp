@@ -118,8 +118,8 @@ class Animation{
 
 
         int clearAllOverlaySprites();
-        bool setOverlaySprite(int id);
-        bool clearOverlaySprite(int id);
+        bool setOverlaySprite(Sprite *s);
+        bool clearOverlaySprite(Sprite *s);
 
         void forceRedrawEachFrame(bool f){
             m_forceRedraw = f;

@@ -3,6 +3,7 @@
 #include "tools/psrammap.hpp"
 #include "tools/displays.hpp"
 #include "tools/sectionview.hpp"
+#include "drawing/rendering/shader.hpp"
 
 class BasicTexture{
     public:
@@ -15,7 +16,7 @@ class BasicTexture{
 
 class Sprite{
     public:
-        Sprite():x(0),y(0),w(0),h(0),frames(),id(0),currentFrame(-1),cosA(0.0f),sinA(1.0f),rotated(false){};
+        Sprite():x(0),y(0),w(0),h(0),frames(),id(0),currentFrame(-1),cosA(0.0f),sinA(1.0f),shaderStrenght(1.0f),rotated(false),usingShader(false),shader(SHADER_NONE){};
         uint16_t x,y;
         uint16_t w,h;
         SectionMap<1> view;
@@ -23,8 +24,19 @@ class Sprite{
         
         int id;
         int currentFrame;
-        float cosA,sinA;
-        bool rotated;
+        float cosA,sinA,shaderStrenght;
+        bool rotated, usingShader;
+        ShaderType shader;
+
+        Sprite *Clone();
+
+        void UseCustomShader(bool use){
+            usingShader = use;
+        }
+        void SetShader(ShaderType shdr, float strenght=1.0f){
+            shaderStrenght = strenght;
+            shader = shdr;
+        };
 
         void SetRotation(float angle){
             if (angle == 0){
@@ -90,10 +102,10 @@ class Sprite{
             view.setView(0, srcX,  srcY, 0,  0, pw, ph, fliph, flipv);
         }
 
-        int CreateEmptySprite(uint16_t sizeX, uint16_t sizeY);
+        int CreateEmptyTexture(uint16_t sizeX, uint16_t sizeY);
 
         int LoadFromPng(std::string name);
 
-        void Draw(FlipConfig& flipSettings);
+        void Draw(FlipConfig flipSettings, ShaderType shader, float shaderStrenght);
 };
 

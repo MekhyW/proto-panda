@@ -50,7 +50,7 @@ public:
         matrix->setBrightness8(b);
     }
     
-    void setPixelWithFlip(uint16_t x, uint16_t y, uint8_t red, uint8_t green, uint8_t blue,  FlipConfig &flipSettings) override;
+    void setPixelWithFlip(int16_t x, int16_t y, uint8_t red, uint8_t green, uint8_t blue,  FlipConfig &flipSettings) override;
     
     void drawPixel(int16_t x, int16_t y, uint16_t color) override {
         matrix->drawPixel(x, y, color);

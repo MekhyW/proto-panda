@@ -1,6 +1,7 @@
 #include "drawing/sprite.hpp"
 #include "tools/storage.hpp"
 #include "tools/devices.hpp"
+#include "drawing/animation.hpp"
 
 
 BasicTexture::BasicTexture(uint16_t sizeX, uint16_t sizeY){
@@ -13,7 +14,7 @@ BasicTexture::BasicTexture(uint16_t sizeX, uint16_t sizeY){
     }
 }
 
-int Sprite::CreateEmptySprite(uint16_t sizeX, uint16_t sizeY){
+int Sprite::CreateEmptyTexture(uint16_t sizeX, uint16_t sizeY){
     BasicTexture* mem = (BasicTexture*)ps_malloc(sizeof(BasicTexture));
     if (!mem) {
         return -1;
@@ -37,6 +38,21 @@ int Sprite::CreateEmptySprite(uint16_t sizeX, uint16_t sizeY){
     }
     return len;
 }
+
+
+Sprite *Sprite::Clone(){
+    Sprite* sp = (Sprite*)ps_malloc(sizeof(Sprite));
+    if (!sp) {
+        return nullptr;
+    }
+    #ifndef __INTELLISENSE__
+    new (sp) Sprite();
+    #endif
+    (*sp) = (*this);
+    g_animation.IncludeSpriteInPool(sp);
+    return sp;
+}
+
 
 int Sprite::LoadFromPng(std::string name){
     int rcError;
@@ -85,12 +101,17 @@ void Sprite::SetPixelColor(int idx, uint16_t x, uint16_t y, uint16_t color){
     tx->pixels[x + y*tx->width] = color;
 }
 
-void Sprite::Draw(FlipConfig& flipSettings){
+void Sprite::Draw(FlipConfig flipSettings, ShaderType shader_p, float shaderStrenght_p){
     if (currentFrame < 0 || currentFrame > frames.size()){
         return;
     }
+    if (usingShader){
+        shaderStrenght_p = shaderStrenght;
+        shader_p = shader;
+    }
     int targetW = w;
     int targetH = h;
+    
     BasicTexture *tx = frames[currentFrame];
     if (targetW > tx->width){
         targetW = tx->width;
@@ -128,12 +149,17 @@ void Sprite::Draw(FlipConfig& flipSettings){
                 outDx = (int)lroundf(rx + cx);
                 outDy = (int)lroundf(ry + cy);
             }
+            int16_t finalX = x+outDx;
+            int16_t finalY = y+outDy;
 
             uint8_t r;
             uint8_t g;
             uint8_t b;
             BaseDisplay::color565to888(color, r,g,b);
-            Devices::Display->setPixelWithFlip(x+outDx, y+outDy, r,g,b, flipSettings);
+
+            ShaderProcessor::UpdateColorByShader(finalX, finalY, r, g, b, shader_p, shaderStrenght_p);
+
+            Devices::Display->setPixelWithFlip(finalX, finalY, r,g,b, flipSettings);
         }
     }
 }

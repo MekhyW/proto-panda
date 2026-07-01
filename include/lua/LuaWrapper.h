@@ -5,6 +5,7 @@
 #include <type_traits>
 #include <vector>
 #include <sstream>
+#include "tools/displays.hpp"
 #include "drawing/rendering/primitives.hpp"
 #include "drawing/modelanimation/keyframeplayer.hpp"
 #ifdef ENABLE_LUA
@@ -238,6 +239,42 @@ template<> struct GenericLuaGetter<PixelStruct> {
 };
 
 
+
+
+template<> struct GenericLuaGetter<FlipConfig> {
+    static inline FlipConfig Call(bool &hasArgError, lua_State *L, int stackPos = -1, bool pop = true, int offsetStack = 0) {
+        FlipConfig fpConf;
+
+        if (!lua_istable(L, stackPos)) {
+            hasArgError = true;
+            const char* function_name = lua_tostring(L, lua_upvalueindex(1));
+            luaL_error(L, "Expected a table value on parameter %d of function %s", lua_gettop(L), function_name);
+            return fpConf;
+        }
+
+        lua_getfield(L, stackPos, "flipLeft");
+        fpConf.flipLeft = lua_toboolean(L, -1) != 0;
+        lua_pop(L, 1);
+
+        lua_getfield(L, stackPos, "flipRight");
+        fpConf.flipRight = lua_toboolean(L, -1) != 0;
+        lua_pop(L, 1);
+
+        lua_getfield(L, stackPos, "modeLeft");
+        fpConf.modeLeft = static_cast<ColorMode>(luaL_optinteger(L, -1, 0));
+        lua_pop(L, 1);
+
+        lua_getfield(L, stackPos, "modeRight");
+        fpConf.modeRight = static_cast<ColorMode>(luaL_optinteger(L, -1, 0));
+        lua_pop(L, 1);
+
+        if (pop) {
+            lua_pop(L, 1); // Remove the table from stack if necessary
+        }
+
+        return fpConf;
+    }
+};
 
 
 template<> struct GenericLuaGetter<Vec2f> {
@@ -776,6 +813,29 @@ template<> struct GenericLuaReturner<Vec2f> {
         return 1;
     }
 };
+
+
+
+template<> struct GenericLuaReturner<FlipConfig> {
+    static inline int Ret(const FlipConfig& fpconf, lua_State* L, bool forceTable = false) {
+        lua_createtable(L, 0, 2);
+            
+        lua_pushnumber(L, static_cast<lua_Number>(fpconf.modeLeft));
+        lua_setfield(L, -2, "modeLeft");
+            
+        lua_pushnumber(L, static_cast<lua_Number>(fpconf.modeRight));
+        lua_setfield(L, -2, "modeRight");
+            
+        lua_pushboolean(L, fpconf.flipRight);
+        lua_setfield(L, -2, "flipRight");
+
+        lua_pushboolean(L, fpconf.flipLeft);
+        lua_setfield(L, -2, "flipLeft");
+
+        return 1;
+    }
+};
+
 
 template<> struct GenericLuaReturner<Keyframe> {
     static inline int Ret(const Keyframe& keyframe, lua_State* L, bool forceTable = false) {

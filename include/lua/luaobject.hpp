@@ -5,6 +5,7 @@
 #include "bluetooth/characteristicshandler.hpp"
 #include "bluetooth/servicehandler.hpp"
 #include "drawing/rendering/model.hpp"
+#include "drawing/sprite.hpp"
 #include <Arduino.h>
 
 
@@ -513,6 +514,53 @@ template<> struct GenericLuaReturner<KeyframeTrack*>{
         MakeLuaObject<KeyframeTrack>::Make(L, vr, "KeyframeTrack");
         return 1;
     };
+};
+
+template<> struct GenericLuaReturner<Sprite*>{
+    static int Ret(Sprite* vr,lua_State *L,bool forceTable = false){
+        MakeLuaObject<Sprite>::Make(L, vr, "Sprite");
+        return 1;
+    };
+};
+
+
+template<> struct GenericLuaGetter<Sprite*> {
+    static inline Sprite* Call(bool &hasArgError, lua_State *L, int stackPos = -1, bool pop = true, int offsetStack = 0) {
+
+        if (!lua_istable(L, stackPos)) {
+            hasArgError = true;
+            const char* function_name = lua_tostring(L, lua_upvalueindex(1));
+            luaL_error(L, "Expected a table value on parameter %d of function %s", lua_gettop(L), function_name);
+            return nullptr;
+        }
+
+        lua_getfield(L, stackPos, "__self");
+        Sprite** sp = (Sprite**)lua_touserdata(L,-1);
+        if (!sp){
+            luaL_error(L, "Expected a lua object");
+            return nullptr;
+        }
+        lua_pop(L, 1);
+        lua_getfield(L, stackPos, "type");
+          
+        std::string otherType = std::string(lua_tostring(L, -1));
+        lua_pop(L, 1);
+
+        if (otherType != "Sprite"){
+            luaL_error(L, "Type mismatched, expecting 'Sprite' instead got %s", otherType.c_str());
+            return nullptr;
+        }
+
+        if (*sp == nullptr){
+            luaL_error(L, "Null userdata in to the object");
+            return nullptr;
+        }
+
+        if (pop) {
+            lua_pop(L, 1);
+        }  
+        return  (*sp);
+    }
 };
 
 

@@ -995,10 +995,14 @@ bool LuaInterface::Start()
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetFrameId",&Sprite::SetFrameId);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","GetFrameId",&Sprite::GetFrameId);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","GetFrameCount",&Sprite::GetFrameCount);
-  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","CreateEmptySprite",&Sprite::CreateEmptySprite);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","CreateEmptyTexture",&Sprite::CreateEmptyTexture);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","LoadFromPng",&Sprite::LoadFromPng);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","CropSprite",&Sprite::CropSprite);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","Draw",&Sprite::Draw, 1.0f, SHADER_NONE, FlipConfig());
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetRotation",&Sprite::SetRotation);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","Clone",&Sprite::Clone);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","UseCustomShader",&Sprite::UseCustomShader);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetShader",&Sprite::SetShader, 1.0f);
 
 
   //Created only using loadModel(modeldata, name)
