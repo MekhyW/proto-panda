@@ -89,7 +89,6 @@ void Sprite::Draw(FlipConfig& flipSettings){
     if (currentFrame < 0 || currentFrame > frames.size()){
         return;
     }
-
     int targetW = w;
     int targetH = h;
     BasicTexture *tx = frames[currentFrame];
@@ -99,27 +98,42 @@ void Sprite::Draw(FlipConfig& flipSettings){
     if (targetH > tx->height){
         targetH = tx->height;
     }
+
+    float cx = targetW * 0.5f;
+    float cy = targetH * 0.5f;
+
     for (int dy=0;dy<targetH;dy++){
         for (int dx=0;dx<targetW;dx++){
-
             int xIn;
             int yIn;
             if (!view.getPosition(dx, dy, xIn, yIn)){
-                continue;;
+                continue;
             }
             if (xIn < 0 || xIn >= tx->width || yIn >= tx->height || yIn < 0){
                 continue;
             }
-
             uint16_t color = tx->pixels[yIn * tx->width + xIn];
             if (color == tx->transparentColor){
                 continue;
             }
+
+            int outDx = dx;
+            int outDy = dy;
+
+            if (rotated) {
+                float fx = dx - cx;
+                float fy = dy - cy;
+                float rx = fx * cosA - fy * sinA;
+                float ry = fx * sinA + fy * cosA;
+                outDx = (int)lroundf(rx + cx);
+                outDy = (int)lroundf(ry + cy);
+            }
+
             uint8_t r;
             uint8_t g;
             uint8_t b;
             BaseDisplay::color565to888(color, r,g,b);
-            Devices::Display->setPixelWithFlip(x+dx, y+dy, r,g,b, flipSettings);            
+            Devices::Display->setPixelWithFlip(x+outDx, y+outDy, r,g,b, flipSettings);
         }
     }
 }

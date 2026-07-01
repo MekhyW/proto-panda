@@ -998,6 +998,7 @@ bool LuaInterface::Start()
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","CreateEmptySprite",&Sprite::CreateEmptySprite);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","LoadFromPng",&Sprite::LoadFromPng);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","CropSprite",&Sprite::CropSprite);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetRotation",&Sprite::SetRotation);
 
 
   //Created only using loadModel(modeldata, name)

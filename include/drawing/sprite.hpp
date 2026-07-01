@@ -15,15 +15,27 @@ class BasicTexture{
 
 class Sprite{
     public:
-        Sprite():x(0),y(0),w(0),h(0),frames(),id(0),currentFrame(-1){};
+        Sprite():x(0),y(0),w(0),h(0),frames(),id(0),currentFrame(-1),cosA(0.0f),sinA(1.0f),rotated(false){};
         uint16_t x,y;
         uint16_t w,h;
         SectionMap<1> view;
-        
         std::vector<BasicTexture*> frames;
         
         int id;
         int currentFrame;
+        float cosA,sinA;
+        bool rotated;
+
+        void SetRotation(float angle){
+            if (angle == 0){
+                rotated = false;
+                return;
+            }
+            float rad = angle * (float)M_PI / 180.0f;
+            cosA = cosf(-rad); 
+            sinA = sinf(-rad);
+            rotated = true;
+        }
 
         bool SetFrameId(int id){
             if (id < 0 || id > frames.size()){
