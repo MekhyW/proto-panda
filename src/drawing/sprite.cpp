@@ -105,7 +105,7 @@ void Sprite::Draw(FlipConfig& flipSettings){
             int xIn;
             int yIn;
             if (!view.getPosition(dx, dy, xIn, yIn)){
-                return;
+                continue;;
             }
             if (xIn < 0 || xIn >= tx->width || yIn >= tx->height || yIn < 0){
                 continue;
@@ -119,7 +119,7 @@ void Sprite::Draw(FlipConfig& flipSettings){
             uint8_t g;
             uint8_t b;
             BaseDisplay::color565to888(color, r,g,b);
-            Devices::Display->setPixelWithFlip(x+xIn, y+yIn, r,g,b, flipSettings);            
+            Devices::Display->setPixelWithFlip(x+dx, y+dy, r,g,b, flipSettings);            
         }
     }
 }

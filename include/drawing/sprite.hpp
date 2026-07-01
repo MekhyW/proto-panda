@@ -69,13 +69,13 @@ class Sprite{
         }
 
         void CropSprite(int srcX,  int srcY, int pw, int ph, bool fliph, bool flipv){
-            w = w;
-            h = h;
+            w = pw;
+            h = ph;
             if (view.count() == 0){
-                view.addView(0, 0, srcX,  srcY, pw, ph, fliph, flipv);
+                view.addView(srcX,  srcY, 0,0, pw, ph, fliph, flipv);
                 return;
             }
-            view.setView(0, 0, 0, srcX,  srcY, pw, ph, fliph, flipv);
+            view.setView(0, srcX,  srcY, 0,  0, pw, ph, fliph, flipv);
         }
 
         int CreateEmptySprite(uint16_t sizeX, uint16_t sizeY);
