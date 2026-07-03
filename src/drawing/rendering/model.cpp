@@ -429,7 +429,7 @@ int Model::AddPointGroup(PointList pts) {
     return bones.points.size() - 1; 
 }
 
-void Model::RasterTriangleWithBitmap(ModelHandler *scene, int i, uint8_t *targetBitmap){
+void Model::RasterTriangleWithBitmap(ModelHandler *scene, int i){
 
     int baseIdx = i * 3;
 
@@ -489,12 +489,6 @@ void Model::RasterTriangleWithBitmap(ModelHandler *scene, int i, uint8_t *target
                 uint8_t rr=r, gg=g, bbl=bl;
                 ShaderProcessor::UpdateColorByShader(a, y0, rr, gg, bbl, m_shader, shaderStrenght);
                 Devices::Display->setPixelWithFlip(a, y0, rr, gg, bbl, FlipConfig::DefaultFlipConfig);
-                if (targetBitmap != nullptr){
-                    if ((color & 0x8610) != 0) { 
-                        int byteIdOled = a + y0*CANVAS_WIDTH;
-                        targetBitmap[byteIdOled] = 1;
-                    }
-                }
             }
         }
         return;
@@ -544,12 +538,6 @@ void Model::RasterTriangleWithBitmap(ModelHandler *scene, int i, uint8_t *target
                 uint8_t rr=r, gg=g, bbl=bl;
                 ShaderProcessor::UpdateColorByShader(a, y0, rr, gg, bbl, m_shader, shaderStrenght);
                 Devices::Display->setPixelWithFlip(xx, y, rr, gg, bbl, FlipConfig::DefaultFlipConfig);
-                if (targetBitmap != nullptr){
-                    if ((color & 0x8610) != 0) { 
-                        int16_t byteIdOled = xx + y*CANVAS_WIDTH;
-                        targetBitmap[byteIdOled] = 1;
-                    }
-                }
             }
         }
     }
@@ -583,12 +571,6 @@ void Model::RasterTriangleWithBitmap(ModelHandler *scene, int i, uint8_t *target
                 uint8_t rr=r, gg=g, bbl=bl;
                 ShaderProcessor::UpdateColorByShader(a, y0, rr, gg, bbl, m_shader, shaderStrenght);
                 Devices::Display->setPixelWithFlip(xx, y, rr, gg, bbl, FlipConfig::DefaultFlipConfig);
-                if (targetBitmap != nullptr){
-                    if ((color & 0x8610) != 0) { 
-                        int16_t byteIdOled = xx + y*CANVAS_WIDTH;
-                        targetBitmap[byteIdOled] = 1;
-                    }
-                }
             }
         }
     }

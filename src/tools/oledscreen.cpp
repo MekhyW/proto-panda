@@ -52,6 +52,17 @@ bool OledScreen::Start(){
     return true;
 }
 
+void OledScreen::MarkPixel(uint16_t x, uint16_t y, uint8_t red, uint8_t green, uint8_t blue){
+    if ( x >= CANVAS_WIDTH || y >= CANVAS_HEIGHT){
+        return;
+    }
+    uint16_t byteId = x + y * CANVAS_WIDTH;
+    if (((red | green | blue) & 0xE0) != 0) { 
+        OledScreen::DisplayFace[0][byteId] = 1;
+    }else{
+        OledScreen::DisplayFace[0][byteId] = 0;
+    }
+}
 int OledScreen::CreateIcon(std::vector<uint8_t> iconData, int width, int height){
     size_t size = iconData.size();
 

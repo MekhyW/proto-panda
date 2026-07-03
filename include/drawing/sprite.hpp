@@ -66,17 +66,17 @@ class Sprite{
         int GetId(){
             return id;
         };
-        uint16_t GetWidth(int id){ 
-            if (id < 0 || id > frames.size()){
+        uint16_t GetWidth(int ida){ 
+            if (ida < 0 || ida > frames.size()){
                 return 0;
             }
-            return frames[id]->width;
+            return frames[ida]->width;
         };
-        uint16_t GetHeight(int id){
-            if (id < 0 || id > frames.size()){
+        uint16_t GetHeight(int ida){
+            if (ida < 0 || ida > frames.size()){
                 return 0;
             } 
-            return frames[id]->height;
+            return frames[ida]->height;
         };
 
         void SetPosition(uint16_t xa, uint16_t ya){
@@ -85,11 +85,17 @@ class Sprite{
         };
 
         void SetPixelColor(int id, uint16_t x, uint16_t y, uint16_t color);
-        void SetTransparent(uint16_t c){
-            if (id < 0 || id > frames.size()){
+        void SetTransparencyColor(uint16_t c, int idx){
+            if (idx == -1){
+                for (int i=0;i<frames.size();i++){
+                    frames[i]->transparentColor = c;
+                }
                 return;
             }
-            frames[id]->transparentColor = c;
+            if (idx < 0 || idx > frames.size()){
+                return;
+            }
+            frames[idx]->transparentColor = c;
         }
 
         void CropSprite(int srcX,  int srcY, int pw, int ph, bool fliph, bool flipv){

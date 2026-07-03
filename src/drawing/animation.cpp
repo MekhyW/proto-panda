@@ -107,13 +107,6 @@ int AnimationSequence::GetFrameId(){
 }
 
 void Animation::drawPixelAt(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, int &byteIdOled, FlipConfig &flipSettings){
-    if ((color & 0x8610) != 0) { 
-        OledScreen::DisplayFace[0][byteIdOled] = 1;
-    }else{
-        OledScreen::DisplayFace[0][byteIdOled] = 0;
-    }
-    
-
     Devices::Display->setPixelWithFlip(x,y, r, g, b, flipSettings);
     if (m_copyToFrameBuffer){
         m_frameBuffer[byteIdOled] = color;
@@ -420,16 +413,16 @@ void Animation::DrawFrame(int i){
     }
     finished:
 
-    if (m_fftOverlay && g_fft.isRunning()){
-        drawFFTOverlay(flipSettings, frameId);
-    }
-
     if (m_spritesInScene.size() > 0){
         xSemaphoreTake(m_SpriteMutex, portMAX_DELAY);
         for (auto &sp : m_spritesInScene){
             m_overlaySprites[sp]->Draw(flipSettings, m_shader, m_shaderStrenght);
         }
         xSemaphoreGive(m_SpriteMutex);
+    }
+
+    if (m_fftOverlay && g_fft.isRunning()){
+        drawFFTOverlay(flipSettings, frameId);
     }
 
     Devices::Display->endWrite();

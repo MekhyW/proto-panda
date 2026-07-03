@@ -129,10 +129,10 @@ class Model {
         void SetTriangleF(int i, Vec2f p1, Vec2f p2, Vec2f p3, uint16_t color);
 
         TriangleData GetTriangle(int i);
-        void RasterTriangleWithBitmap(ModelHandler *s, int i, uint8_t *targetBitmap=nullptr);
+        void RasterTriangleWithBitmap(ModelHandler *s, int i);
         
         inline void RasterTriangle(ModelHandler *s, int i){
-            return RasterTriangleWithBitmap(s, i, nullptr);
+            return RasterTriangleWithBitmap(s, i);
         }
 };
 

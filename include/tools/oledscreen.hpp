@@ -44,6 +44,8 @@ class OledScreen{
         static void DrawPanelFaceToScreen(int x, int y);
         static void DrawIcon(int x, int y, int iconId);
         static int CreateIcon(std::vector<uint8_t> iconData, int width, int height);
+
+        static void MarkPixel(uint16_t x, uint16_t y, uint8_t red, uint8_t green, uint8_t blue);
     
         static Panda_SSD1306 display;
         static bool consoleMode;

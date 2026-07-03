@@ -986,7 +986,7 @@ bool LuaInterface::Start()
     }
   }, &EmptyGC);
 
-  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetTransparent",&Sprite::SetTransparent);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetTransparencyColor",&Sprite::SetTransparencyColor, -1);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","GetId",&Sprite::GetId);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetPixelColor",&Sprite::SetPixelColor);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetPosition",&Sprite::SetPosition);

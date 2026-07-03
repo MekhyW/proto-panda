@@ -1,6 +1,6 @@
 
 #include "tools/displays/ws2812.hpp"
-
+#include "tools/oledscreen.hpp"
 
 bool WS2812BDisplay::begin(){
     return true;
@@ -75,7 +75,7 @@ int WS2812BDisplay::GetLEDIndex(uint16_t x, uint16_t y) {
 
 void WS2812BDisplay::setPixelWithFlip(int16_t xIn, int16_t yIn, uint8_t red, uint8_t green, uint8_t blue,  FlipConfig &flipSettings){
     int idx;
-
+    OledScreen::MarkPixel(xIn, yIn, red, green, blue);
     uint8_t ra = red;
     uint8_t ga = green;
     uint8_t ba = blue;
