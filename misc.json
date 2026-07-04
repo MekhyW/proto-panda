@@ -15,14 +15,13 @@
         "transictionOnlyOnAnimation": "normal",
         "transictionInOnlyOnSpecificFrame": 1
     },
-
     "fft": {
-        "gpio": 1,
+        "gpio": 3 ,
         "samples": 512,
         "sampling_frequency": 44100,
-        "noise_threshold": 2000,
+        "noise_threshold": 2500,
         "band_count": 16,
-        "enabled": false
+        "enabled": true
     },
     "scripts": [
         {

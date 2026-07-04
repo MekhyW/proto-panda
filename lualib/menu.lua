@@ -14,6 +14,7 @@ local boop = require("boop")
 local input = require("input")
 local drivers = require("drivers")
 local configloader = require("configloader")
+local overlays = require("overlays")
 
 MAX_INTERFACE_ICONS = 4
 MENU_SPACING = 13
@@ -48,6 +49,7 @@ function _M.setup(expressions)
     _M.has_fft_overlay = dictGet("has_fft_overlay") == "1" 
     setFFTOverlay(_M.has_fft_overlay)
     _M.inverted_left_right = dictGet("inverted_left_right") == "1" 
+    overlays.enabled = (tonumber(dictGet("enable_overlays")) or 1) == 1 
     _M.reapplyButtons()
     _M.settings_icon = oledCreateIcon({0x00, 0x00, 0x16, 0x80, 0x3f, 0xc0, 0x7f, 0xe0, 0x39, 0xc0, 0x70, 0xe0, 0x70, 0xe0, 0x39, 0xc0, 0x7f, 0xe0, 0x3f, 0xc0, 0x16, 0x80, 0x00, 0x00}, 12, 12)
     _M.face_icon = oledCreateIcon({0x00, 0x00, 0x00, 0x00, 0x01, 0xc0, 0x21, 0xc0, 0x60, 0x00, 0x00, 0x00, 0x00, 0x20, 0x15, 0x40, 0x2a, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, 12, 12)
@@ -93,8 +95,20 @@ function _M.setup(expressions)
         end)
     end
 
+   
+    _M.settings.addElement(function() return "Overlays ["..(overlays.enabled and "ON" or "OFF").."]" end,  function()
+        if overlays.enabled  then  
+            overlays.setEnabled(false)
+        else 
+            overlays.setEnabled(true)
+        end
+        dictSet("enable_overlays", overlays.enabled and "1" or "0")
+        dictSave()
+    end)
+    
+
     if cfg.fft and cfg.fft.enabled then
-        _M.settings.addElement(function() return "FFT Overlay ["..(_M.has_fft_overlay and "ON" or "OFF").."]" end,  function()
+        _M.settings.addElement(function() return "Show FFT ["..(_M.has_fft_overlay and "ON" or "OFF").."]" end,  function()
             if _M.has_fft_overlay  then  
                 _M.has_fft_overlay = false
             else 
@@ -106,19 +120,14 @@ function _M.setup(expressions)
         end)
     end
 
-    _M.settings.addElement(function() return "Calibrate boop" end,  function()
-        if boop.onEnter() then 
-            _M.has_boop = false
-            _M.mode = MODE_CALIBRATE_BOOP
-        end
-    end)
-
-    _M.settings.addElement(function() return "Check boop cnfg" end,  function()
-        if boop.EnterDisplayConfig() then 
-            _M.has_boop = false
-            _M.mode = MODE_CALIBRATE_BOOP
-        end
-    end)
+    if _M.has_boop and boop.config.trigger_mode == "lidar" then
+        _M.settings.addElement(function() return "Calibrate boop" end,  function()
+            if boop.onEnter() then 
+                _M.has_boop = false
+                _M.mode = MODE_CALIBRATE_BOOP
+            end
+        end)
+    end
 
     _M.settings.addElement(function() return "Rebuild bulk file" end,  function()
         setPanelManaged(false)
@@ -154,6 +163,8 @@ function _M.setup(expressions)
         ledsGentlySeBrightness(_M.led_brightness)
         gentlySetPanelBrightness(_M.brigthness)
         dictSet("inverted_left_right", "0") 
+        dictSet("has_fft_overlay", "0")
+        dictSet("enable_overlays", "1")
         dictSet("has_boop", "0")
         dictSave()
         _M.reapplyButtons()

@@ -1,9 +1,11 @@
 local configloader = require("configloader")
 local models = require("models")
+local overlays = require("overlays")
 local _M = {
 	animations = {},
 	by_name = {},
 	by_frame = {},
+	pendingEnter = {},
 	count = 0,
 	editbutton_state=0,
 }
@@ -109,7 +111,20 @@ function _M.update()
 		end
 		_M.editbutton_state = mode
 	end
-	
+
+	local id = getCurrentAnimationStorage()
+	if id ~= 0 then
+		local aux = _M.pendingEnter[id]
+		if aux ~= nil then  
+			if aux.onEnter then 
+				aux.onEnter()
+			end
+			if aux.overlay then  
+				overlays.enableOverlay(aux.overlay)
+			end
+			_M.pendingEnter[id] = nil
+		end
+	end
 end
 
 function _M.Load()
@@ -234,8 +249,13 @@ function _M.SetExpression(id)
 			end
 			allDrop = false
 		end
-		if _M.previousExpression and _M.previousExpression.onLeave then 
-			_M.previousExpression.onLeave()
+		if _M.previousExpression then
+			if _M.previousExpression.onLeave then 
+				_M.previousExpression.onLeave()
+			end
+			if _M.previousExpression.overlay then  
+				overlays.disableOverlay(_M.previousExpression.overlay)
+			end
 		end
 		setPanelManaged(false) --To avoid frame flicker
 		local current_id = aux.id 
@@ -254,9 +274,7 @@ function _M.SetExpression(id)
 		end
 		setPanelManaged(true)
 
-		if aux.onEnter then 
-			aux.onEnter()
-		end
+		_M.pendingEnter[current_id] = aux
 
 		_M.previousExpression = aux
 		return aux
