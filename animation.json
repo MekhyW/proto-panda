@@ -211,15 +211,37 @@
   ],
   "overlays"   : [
     {
+      "name"    : "stars",
+      "elements": [
+        {
+          "sprites"           : [
+            "/expressions/overlays/star.png",
+          ],
+          "transparency": true,
+          "transparency_color": "#ff00ff",
+          "animation"         : {
+            "mode": "random_flashing",
+            "alive_duration": 50,
+            "interval_min": 100,
+            "interval_max": 500,
+            "min_x": 0,
+            "max_x": 64,
+            "min_y": 0,
+            "max_y": 64
+          }
+        }
+      ]
+    },
+    {
       "name"    : "mouth",
       "elements": [
         {
           "sprites"           : [
-            "/expressions/speech-mouth/mouth0.png",
-            "/expressions/speech-mouth/mouth1.png",
-            "/expressions/speech-mouth/mouth2.png",
-            "/expressions/speech-mouth/mouth3.png",
-            "/expressions/speech-mouth/mouth4.png"
+            "/expressions/overlays/mouth0.png",
+            "/expressions/overlays/mouth1.png",
+            "/expressions/overlays/mouth2.png",
+            "/expressions/overlays/mouth3.png",
+            "/expressions/overlays/mouth4.png"
           ],
           "transparency_color": 2,
           "animation"         : {
