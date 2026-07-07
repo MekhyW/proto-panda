@@ -76,9 +76,9 @@ The resolution is 64 pixels wide and 32 pixels tall. Being two panels side by si
 
 You can also use MAX7219 matrixes or adderessable leds matrixes!
 
-# Face and expressions
+# Rosto e expressões
 
-Protopanda uses images from the SD card and a few JSON files to construct the animation sequences. All images must be `PNG`; later, they're decoded to a compressed format for fast access and stored in the [frame bulk file](#bulk-file) inside the internal flash.
+O Protopanda usa imagens do cartão SD e alguns arquivos JSON para construir as sequências de animação. Todas as imagens devem ser `PNG`; posteriormente, elas são decodificadas para um formato compactado para acesso rápido e armazenadas no [arquivo bulk de quadros](#arquivo-bulk) dentro da flash interna.
 
 - [Loading Frames](#loading-frames)
 - [Expressions](#expressions)
@@ -238,7 +238,7 @@ Sometimes you want something with a little more swag. Like a mouth that moves as
       "elements": [
         {
           "sprites"           : [
-            "/expressions/overlays/star.png",
+            "/expressions/overlays/star.png"
           ],
           "transparency": true,
           "transparency_color": "#ff00ff",

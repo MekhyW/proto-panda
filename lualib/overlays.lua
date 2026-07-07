@@ -102,6 +102,10 @@ function _M.setEnabled(en)
     end
 end
 
+_M.modes["random_flashing"] = function(obj, dt)
+
+end
+
 _M.modes["fft"] = function(obj, dt)
     local energy = 0
     local setting = obj.animation

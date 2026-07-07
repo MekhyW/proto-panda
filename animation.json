@@ -215,7 +215,7 @@
       "elements": [
         {
           "sprites"           : [
-            "/expressions/overlays/star.png",
+            "/expressions/overlays/star.png"
           ],
           "transparency": true,
           "transparency_color": "#ff00ff",
