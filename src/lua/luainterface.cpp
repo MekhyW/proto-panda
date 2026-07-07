@@ -614,6 +614,7 @@ void LuaInterface::RegisterMethods()
 
   m_lua->FuncRegisterFromObjectOpt("startFft", &g_fft, &FFT::start);
   m_lua->FuncRegisterFromObjectOpt("stopFft", &g_fft, &FFT::stop);
+  m_lua->FuncRegisterFromObjectOpt("setNoiseThreshold", &g_fft, &FFT::setNoiseThreshold);
   m_lua->FuncRegisterFromObjectOpt("setManaged", &g_fft, &FFT::setManaged);
   m_lua->FuncRegisterFromObjectOpt("deinitFft", &g_fft, &FFT::deinit);
   m_lua->FuncRegisterFromObjectOpt("updateFft", &g_fft, &FFT::update);
