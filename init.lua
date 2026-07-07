@@ -9,7 +9,7 @@ local drivers = require("drivers")
 local input = require("input")
 local leds = require("leds")
 local fft = require("fft")
---local overlays = require("overlays")
+local overlays = require("overlays")
 
 
 function onSetup()

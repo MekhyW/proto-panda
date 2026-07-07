@@ -16,10 +16,10 @@
         "transictionInOnlyOnSpecificFrame": 1
     },
     "fft": {
-        "gpio": 3 ,
+        "gpio": 1 ,
         "samples": 512,
         "sampling_frequency": 44100,
-        "noise_threshold": 2500,
+        "noise_threshold": 6500,
         "band_count": 16,
         "enabled": true
     },
