@@ -101,8 +101,12 @@ void Sprite::SetPixelColor(int idx, uint16_t x, uint16_t y, uint16_t color){
     tx->pixels[x + y*tx->width] = color;
 }
 
+inline int roundPlease(float v) {
+    return (int)(v + (v >= 0.0f ? 0.5f : -0.5f));
+}
+
 void Sprite::Draw(FlipConfig flipSettings, ShaderType shader_p, float shaderStrenght_p){
-    if (currentFrame < 0 || currentFrame > frames.size()){
+    if (currentFrame < 0 || currentFrame >= frames.size()){
         return;
     }
     if (!visibility){
@@ -114,30 +118,45 @@ void Sprite::Draw(FlipConfig flipSettings, ShaderType shader_p, float shaderStre
     }
     int targetW = w;
     int targetH = h;
-    
+
     BasicTexture *tx = frames[currentFrame];
-    if (targetW > tx->width){
-        targetW = tx->width;
+    const int txW = tx->width;
+    const int txH = tx->height;
+    const uint16_t *txPixels = tx->pixels;
+    const uint16_t transColor = tx->transparentColor;
+    
+    if (targetW > txW){
+        targetW = txW;
     }
-    if (targetH > tx->height){
-        targetH = tx->height;
+    if (targetH > txH){
+        targetH = txH;
     }
 
     float cx = targetW * 0.5f;
     float cy = targetH * 0.5f;
 
+
+    float fy;
+    float rxRow;
+    float ryRow;
     for (int dy=0;dy<targetH;dy++){
+        if (rotated) {
+            fy = dy - cy;
+            rxRow = -cx * cosA - fy * sinA;  
+            ryRow = -cx * sinA + fy * cosA;
+        }
+
         for (int dx=0;dx<targetW;dx++){
             int xIn;
             int yIn;
             if (!view.getPosition(dx, dy, xIn, yIn)){
                 continue;
             }
-            if (xIn < 0 || xIn >= tx->width || yIn >= tx->height || yIn < 0){
+            if (xIn < 0 || xIn >= txW || yIn >= txH || yIn < 0){
                 continue;
             }
-            uint16_t color = tx->pixels[yIn * tx->width + xIn];
-            if (color == tx->transparentColor){
+            uint16_t color = txPixels[yIn * txW + xIn];
+            if (color == transColor){
                 continue;
             }
 
@@ -145,12 +164,8 @@ void Sprite::Draw(FlipConfig flipSettings, ShaderType shader_p, float shaderStre
             int outDy = dy;
 
             if (rotated) {
-                float fx = dx - cx;
-                float fy = dy - cy;
-                float rx = fx * cosA - fy * sinA;
-                float ry = fx * sinA + fy * cosA;
-                outDx = (int)lroundf(rx + cx);
-                outDy = (int)lroundf(ry + cy);
+                outDx = roundPlease(rxRow + cx);
+                outDy = roundPlease(ryRow + cy);
             }
             int16_t finalX = x+outDx;
             int16_t finalY = y+outDy;
@@ -160,7 +175,9 @@ void Sprite::Draw(FlipConfig flipSettings, ShaderType shader_p, float shaderStre
             uint8_t b;
             BaseDisplay::color565to888(color, r,g,b);
 
-            ShaderProcessor::UpdateColorByShader(finalX, finalY, r, g, b, shader_p, shaderStrenght_p);
+            if (shader_p != SHADER_NONE){
+                ShaderProcessor::UpdateColorByShader(finalX, finalY, r, g, b, shader_p, shaderStrenght_p);
+            }
 
             Devices::Display->setPixelWithFlip(finalX, finalY, r,g,b, flipSettings);
         }

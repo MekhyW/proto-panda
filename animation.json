@@ -215,16 +215,18 @@
       "elements": [
         {
           "sprites"           : [
-            "/expressions/overlays/star.png"
+            "/expressions/overlays/star1.png",
+            "/expressions/overlays/star2.png"
           ],
           "transparency": true,
           "transparency_color": "#ff00ff",
           "clones": 4,
           "behavior": {
+            "anim_speed": 75,
             "mode": "random_flashing",
-            "alive_duration": 50,
-            "interval_min": 100,
-            "interval_max": 500,
+            "alive_duration": 226,
+            "interval_min": 300,
+            "interval_max": 2000,
             "min_x": 0,
             "max_x": 64,
             "min_y": 0,
@@ -509,6 +511,7 @@
       "animation": "pingpong",
       "intro"    : "UwU_intro",
       "outro"    : "UwU_outro",
+      "overlay"  : "stars",
       "duration" : 100
     },
     {

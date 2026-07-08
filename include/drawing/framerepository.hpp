@@ -13,7 +13,7 @@ class FrameRepository{
         bool Begin();
 
         File *takeFile();
-        inline void getBulkOffsetByFrameId(int frameid, uint32_t &start, uint32_t &lenght){
+        inline void getBulkOffsetByFrameId(int frameid, int32_t &start, int32_t &lenght){
           if (frameid >= m_frameCount || frameid < 0){
             Serial.printf("Tried to get frame %d but we got only %d frames\n", frameid, m_frameCount);
             start = 0;

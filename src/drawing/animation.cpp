@@ -138,8 +138,8 @@ void Animation::LoadFrameAsTexture(int i){
         return;
     }
 
-    uint32_t startPosition;
-    uint32_t flashFileLenght;
+    int32_t startPosition;
+    int32_t flashFileLenght;
     
     g_frameRepo.getBulkOffsetByFrameId(i, startPosition, flashFileLenght);
     if (startPosition < 0){
@@ -300,8 +300,8 @@ void Animation::DrawFrame(int i){
 
     i--;
     
-    uint32_t startPosition;
-    uint32_t flashFileLenght;
+    int32_t startPosition;
+    int32_t flashFileLenght;
     
     g_frameRepo.getBulkOffsetByFrameId(i, startPosition, flashFileLenght);
     if (startPosition < 0){

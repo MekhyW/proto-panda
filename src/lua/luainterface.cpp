@@ -995,6 +995,7 @@ bool LuaInterface::Start()
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","GetHeight",&Sprite::GetHeight);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetFrameId",&Sprite::SetFrameId);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","GetFrameId",&Sprite::GetFrameId);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","NextFrame",&Sprite::NextFrame);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","GetFrameCount",&Sprite::GetFrameCount);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","CreateEmptyTexture",&Sprite::CreateEmptyTexture);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","LoadFromPng",&Sprite::LoadFromPng);
