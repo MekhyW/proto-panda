@@ -1004,6 +1004,7 @@ bool LuaInterface::Start()
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","Clone",&Sprite::Clone);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","UseCustomShader",&Sprite::UseCustomShader);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetShader",&Sprite::SetShader, 1.0f);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","setVisibility",&Sprite::setVisibility);
 
 
   //Created only using loadModel(modeldata, name)

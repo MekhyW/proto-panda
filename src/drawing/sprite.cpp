@@ -105,6 +105,9 @@ void Sprite::Draw(FlipConfig flipSettings, ShaderType shader_p, float shaderStre
     if (currentFrame < 0 || currentFrame > frames.size()){
         return;
     }
+    if (!visibility){
+        return;
+    }
     if (usingShader){
         shaderStrenght_p = shaderStrenght;
         shader_p = shader;

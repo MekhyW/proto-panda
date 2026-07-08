@@ -16,7 +16,7 @@ class BasicTexture{
 
 class Sprite{
     public:
-        Sprite():x(0),y(0),w(0),h(0),frames(),id(0),currentFrame(-1),cosA(0.0f),sinA(1.0f),shaderStrenght(1.0f),rotated(false),usingShader(false),shader(SHADER_NONE){};
+        Sprite():x(0),y(0),w(0),h(0),frames(),id(0),currentFrame(-1),cosA(0.0f),sinA(1.0f),shaderStrenght(1.0f),rotated(false),usingShader(false),visibility(true),shader(SHADER_NONE){};
         uint16_t x,y;
         uint16_t w,h;
         SectionMap<1> view;
@@ -25,7 +25,7 @@ class Sprite{
         int id;
         int currentFrame;
         float cosA,sinA,shaderStrenght;
-        bool rotated, usingShader;
+        bool rotated, usingShader, visibility;
         ShaderType shader;
 
         Sprite *Clone();
@@ -82,6 +82,10 @@ class Sprite{
         void SetPosition(uint16_t xa, uint16_t ya){
             x = xa;
             y = ya;
+        };
+
+        void setVisibility(bool v){
+            visibility = v;
         };
 
         void SetPixelColor(int id, uint16_t x, uint16_t y, uint16_t color);

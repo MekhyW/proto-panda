@@ -4,7 +4,8 @@ local _M = {
     active = {},
 
     enabled = true,
-    modes = {}
+    modes = {},
+    starttup = {},
 }
 
 
@@ -21,6 +22,12 @@ function _M.setup()
 
     for i,b in pairs(overlays) do  
         _M.loadSingleOverlay(i, b)
+    end
+
+    for i,b in pairs(_M.loaded) do  
+        if _M.starttup[element.name] then  
+            _M.starttup[element.name](element)
+        end
     end
 end
 
@@ -64,22 +71,35 @@ function _M.loadSingleOverlay(id, data)
             el.sprite:SetTransparencyColor(elem.transparency_color)
         end
 
-        if type(elem.animation) ~= 'table' then
-            error("Overlay "..id.." at element "..edi.." requires field 'animation'")
+        if type(elem.behavior) ~= 'table' then
+            error("Overlay "..id.." at element "..edi.." requires field 'behavior'")
         end
 
-        if not _M.modes[elem.animation.mode] then  
-            error("Overlay "..id.." at element "..edi.." has a invalid animation mode")
+        if not _M.modes[elem.behavior.mode] then  
+            error("Overlay "..id.." at element "..edi.." has a invalid behavior mode")
         end
 
-        if elem.animation.x and elem.animation.y then  
-            el.sprite:SetPosition(elem.animation.x, elem.animation.y)
+        if elem.behavior.x and elem.behavior.y then  
+            el.sprite:SetPosition(elem.behavior.x, elem.behavior.y)
         end
 
         el.frames = frames
-        el.mode = elem.animation.mode
-        el.animation = elem.animation
-        element.objects[edi] = el
+        el.mode = elem.behavior.mode
+        el.behavior = elem.behavior
+        element.objects[#element.objects+1] = el
+        el.id = #element.objects
+        if elem.clones then 
+            for i=1,elem.clones do
+                local clone = {
+                    frames=el.frames,
+                    mode=el.mode,
+                    behavior=el.behavior,
+                }
+                clone.sprite = el.sprite:Clone()
+                element.objects[#element.objects+1] = clone
+                clone.id = #element.objects
+            end
+        end
     end
 
     element.id = id
@@ -102,44 +122,71 @@ function _M.setEnabled(en)
     end
 end
 
-_M.modes["random_flashing"] = function(obj, dt)
-
+_M.starttup["random_flashing"] = function(element)
+    for _, obj in pairs(element.objects) do
+        obj.nextSpawn = millis() + math.random(obj.behavior.interval_min, obj.behavior.interval_max)
+        obj.sprite:setVisibility(false)
+        obj.alive = false
+    end
 end
 
-_M.modes["fft"] = function(obj, dt)
-    local energy = 0
-    local setting = obj.animation
-    local frameCount = obj.frames
-    for b = setting.band_start, setting.band_end do
-        energy = energy + getBandValueFft(b)
+_M.starttup["fft"] = function(element) end
+
+
+
+_M.modes["random_flashing"] = function(element, dt)
+    local time = millis()
+    for _, obj in pairs(element.objects) do
+        if not obj.alive then
+            if obj.nextSpawn < millis() then 
+                obj.alive = true
+                obj.sprite:SetPosition(math.random(obj.behavior.min_x,obj.behavior.max_x), math.random(obj.behavior.min_y,obj.behavior.max_y))
+                obj.liveness = millis() + obj.behavior.alive_duration
+                obj.sprite:setVisibility(true)
+            end
+        else
+            if obj.liveness < millis() then 
+                obj.alive = false
+                obj.sprite:setVisibility(false)
+            end
+        end
     end
+end
 
-    obj.mouthSmoothed = obj.mouthSmoothed or 0
+_M.modes["fft"] = function(element, dt)
+    for _, obj in pairs(element.objects) do
+        local energy = 0
+        local setting = obj.behavior
+        local frameCount = obj.frames
+        for b = setting.band_start, setting.band_end do
+            energy = energy + getBandValueFft(b)
+        end
 
-    local tau = (energy > obj.mouthSmoothed) and (setting.attack or 0.05) or (setting.release or 0.2)
-    local alpha = 1 - math.exp(-dt / tau)
-    obj.mouthSmoothed = obj.mouthSmoothed * (1 - alpha) + energy * alpha
+        obj.mouthSmoothed = obj.mouthSmoothed or 0
 
-    local newLevel = 0
-    if obj.mouthSmoothed > setting.frist_frame_threshold then
-        local norm = (obj.mouthSmoothed - setting.min_energy) / (setting.max_energy - setting.min_energy)
-        if norm < 0 then norm = 0 end
-        if norm > 1 then norm = 1 end
-        newLevel = math.floor(norm * frameCount)
-        if newLevel > frameCount - 1 then newLevel = frameCount - 1 end
-        if newLevel < 1 then newLevel = 1 end
+        local tau = (energy > obj.mouthSmoothed) and (setting.attack or 0.05) or (setting.release or 0.2)
+        local alpha = 1 - math.exp(-dt / tau)
+        obj.mouthSmoothed = obj.mouthSmoothed * (1 - alpha) + energy * alpha
+
+        local newLevel = 0
+        if obj.mouthSmoothed > setting.frist_frame_threshold then
+            local norm = (obj.mouthSmoothed - setting.min_energy) / (setting.max_energy - setting.min_energy)
+            if norm < 0 then norm = 0 end
+            if norm > 1 then norm = 1 end
+            newLevel = math.floor(norm * frameCount)
+            if newLevel > frameCount - 1 then newLevel = frameCount - 1 end
+            if newLevel < 1 then newLevel = 1 end
+        end
+
+        obj.mouthLevel = newLevel
+        obj.sprite:SetFrameId(obj.mouthLevel)
     end
-
-    obj.mouthLevel = newLevel
-    obj.sprite:SetFrameId(obj.mouthLevel)
 end
 
 
 function _M.update(dt)
     for i,element in pairs(_M.active) do  
-        for _, obj in pairs(element.objects) do
-            _M.modes[obj.mode](obj, dt)
-        end
+        _M.modes[element.name](element, dt)
     end
 end
 

@@ -219,7 +219,8 @@
           ],
           "transparency": true,
           "transparency_color": "#ff00ff",
-          "animation"         : {
+          "clones": 4,
+          "behavior": {
             "mode": "random_flashing",
             "alive_duration": 50,
             "interval_min": 100,
@@ -244,7 +245,7 @@
             "/expressions/overlays/mouth4.png"
           ],
           "transparency_color": 2,
-          "animation"         : {
+          "behavior"         : {
             "mode": "fft",
             "x": 11,
             "y": 19,
