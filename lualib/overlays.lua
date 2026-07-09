@@ -170,8 +170,11 @@ _M.modes["random_flashing"] = function(obj, dt)
 end
 
 _M.modes["frame_by_fft_level"] = function(obj, dt)
+    if fft.calibrating then 
+        return
+    end
     local setting = obj.behavior
-    local level = fft.getSpeechLevel(setting.attack, setting.release, setting.frameCount)
+    local level = fft.getSpeechLevel(dt, setting.attack, setting.release, obj.frameCount)
     obj.sprite:SetFrameId(level)
 end
 

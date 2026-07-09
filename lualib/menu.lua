@@ -237,7 +237,7 @@ function _M.enterFaceMenu()
 end
 
 
-function _M.draw()
+function _M.draw(dt)
     oledClearScreen()
 
     if _M.mode == MODE_MAIN_MENU then
@@ -380,7 +380,7 @@ function _M.draw()
     elseif _M.mode == MODE_CALIBRATE_BOOP then 
         boop.CalibrateDraw()
     elseif _M.mode == MODE_CALIBRATE_MIC then 
-        fft.CalibrateDraw()
+        fft.CalibrateDraw(dt)
         return
     end
 end
@@ -513,7 +513,7 @@ function _M.handleMenu(dt)
         boop.manageBoop(dt)
     end
 
-    _M.draw()
+    _M.draw(dt)
 end
 
 
