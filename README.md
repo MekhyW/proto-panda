@@ -6,7 +6,7 @@ __[Versão em portugues: 🇧🇷](README.pt-br.md)__
   <img src="doc/logoprotopanda.png" alt="Protopanda">
 </p>
 
-Protopanda is a open source patform (firmware and hardware), for controling protogens. The idea is to be simple enough so all you need is just a bit of tech savy to make it work. But at the same time, flexible enough so an person with the minimum knowledge of lua can make amazing things.
+Protopanda is an open source patform (firmware and hardware), for controling protogens. The idea is to be simple enough so all you need is just a bit of tech savvy to make it work. But at the same time, flexible enough so a person with minimum knowledge of lua can make amazing things.
 
 **Telegram channel:** https://t.me/mockdiodes
 **Telegram chat:** https://t.me/protopandachat
@@ -54,12 +54,12 @@ There are several guides with images and all!
 
 # Powering 
 
-__TLDR: At least a power bank of 20W with PD and usb-c.__
+__TLDR: Use a power bank that has at least 20W with PD and USB-C.__
 
-There are two modes, one powering 5V directly from USB, and other that has some power management (buck converter), that needs from 6.5v up to 12v. This second mode is enabled only via hardware changes on the PCB.
-Each hub75 panel can consume up to 2A when maximum brightness, so powering directly from USB at 5v can be problematic, so this version with the regulator triggers the PD on the usb, requesting 9V 3A, and this is plenty of power to light up both panels, sadly this version consumes way more power.
+There are two modes, one powering 5V directly from USB, and other that has some power management (buck converter), that needs from 6.5V up to 12V. This second mode is enabled only via hardware changes on the PCB.
+Each HUB75 panel can consume up to 2A when maximum brightness, so powering directly from USB at 5V can be problematic, so this version with the regulator triggers the PD on the usb, requesting 9V at 3A, and this is plenty of power to light up both panels, sadly this version consumes way more power.
 
-Since on most cases you wont be running them at full brightness and neither all leds on white, it would be reccomended the 5v version. But some power banks cant handle the power spike upon startup. So choosing a version with PD is reccomended.
+Since usually you wont be running them at full brightness or with all LEDs set to white, it is reccomended to use the 5V version. But some power banks cant handle the power spike upon startup. So choosing a version with PD is reccomended.
 
 
 # Panels
@@ -73,11 +73,11 @@ The resolution is 64 pixels wide and 32 pixels tall. Being two panels side by si
 
 ## Double buffer
 
-To prevent another type of tearing when a frame is being drawn while the frame is being changed, we enable the use of double buffering. This means that we draw pixels to the frame, but they won't appear on the screen immediately. Instead, we're drawing in memory. When we call `flipPanelBuffer()`, the memory we drew is sent to the DMA to be constantly drawn on the panel. Then, the buffer we use to draw changes. This increased the memory usage, but it's a price needed to pay.
+To prevent another type of tearing when a frame is being drawn while it is being updated, we enable the use of double buffering. This means that we draw pixels to the frame, but they won't appear on the screen immediately. Instead, we're drawing in memory. When we call `flipPanelBuffer()`, the memory we drew is sent to the DMA to be constantly drawn on the panel. Then, the buffer we use to draw changes. This increased the memory usage, but it's a price needed to pay.
 
 # Face and expressions
 
-Protopanda uses images from the SD card and a few JSON files to construct the animation sequences. All images must be `PNG`; later, they're decoded to a raw format and stored in the [frame bulk file](#bulk-file).
+Protopanda uses images from the SD card and a few JSON files to construct the animation sequences. All images must be in `.PNG` format; later, they're decoded to a raw format and stored in the [frame bulk file](#bulk-file).
 
 - [Loading Frames](#loading-frames)
 - [Expressions](#expressions)
@@ -122,7 +122,7 @@ Each entry in the `frames` array can be either:
 
 - **`name`** (string)  
   Assigns an identifier to a frame or group. The name refers to the first frame in the `pattern`.  
-  *Why?* Hardcoding frame orders (e.g., `[1, 2, 3]`) becomes problematic if you later insert a new frame. Names act as offsets for flexibility.  
+  *Why?* Hardcoding frame orders (e.g., `[1, 2, 3]`) becomes problematic if you need to insert a new frame later on. Names act as offsets for flexibility.  
 
 - **`color_scheme_left`** (string)  
   Flips specific color channels if needed.  
@@ -227,11 +227,11 @@ The expressions are stored in a stack. So when you add an animation that doesn't
 ## Bulk file
 
 Even with the SD card, changing frames is not quite fast. The SD card interface is not fast enough. To make it faster, the images are PNG decoded to raw pixel data stored in RGB565 format inside the internal flash. All frames are stored in a single file called the `Bulk file`. This is done in a way that the frames are stored sequentially, and by keeping the file open, the transfer speed is accelerated, achieving 60fps.
-Every time you add or modify a new frame, it's needed to rebuild this file. This can be done in the menu or by calling the Lua function `composeBulkFile`.
+Every time you add or modify a new frame, this file must be rebuilt. This can be done in the menu or by calling the Lua function `composeBulkFile`.
 
 ## Managed mode
 
-The animations are processed by Core 0, so you don't have to waste some precious time on the [lua scripts](#programming-in-lua) updating it. 
+The animations are processed by Core 0, so you don't have to waste any precious time on the [lua scripts](#programming-in-lua) updating it. 
 It is possible to change the frame using Lua scripts... But it's also wasteful. So leave it to the other core, and you only have to worry about selecting which expressions you want!
 During managed mode, the frame drawing is handled by Core 0.
 ![alt text](mdoc/managed.png "Title")
@@ -243,7 +243,7 @@ Full guide here: [Compiling and flashing firmware](./doc/flashing-guide.md)
 
 # LED strips
 
-Protopanda suport the WS2812B adderessable led protocol and it provies a simple crude system to defining a few behaviors for the strip/matrices
+Protopanda supports the WS2812B adderessable LED protocol and it provies a simple crude system to defining a few behaviors for the strip/matrices
 ![alt text](doc/A7301542.JPG)
 
 ![alt text](doc/ewm.drawio.png)
@@ -251,12 +251,12 @@ Protopanda suport the WS2812B adderessable led protocol and it provies a simple 
 
 # Bluetooth  
 
-Since version 2.0, its supported almost any kind of BLE device that have HID. All you need to do is adapt the driver if needed or write a new one. Currently the devices supported are:
+Since version 2.0, Protopanda supports almost any kind of BLE device that has HID. All you need to do is adapt the driver if needed or write a new one. Currently the devices supported are:
 * https://github.com/mockthebear/ble-fursuit-paw
 * https://pt.aliexpress.com/item/1005008459884910.html
 * https://pt.aliexpress.com/item/1005009845485445.html
 
-What would do best is a BLE joystick.
+A BLE joystick works best.
 
 ## Keybind
 
@@ -286,7 +286,7 @@ They all map by default for the BLE fursuit paw
 # Hardware
 
 Protopanda is designed to run on Esp32s3-n16r8, which is a version with 16MB Flash, 384kB ROM, 512 Kb RAM, and 8MB octal PSRAM.
-It is required to be this version with more space and the PSRAM to have enough RAM to run the panels, BLE, and [lua](#programming-in-lua) together.
+This specific version is required because its extra space and PSRAM provide enough RAM to run the panels, BLE, and [lua](#programming-in-lua) together.
 
 On the hardware, there is a port for the HUB75 data, an SD card connector, two screw terminals for the 5V out, the power in pins, one I2C port, and the LED strip pin.
 
@@ -312,7 +312,7 @@ The second core handles non-screen-related tasks. It has the routine that checks
 
 ## DIY
 
-We know not all of us can build a PCB from scratch, so i'm providing a way you can build your own reduced version of protopanda. 
+We know not all of us can build a PCB from scratch, so I'm providing a way you can build your own reduced version of protopanda. 
 Well, we have a [guide for making your own protopanda!](./doc/diy-guide.md)
 
 ![Diagrama](doc/diy-schematic.png "Eletronics schematic")  
@@ -321,9 +321,9 @@ Well, we have a [guide for making your own protopanda!](./doc/diy-guide.md)
 
 To control you can:
 * Use a protopanda controller built with a NRF52832.
-* Use IR controller and write a driver for it.
+* Use an IR controller and write a driver for it.
 * [Buy one of those BLE devices that are compatible and have a driver already](https://pt.aliexpress.com/item/1005008459884910.html?)
-* Write your own solution vusing the extra two gpios left.
+* Write your own solution using the two extra gpios left.
 
 
 # Printing and assembly guide
