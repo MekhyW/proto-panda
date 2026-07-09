@@ -141,7 +141,7 @@ _M.starttup["random_flashing"] = function(obj)
     obj.alive = false
 end
 
-_M.starttup["fft"] = function(element) end
+_M.starttup["frame_by_fft_level"] = function(element) end
 
 
 
@@ -152,23 +152,23 @@ _M.modes["random_flashing"] = function(obj, dt)
         if obj.nextSpawn < time then 
             obj.alive = true
             obj.sprite:SetPosition(math.random(obj.behavior.min_x,obj.behavior.max_x), math.random(obj.behavior.min_y,obj.behavior.max_y))
-            obj.liveness = time + obj.behavior.alive_duration
+            obj.nextFrame = time + obj.behavior.anim_speed
             obj.sprite:setVisibility(true)
         end
     else
         if obj.nextFrame < time then  
             obj.nextFrame = time + obj.behavior.anim_speed
-            obj.sprite:NextFrame()
-        end
-        if obj.liveness < time then 
-            obj.alive = false
-            obj.sprite:setVisibility(false)
+            if obj.sprite:NextFrame() == 0 then  
+                obj.alive = false
+                obj.sprite:setVisibility(false)
+                obj.nextSpawn = millis() + math.random(obj.behavior.interval_min or 10, obj.behavior.interval_max or 100)
+            end
         end
     end
     
 end
 
-_M.modes["fft"] = function(obj, dt)
+_M.modes["frame_by_fft_level"] = function(obj, dt)
     local energy = 0
     local setting = obj.behavior
     local frameCount = obj.frames

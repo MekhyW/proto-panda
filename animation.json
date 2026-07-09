@@ -216,16 +216,18 @@
         {
           "sprites"           : [
             "/expressions/overlays/star1.png",
-            "/expressions/overlays/star2.png"
+            "/expressions/overlays/star2.png",
+            "/expressions/overlays/star3.png",
+            "/expressions/overlays/star2.png",
+            "/expressions/overlays/star1.png"
           ],
           "transparency": true,
           "transparency_color": "#ff00ff",
-          "clones": 4,
+          "clones": 6,
           "behavior": {
-            "anim_speed": 75,
+            "anim_speed": 40,
             "mode": "random_flashing",
-            "alive_duration": 226,
-            "interval_min": 300,
+            "interval_min": 200,
             "interval_max": 2000,
             "min_x": 0,
             "max_x": 64,
@@ -246,9 +248,9 @@
             "/expressions/overlays/mouth3.png",
             "/expressions/overlays/mouth4.png"
           ],
-          "transparency_color": 2,
+          "transparency": false,
           "behavior"         : {
-            "mode": "fft",
+            "mode": "frame_by_fft_level",
             "x": 11,
             "y": 19,
             "band_start": 2,

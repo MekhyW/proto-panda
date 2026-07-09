@@ -38,12 +38,13 @@ class Sprite{
             shader = shdr;
         };
 
-        void NextFrame(){
+        int NextFrame(){
             if (currentFrame >= frames.size()-1){
                 currentFrame = 0;
-                return;
+                return 0;
             }
             currentFrame++;
+            return currentFrame;
         }
 
         void SetRotation(float angle){
