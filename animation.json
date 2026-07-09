@@ -253,13 +253,8 @@
             "mode": "frame_by_fft_level",
             "x": 11,
             "y": 19,
-            "band_start": 2,
-            "band_end": 8,
             "attack": 0.05,
-            "release": 0.2,
-            "min_energy": 50000,
-            "max_energy": 200000,
-            "frist_frame_threshold": 60000
+            "release": 0.2
           }
         }
       ]

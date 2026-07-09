@@ -6,6 +6,7 @@ MODE_CHANGE_PANEL_BRIGHTNESS = 4
 MODE_CHANGE_LED_BRIGHTNESS = 5
 MODE_SCRIPTS = 6
 MODE_CALIBRATE_BOOP = 7
+MODE_CALIBRATE_MIC = 8
 
 local scripts = require("scripts")
 local ui = require("ui")
@@ -125,6 +126,14 @@ function _M.setup(expressions)
             if boop.onEnter() then 
                 _M.has_boop = false
                 _M.mode = MODE_CALIBRATE_BOOP
+            end
+        end)
+    end
+
+    if cfg.fft and cfg.fft.enabled then
+        _M.settings.addElement(function() return "Calibrate mic volume" end,  function()
+            if fft.onEnter() then 
+                _M.mode = MODE_CALIBRATE_MIC
             end
         end)
     end
@@ -370,6 +379,8 @@ function _M.draw()
         _M.scripts.draw()
     elseif _M.mode == MODE_CALIBRATE_BOOP then 
         boop.CalibrateDraw()
+    elseif _M.mode == MODE_CALIBRATE_MIC then 
+        fft.CalibrateDraw()
         return
     end
 end
@@ -485,6 +496,13 @@ function _M.handleMenu(dt)
         boop.Calibrate(dt)
         if boop.quit then
             _M.has_boop = true  
+            _M.enterMainMenu()
+            toneDuration(440, 10)
+            return
+        end    
+    elseif _M.mode == MODE_CALIBRATE_MIC then 
+        fft.Calibrate(dt)
+        if fft.quit then
             _M.enterMainMenu()
             toneDuration(440, 10)
             return

@@ -1,3 +1,5 @@
+local fft = require("fft")
+
 local _M = {
     by_name = {},
     loaded = {},
@@ -94,7 +96,7 @@ function _M.loadSingleOverlay(id, data)
             el.sprite:SetPosition(elem.behavior.x, elem.behavior.y)
         end
 
-        el.frames = frames
+        el.frameCount = frames
         el.mode = elem.behavior.mode
         el.behavior = elem.behavior
         element.objects[#element.objects+1] = el
@@ -102,7 +104,7 @@ function _M.loadSingleOverlay(id, data)
         if elem.clones then 
             for i=1,elem.clones do
                 local clone = {
-                    frames=el.frames,
+                    frameCount=el.frameCount,
                     mode=el.mode,
                     behavior=el.behavior,
                 }
@@ -147,7 +149,6 @@ _M.starttup["frame_by_fft_level"] = function(element) end
 
 _M.modes["random_flashing"] = function(obj, dt)
     local time = millis()
-    
     if not obj.alive then
         if obj.nextSpawn < time then 
             obj.alive = true
@@ -169,32 +170,9 @@ _M.modes["random_flashing"] = function(obj, dt)
 end
 
 _M.modes["frame_by_fft_level"] = function(obj, dt)
-    local energy = 0
     local setting = obj.behavior
-    local frameCount = obj.frames
-    for b = setting.band_start, setting.band_end do
-        energy = energy + getBandValueFft(b)
-    end
-
-    obj.mouthSmoothed = obj.mouthSmoothed or 0
-
-    local tau = (energy > obj.mouthSmoothed) and (setting.attack or 0.05) or (setting.release or 0.2)
-    local alpha = 1 - math.exp(-dt / tau)
-    obj.mouthSmoothed = obj.mouthSmoothed * (1 - alpha) + energy * alpha
-
-    local newLevel = 0
-    if obj.mouthSmoothed > setting.frist_frame_threshold then
-        local norm = (obj.mouthSmoothed - setting.min_energy) / (setting.max_energy - setting.min_energy)
-        if norm < 0 then norm = 0 end
-        if norm > 1 then norm = 1 end
-        newLevel = math.floor(norm * frameCount)
-        if newLevel > frameCount - 1 then newLevel = frameCount - 1 end
-        if newLevel < 1 then newLevel = 1 end
-    end
-
-    obj.mouthLevel = newLevel
-    obj.sprite:SetFrameId(obj.mouthLevel)
-    
+    local level = fft.getSpeechLevel(setting.attack, setting.release, setting.frameCount)
+    obj.sprite:SetFrameId(level)
 end
 
 

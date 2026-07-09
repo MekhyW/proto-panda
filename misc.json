@@ -19,7 +19,7 @@
         "gpio": 1 ,
         "samples": 512,
         "sampling_frequency": 44100,
-        "noise_threshold": 6500,
+        "default_noise_threshold": 5500,
         "band_count": 16,
         "enabled": true
     },
