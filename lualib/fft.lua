@@ -1,11 +1,20 @@
-local _M = {
-
+local DEFAULTS = {
 	noise_threshold = 2500,
 	band_start = 2,
-    band_end = 8,
-    min_energy = 50000,
-    max_energy = 200000,
-    frist_frame_threshold = 60000,
+	band_end = 8,
+	min_energy = 50000,
+	max_energy = 200000,
+	frist_frame_threshold = 60000,
+}
+
+local _M = {
+
+	noise_threshold = DEFAULTS.noise_threshold,
+	band_start = DEFAULTS.band_start,
+    band_end = DEFAULTS.band_end,
+    min_energy = DEFAULTS.min_energy,
+    max_energy = DEFAULTS.max_energy,
+    frist_frame_threshold = DEFAULTS.frist_frame_threshold,
 
 
     --Speech level:
@@ -79,6 +88,29 @@ function _M.load()
 	end
 
 	startFft()
+end
+
+function _M.resetDefaults()
+	_M.noise_threshold       = DEFAULTS.noise_threshold
+	_M.band_start            = DEFAULTS.band_start
+	_M.band_end              = DEFAULTS.band_end
+	_M.min_energy            = DEFAULTS.min_energy
+	_M.max_energy            = DEFAULTS.max_energy
+	_M.frist_frame_threshold = DEFAULTS.frist_frame_threshold
+
+	dictSet("fft_noise_threshold", tostring(DEFAULTS.noise_threshold))
+	dictSet("fft_speech_band_start", tostring(DEFAULTS.band_start))
+	dictSet("fft_speech_band_end", tostring(DEFAULTS.band_end))
+	dictSet("fft_speech_min_energy", tostring(DEFAULTS.min_energy))
+	dictSet("fft_speech_max_energy", tostring(DEFAULTS.max_energy))
+	dictSet("fft_speech_frist_frame_threshold", tostring(DEFAULTS.frist_frame_threshold))
+	dictSave()
+
+	setNoiseThreshold(_M.noise_threshold)
+
+	-- Reset speech-level smoothing so any in-progress reading starts clean.
+	_M.smoothed = 0
+	_M.level = 0
 end
 
 function _M.loadCalibration()

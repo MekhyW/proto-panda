@@ -272,8 +272,13 @@ bool formatFFAT(bool full){
   return FFat.format(full);
 }
 
+int totalFFATBytes(){
+  return FFat.totalBytes();
+}
 
-
+int totalFFATUsedBytes(){
+  return FFat.usedBytes();
+}
 
 void powerOff()
 {
@@ -580,8 +585,10 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("setHaltOnError", setHaltOnError);
   m_lua->FuncRegister("getLuaFps", Devices::getFps); 
   m_lua->FuncRegister("getFreePsram", Devices::getFreePsram); 
+  m_lua->FuncRegister("getTotalPsram", Devices::getTotalPsram); 
   m_lua->FuncRegister("getFps", Devices::getAutoFps); 
   m_lua->FuncRegister("getFreeHeap", Devices::getFreeHeap); 
+  m_lua->FuncRegister("getTotalHeap", Devices::getTotalHeap); 
   #ifdef USE_SERVO
   m_lua->FuncRegister("servoPause", Devices::StartServos);
   m_lua->FuncRegister("servoPause", Devices::ServoPause);
@@ -738,6 +745,10 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("fileExists", fileExists);
   
   m_lua->FuncRegister("formatFFAT", formatFFAT);
+  m_lua->FuncRegister("totalFFATBytes", totalFFATBytes);
+  m_lua->FuncRegister("totalFFATUsedBytes", totalFFATUsedBytes);
+
+
 
   m_lua->FuncRegister("listFilesInFolder", Storage::listFolder);
 
