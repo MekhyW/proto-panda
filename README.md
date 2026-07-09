@@ -6,7 +6,7 @@ __[Versão em portugues: 🇧🇷](README.pt-br.md)__
   <img src="doc/logoprotopanda.png" alt="Protopanda">
 </p>
 
-Protopanda is an open source patform (firmware and hardware), for controling protogens. The idea is to be simple enough so all you need is just a bit of tech savvy to make it work. But at the same time, flexible enough so a person with minimum knowledge of lua can make amazing things.
+Protopanda is an open source patform (firmware and hardware), for controling protogens. The idea is to be simple enough so all you need is just a bit of tech savviness to make it work. But at the same time, flexible enough so a person with minimum knowledge of lua can make amazing things.
 
 **Telegram channel:** https://t.me/mockdiodes
 **Telegram chat:** https://t.me/protopandachat
