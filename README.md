@@ -26,8 +26,8 @@ Protopanda is an open source patform (firmware and hardware), for controling pro
 
 # Features
 
-- Run with a esp32s3 dual core at 240Mhz
-- 16MB Ram
+- Run with a ESP32s3 dual core at 240Mhz
+- 16MB RAM
 - RGB 16bit color depth using two HUB75 panels
 - Support WS2812 led stips
 - Customization using Lua
@@ -35,7 +35,7 @@ Protopanda is an open source patform (firmware and hardware), for controling pro
 - Expressions are .png sprites
 - Around 60~80FPS
 - BLE support for remote control with Lua custom drivers
-- USB-C pd trigger support
+- USB-C PD trigger support
 - Up to 5V 5A output while on PD mode
 - Supports internal oled 128x64 screen for menu and UI
 - Wifi mode where you can change configurations
