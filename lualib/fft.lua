@@ -73,7 +73,15 @@ function _M.load()
 
 	cfg.samples = cfg.samples or 512
 	cfg.sampling_frequency = cfg.sampling_frequency or 44100
-	_M.noise_threshold = cfg.default_noise_threshold or _M.noise_threshold
+
+
+	_M.noise_threshold = cfg.noise_threshold or _M.noise_threshold
+	_M.band_start 	= cfg.speech_band_start or _M.band_start
+	_M.band_end 	= cfg.speech_band_end or _M.band_end
+	_M.min_energy 	= cfg.speech_min_energy or _M.min_energy
+	_M.band_end 	= cfg.speech_max_energy or _M.max_energy
+	_M.frist_frame_threshold 	= cfg.speech_frist_frame_threshold or _M.frist_frame_threshold
+
 
 	_M.loadCalibration()
 	cfg.band_count = cfg.band_count or 16
@@ -91,6 +99,9 @@ function _M.load()
 end
 
 function _M.resetDefaults()
+
+
+
 	_M.noise_threshold       = DEFAULTS.noise_threshold
 	_M.band_start            = DEFAULTS.band_start
 	_M.band_end              = DEFAULTS.band_end
@@ -98,12 +109,22 @@ function _M.resetDefaults()
 	_M.max_energy            = DEFAULTS.max_energy
 	_M.frist_frame_threshold = DEFAULTS.frist_frame_threshold
 
-	dictSet("fft_noise_threshold", tostring(DEFAULTS.noise_threshold))
-	dictSet("fft_speech_band_start", tostring(DEFAULTS.band_start))
-	dictSet("fft_speech_band_end", tostring(DEFAULTS.band_end))
-	dictSet("fft_speech_min_energy", tostring(DEFAULTS.min_energy))
-	dictSet("fft_speech_max_energy", tostring(DEFAULTS.max_energy))
-	dictSet("fft_speech_frist_frame_threshold", tostring(DEFAULTS.frist_frame_threshold))
+	local cfg = configloader.Get()
+	if not cfg.fft or not cfg.fft.enabled then
+		_M.noise_threshold 			= cfg.noise_threshold or _M.noise_threshold
+		_M.band_start 				= cfg.speech_band_start or _M.band_start
+		_M.band_end 				= cfg.speech_band_end or _M.band_end
+		_M.min_energy 				= cfg.speech_min_energy or _M.min_energy
+		_M.band_end 				= cfg.speech_max_energy or _M.max_energy
+		_M.frist_frame_threshold 	= cfg.speech_frist_frame_threshold or _M.frist_frame_threshold
+	end
+
+	dictSet("fft_noise_threshold", tostring(_M.noise_threshold))
+	dictSet("fft_speech_band_start", tostring(_M.band_start))
+	dictSet("fft_speech_band_end", tostring(_M.band_end))
+	dictSet("fft_speech_min_energy", tostring(_M.min_energy))
+	dictSet("fft_speech_max_energy", tostring(_M.max_energy))
+	dictSet("fft_speech_frist_frame_threshold", tostring(_M.frist_frame_threshold))
 	dictSave()
 
 	setNoiseThreshold(_M.noise_threshold)
