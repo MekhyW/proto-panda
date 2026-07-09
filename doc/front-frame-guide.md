@@ -76,23 +76,23 @@ There is a correct orientation of the panel. Note on the panel there are white a
 Then follow those steps:
 1) Align the panel
 2) Place the screw in the hole
-3) Push the screw an align the panel
-4) With a small screwdriver or a screwdriver bit, tighten the screw. **DONT TIGHT TOO MUCH, just enough to be in place**
+3) Push the screw and align the panel
+4) With a small screwdriver or a screwdriver bit, tighten the screw. **DONT TIGHTEN THEM TOO MUCH, just enough for them to stay in place**
 5) Do it for those 5 points highlighted in red.
 
 ![img](./front-frame-fixing-panel-2.png)
 
 ## HUB75 Cables
 
-Now its time to put the first cable. This cable will transfer the signal from the first panel to the second one.
+Now its time to install the first cable. This cable will transfer the signal from the first panel to the second one.
 
 ![img](./front-frame-cable-1.png)
 
-But as you can see, thats a bit too much. You can leave it as is, or you can trim the cable down. Thats whats I'll teach you right now. But please pay attention on what you doing, if you wire them backwards you will certainly destroy one or both panels.
+But as you can see, theres a bit too much cable in there. You can leave it as is, or you can trim the cable down. Thats whats I'll teach you right now. But please pay attention on what you doing, if you wire them backwards you will certainly destroy one or both panels.
 
 If you want to leave it as is, skip to [Power cable](#power-cable)  
 
-As you can see, the cable has about 19~20cm. But we need at least 11CM. 
+As you can see, the cable has about 19~20cm. But we only need at least 11CM. 
 
 ![img](./front-frame-cable-2.png)
 
@@ -109,7 +109,7 @@ If you need extra help, try googling on how to crimp idc connectors.
 
 ## Power cable
 
-For powering the HUB75, you can use the original cable. But its bulky and extra long. So you can trim it down. 
+For powering the HUB75, you can use the original cable. But its bulky and too long. So you can trim it down. 
 
 ![img](./front-frame-cable-6.png)
 
@@ -132,18 +132,18 @@ They go in the protopanda at the screw terminal.
 
 ![img](./front-frame-cable-11.png)
 
-If you're doing DIY route, they go at the schematic where is written **HUB75 POWER**
-In case istn clear, red means positive and black negative.
+If you're doing DIY route, then go at the schematic where is written **HUB75 POWER**
+In case it isnt clear, red means positive and black negative.
 
 ![img](./front-frame-cable-12.png)
 
 ## Other cables
 
-Now its a good idea do plug the other cables.
+Now its a good idea do plug in the other cables.
 
 ![img](./front-frame-cable-13.png)
 
-If you doing the DIY route, you can choose any kind of connector you want, or just wire directly to the display and boop sensor. I used PHT connector but that was my prefference for the way I did. Do your way!
+If you doing the DIY route, you can choose any kind of connector you want, or just wire directly to the display and boop sensor. I used PHT connector but that was my prefference for the way I did. Do it your way!
 
 ![img](./front-frame-stuff-1.png)
 
@@ -182,11 +182,11 @@ And screw them tto the nuts at the other side
 
 ## Boop sensor
 
-There will be a guide to make the boop sensor in the future. I'll do it i swear! For now it just the capacitive sensor with some wire wrapped around it.
+There will be a guide to make the boop sensor in the future. I'll do it I swear! For now it's just the capacitive sensor with some wire wrapped around it.
 
 ![img](./front-frame-boop-1.png)
 
-Attach the boop sensor to the front o the panel
+Attach the boop sensor to the front of the panel
 
 ![img](./front-frame-boop-2.png)
 
@@ -208,9 +208,9 @@ Use the nuts at the bottom part and tight the screws.
 
 ## Second panel
 
-Now we're not fiddling with any more wiring, lets connect the last cables on the second panel. PAY ATTENTION ON THE DIRECTION OF THE ARROWS IN THE PANEL.
+Now we're not fiddling with any more wiring, let's connect the last cables on the second panel. PAY ATTENTION TO THE DIRECTION OF THE ARROWS IN THE PANEL.
 
-Therer shold be 4 screws to fix it in place. They are circled in yellow.
+There shold be 4 screws to fix it in place. They are circled in yellow.
 
 ![img](front-frame-panel-fix-1.png)
 
@@ -218,7 +218,7 @@ No need the 5th one. The process to align the panel is the same as the previous 
 
 ## Fur support
 
-In case you a place to sew or attach the fur, there is a support.
+In case you need a place to sew or attach the fur, there is a support.
 
 ![img](./front-frame-spp-1.png)
 
@@ -240,7 +240,7 @@ It should look like this:
 
 ## Fresnel lens
 
-The fresnel lens is completely opitional but a nice to have. Without it might be hard to focus your vision at the internal screen. Witth it is way way easier. The effects are mostly in person.
+The fresnel lens is completely opitional but a nice to have. Without it might be hard to focus your vision at the internal screen. With it is way way easier. The effects are mostly in person.
 
 ![img](./front-frame-fresne-1.png)
 
@@ -260,17 +260,17 @@ Now align it in the front frame. It goes at the internal right top part of it.
 
 ![img](./front-frame-fresne-5.png)
 
-Then screw it in place and you will have an fresnel lens that can be moved up out of the way when the visor is not there, or simply unscrewd in case you dont like it!
+Then screw it in place and you will have a fresnel lens that can be moved up out of the way when the visor is not there, or simply unscrewed in case you don't like it!
 
 ![img](./front-frame-fresne-6.png)
 
 ## USB Cable
 
-Now for the USB cable. In the material list i asked for a 90 degree USB-C. There is not much space for a straight USB cable there, and that might force the cable or the connector. Even the side facing cable can have alot of strain on it. 
+Now for the USB cable. In the material list I asked for a 90 degree USB-C. There is not much space for a straight USB cable there, and that might force the cable or the connector. Even the side facing cable can have a lot of strain on it. 
 
 ![img](./front-frame-usb-1.png)
 
-Thats why we will palce it in a slot.
+That's why we will place it in a slot.
 
 ![img](./front-frame-usb-2.png)
 
@@ -278,7 +278,7 @@ Make sure the cable is going inside that slot and doing a little curve inside. I
 
 ![img](./front-frame-usb-3.png)
 
-# IS COMPLETE!
+# IT IS COMPLETE!
 
 ![img](./front-frame-completed.png)
 
