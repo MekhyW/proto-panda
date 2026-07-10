@@ -159,9 +159,13 @@ function _M.loadCalibration()
 	if _M.frist_frame_threshold < _M.min_energy then
 		_M.min_energy = _M.frist_frame_threshold
 	end
-
-	print("Loaded noise: ".._M.noise_threshold)
-	
+	log("Mic calibration loaded")
+	log("fft_noise_threshold: ".._M.noise_threshold)
+	log("fft_speech_band_start: ".._M.band_start)
+	log("fft_speech_band_end: ".._M.band_end)
+	log("fft_speech_min_energy: ".._M.min_energy)
+	log("fft_speech_max_energy: ".._M.max_energy)
+	log("fft_speech_frist_frame_threshold: ".._M.frist_frame_threshold)
 	setNoiseThreshold(_M.noise_threshold)
 end
 

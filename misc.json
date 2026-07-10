@@ -9,8 +9,6 @@
         "power_gpio": 13,
         "gpio_state": 1,
         "enabled": true,
-        "transitionIn": "boop_intro",
-        "transitionOut": "boop_outro",
         "boopAnimationName": "boop",
         "transictionOnlyOnAnimation": "normal",
         "transictionInOnlyOnSpecificFrame": 1

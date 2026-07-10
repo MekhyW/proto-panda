@@ -70,7 +70,7 @@ function _M.setup(expressions)
     _M.original_right = BUTTON_RIGHT
     _M.brigthness = tonumber(dictGet("panel_brightness")) or 64
     _M.led_brightness = tonumber(dictGet("led_brightness")) or 64
-    _M.has_boop = dictGet("has_boop") == "1" 
+    _M.has_boop = (tonumber(dictGet("has_boop")) or 1) == 1
     _M.has_fft_overlay = dictGet("has_fft_overlay") == "1" 
     setFFTOverlay(_M.has_fft_overlay)
     _M.inverted_left_right = dictGet("inverted_left_right") == "1" 

@@ -227,12 +227,12 @@
           "behavior": {
             "anim_speed": 40,
             "mode": "random_flashing",
-            "interval_min": 200,
-            "interval_max": 2000,
+            "interval_min": 50,
+            "interval_max": 120,
             "min_x": 0,
-            "max_x": 64,
+            "max_x": 59,
             "min_y": 0,
-            "max_y": 64
+            "max_y": 27
           }
         }
       ]
@@ -312,6 +312,7 @@
       "animation": "pingpong",
       "intro"    : "boop_intro",
       "outro"    : "boop_outro",
+      "overlay"  : "stars",
       "duration" : 100
     },
     {

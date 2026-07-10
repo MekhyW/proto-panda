@@ -136,7 +136,7 @@ function _M.setEnabled(en)
 end
 
 _M.starttup["random_flashing"] = function(obj)
-    obj.nextSpawn = millis() + math.random(obj.behavior.interval_min or 10, obj.behavior.interval_max or 100)
+    obj.nextSpawn = -1
     obj.sprite:setVisibility(false)
     obj.behavior.anim_speed = obj.behavior.anim_speed or 20
     obj.nextFrame = millis() + obj.behavior.anim_speed
@@ -150,7 +150,11 @@ _M.starttup["frame_by_fft_level"] = function(element) end
 _M.modes["random_flashing"] = function(obj, dt)
     local time = millis()
     if not obj.alive then
-        if obj.nextSpawn < time then 
+        local diff = obj.nextSpawn - time
+        if diff < -3000 then  
+            obj.nextSpawn = millis() + math.random(obj.behavior.interval_min or 10, obj.behavior.interval_max or 100)
+        end
+        if diff < 0 then 
             obj.alive = true
             obj.sprite:SetPosition(math.random(obj.behavior.min_x,obj.behavior.max_x), math.random(obj.behavior.min_y,obj.behavior.max_y))
             obj.nextFrame = time + obj.behavior.anim_speed
