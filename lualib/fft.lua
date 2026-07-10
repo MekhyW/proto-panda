@@ -24,7 +24,6 @@ local _M = {
 }
 
 local generic = require("generic")
-local ui = require("ui")
 local Map = generic.map
 
 
@@ -72,6 +71,18 @@ function _M.load()
 		delay(200)
 		return
 	end
+	local ui = require("ui")
+	local menu = ui.generateUi("Mic Calibration", nil, exitCalibration)
+	menu.addElement(function() return "Full calibration" end, startFullCalibration)
+	menu.addElement(function() return "Adjust frame thresh" end, startAdjustFrist)
+	menu.addElement(function() return "Adjust noise thresh" end, startAdjustNoise)
+	menu.addElement(function() return "Adjust min energy" end, startAdjustMin)
+	menu.addElement(function() return "Adjust max energy" end, startAdjustMax)
+	menu.addElement(function() return "Adjust band start" end, startAdjustBandStart)
+	menu.addElement(function() return "Adjust band end" end, startAdjustBandEnd)
+	menu.addElement(function() return "Exit" end, exitCalibration)
+	_M.menu = menu
+
 	local cfg = cfg.fft
 
 	if not tonumber(cfg.gpio) then
@@ -361,20 +372,10 @@ local function exitCalibration()
 	_M.calibrating = false
 end
 
-local menu = ui.generateUi("Mic Calibration", nil, exitCalibration)
-menu.addElement(function() return "Full calibration" end, startFullCalibration)
-menu.addElement(function() return "Adjust frame thresh" end, startAdjustFrist)
-menu.addElement(function() return "Adjust noise thresh" end, startAdjustNoise)
-menu.addElement(function() return "Adjust min energy" end, startAdjustMin)
-menu.addElement(function() return "Adjust max energy" end, startAdjustMax)
-menu.addElement(function() return "Adjust band start" end, startAdjustBandStart)
-menu.addElement(function() return "Adjust band end" end, startAdjustBandEnd)
-menu.addElement(function() return "Exit" end, exitCalibration)
-
 -- Switches into the menu state and resets its selection/scroll position.
 local function goToMenu()
 	_M.state = CALIB_STATE_MENU
-	menu.onEnter()
+	_M.menu.onEnter()
 end
 
 function _M.onEnter()
@@ -389,7 +390,7 @@ function _M.CalibrateDraw(dt)
 	oledClearScreen()
 
 	if _M.state == CALIB_STATE_MENU then
-		menu.draw()
+		_M.menu.draw()
 		return
 	end
 
@@ -773,7 +774,7 @@ end
 
 function _M.Calibrate(dt)
 	if _M.state == CALIB_STATE_MENU then
-		menu.handle(dt)
+		_M.menu.handle(dt)
 		return
 	end
 
