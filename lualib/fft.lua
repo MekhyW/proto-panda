@@ -1,8 +1,8 @@
 local DEFAULTS = {
-	noise_threshold = 2500,
+	noise_threshold = 4000,
 	band_start = 2,
 	band_end = 8,
-	min_energy = 50000,
+	min_energy = 60000,
 	max_energy = 200000,
 	frist_frame_threshold = 60000,
 }
@@ -24,13 +24,19 @@ local _M = {
 }
 
 local generic = require("generic")
+local ui = require("ui")
 local Map = generic.map
 
 
-local CALIB_STATE_NOISE  = 0
-local CALIB_STATE_TALK   = 1
-local CALIB_STATE_REVIEW = 2
-local CALIB_STATE_TEST   = 3
+local CALIB_STATE_MENU          = 0
+local CALIB_STATE_NOISE         = 1
+local CALIB_STATE_TALK          = 2
+local CALIB_STATE_REVIEW        = 3
+local CALIB_STATE_TEST          = 4
+local CALIB_STATE_ADJ_NOISE     = 5
+local CALIB_STATE_ADJ_MIN       = 6
+local CALIB_STATE_ADJ_MAX       = 7
+local CALIB_STATE_ADJ_BANDEND   = 8
 
 
 local ENVELOPE_ATTACK_ALPHA  = 0.5
@@ -50,6 +56,10 @@ local BAND_ADAPT_ALPHA = 0.15
 -- this multiple of the noise energy in that same range before we
 -- consider the user to be "speaking" (used to gate min/max tracking).
 local ACTIVE_ENERGY_MULT = 2.0
+
+-- Step sizes used by the quick "adjust a single value" screens.
+local NOISE_STEP  = 500
+local ENERGY_STEP = 5000
 
 
 function _M.load()
@@ -84,7 +94,8 @@ function _M.load()
 
 
 	_M.loadCalibration()
-	cfg.band_count = cfg.band_count or 16
+	cfg.band_count = cfg.band_count or 8
+	_M.band_count = cfg.band_count
 
 	fft.enabled = beginFft(cfg.gpio, cfg.samples, cfg.sampling_frequency, 100, cfg.band_count)
 
@@ -146,6 +157,7 @@ end
 
 function _M.getSpeechLevel(dt, attack, release, maxLevels)
 	local energy = 0
+	_M.band_end = math.min(_M.band_count, _M.band_end)
     for b = _M.band_start, _M.band_end do
         energy = energy + getBandValueFft(b)
     end
@@ -223,7 +235,42 @@ local function drawInstructions(info)
 	oledDrawText("Press CONFIRM")
 end
 
-function _M.onEnter()
+-- Shared "N boxes, filled up to `level`" renderer used by the live
+-- speech-level test screen and by the quick min/max/band adjust screens.
+local function drawLevelBoxes(level, maxLevels, boxSize, y)
+	maxLevels = maxLevels or 5
+	boxSize = boxSize or 22
+	y = y or 6
+
+	local gap = math.floor(boxSize / 4)
+	if gap < 2 then gap = 2 end
+
+	local totalWidth = boxSize * maxLevels + gap * (maxLevels - 1)
+	local startX = math.floor((128 - totalWidth) / 2)
+
+	for i = 0, maxLevels - 1 do
+		local x = startX + i * (boxSize + gap)
+		local isOn = level >= i
+
+		oledDrawRect(x, y, boxSize, boxSize, 1)
+		if isOn then
+			oledDrawFilledRect(x + 3, y + 3, boxSize - 6, boxSize - 6, 1)
+		end
+
+		local label = tostring(i)
+		local textColor = isOn and 0 or 1
+		oledSetCursor(x + math.floor(boxSize / 2) - 3, y + math.floor(boxSize / 2) - 4)
+		oledSetTextColor(textColor)
+		oledDrawText(label)
+	end
+	oledSetTextColor(1)
+end
+
+-- ---------------------------------------------------------------------
+-- Calibration mode entry points (one per menu option)
+-- ---------------------------------------------------------------------
+
+local function startFullCalibration()
 	setNoiseThreshold(1)
 
 	_M.maxBandInput = 100
@@ -247,14 +294,77 @@ function _M.onEnter()
 	_M.isSpeaking = false
 
 	_M.result = nil
-	_M.calibrating = true
 	_M.showingInstructions = true
+end
 
+local function startAdjustNoise()
+	_M.state = CALIB_STATE_ADJ_NOISE
+	_M.showingInstructions = false
+	_M.maxBandInput = math.max(_M.noise_threshold * 2, 100)
+end
+
+local function startAdjustMin()
+	_M.state = CALIB_STATE_ADJ_MIN
+	_M.showingInstructions = false
+	_M.smoothed = 0
+end
+
+local function startAdjustMax()
+	_M.state = CALIB_STATE_ADJ_MAX
+	_M.showingInstructions = false
+	_M.smoothed = 0
+end
+
+local function startAdjustBandEnd()
+	_M.state = CALIB_STATE_ADJ_BANDEND
+	_M.showingInstructions = false
+	_M.band_start = 1
+	_M.maxBandInput = 100
+	_M.smoothed = 0
+end
+
+-- ---------------------------------------------------------------------
+-- Pre-calibration menu (built with the shared ui lib, same widget used
+-- by the settings/scripts menus)
+-- ---------------------------------------------------------------------
+
+-- The ONLY place _M.quit is set. Reachable either by selecting "Exit"
+-- from the menu, or via LEFT/BACK on the menu (the ui lib's built-in
+-- "back" handling, wired up below as this menu's onQuit).
+local function exitCalibration()
+	_M.quit = true
+	_M.calibrating = false
+end
+
+local menu = ui.generateUi("Mic Calibration", nil, exitCalibration)
+menu.addElement(function() return "Full calibration" end, startFullCalibration)
+menu.addElement(function() return "Adjust noise thresh" end, startAdjustNoise)
+menu.addElement(function() return "Adjust min energy" end, startAdjustMin)
+menu.addElement(function() return "Adjust max energy" end, startAdjustMax)
+menu.addElement(function() return "Adjust band end" end, startAdjustBandEnd)
+menu.addElement(function() return "Exit" end, exitCalibration)
+
+-- Switches into the menu state and resets its selection/scroll position.
+local function goToMenu()
+	_M.state = CALIB_STATE_MENU
+	menu.onEnter()
+end
+
+function _M.onEnter()
+	_M.calibrating = true
+	_M.quit = false
+	_M.showingInstructions = false
+	goToMenu()
 	return true
 end
 
 function _M.CalibrateDraw(dt)
 	oledClearScreen()
+
+	if _M.state == CALIB_STATE_MENU then
+		menu.draw()
+		return
+	end
 
 	if _M.showingInstructions and INSTRUCTIONS[_M.state] then
 		drawInstructions(INSTRUCTIONS[_M.state])
@@ -393,34 +503,70 @@ function _M.CalibrateDraw(dt)
 
 	elseif _M.state == CALIB_STATE_TEST then
 		_M.testLevel = _M.getSpeechLevel(dt, nil, nil, 5)
-
-		local boxSize = 22
-		local gap = 5
-		local totalWidth = boxSize * 5 + gap * 4
-		local startX = math.floor((128 - totalWidth) / 2)
-		local y = 6
-
-		for i = 0, 4 do
-			local x = startX + i * (boxSize + gap)
-			local isOn = _M.testLevel >= i
-
-			oledDrawRect(x, y, boxSize, boxSize, 1)
-			if isOn then
-				oledDrawFilledRect(x + 3, y + 3, boxSize - 6, boxSize - 6, 1)
-			end
-
-			local label = tostring(i)
-			local textColor = isOn and 0 or 1
-			oledSetCursor(x + math.floor(boxSize / 2) - 3, y + math.floor(boxSize / 2) - 4)
-			oledSetTextColor(textColor)
-			oledDrawText(label)
-		end
-		oledSetTextColor(1)
+		drawLevelBoxes(_M.testLevel, 5, 22, 6)
 
 		oledSetCursor(0, 44)
 		oledDrawText("Talk to test level")
 		oledSetCursor(0, 54)
 		oledDrawText("CONFIRM=save DIR=redo")
+
+	elseif _M.state == CALIB_STATE_ADJ_NOISE then
+		local count = getBandCountFft()
+		for i = 1, count do
+			local v = getBandValueFft(i)
+			_M.maxBandInput = math.max(v, _M.maxBandInput, _M.noise_threshold * 1.1)
+
+			local mapped = Map(v, 0, _M.maxBandInput * 1.1, 0, 64)
+			oledDrawFilledRect(i * 5, 0, 4, math.ceil(mapped), 1)
+		end
+		oledDrawFastHLine(0, Map(_M.noise_threshold, 0, _M.maxBandInput * 1.1, 0, 64), 128, 1)
+
+		oledSetCursor(0, 40)
+		oledDrawText("Noise: " .. math.floor(_M.noise_threshold))
+		oledSetCursor(0, 49)
+		oledDrawText("UP/DN +-500 CONFIRM")
+
+	elseif _M.state == CALIB_STATE_ADJ_MIN then
+		local level = _M.getSpeechLevel(dt, nil, nil, 5)
+		drawLevelBoxes(level, 5, 20, 4)
+
+		oledSetCursor(0, 32)
+		oledDrawText("Min energy: " .. math.floor(_M.min_energy))
+		oledSetCursor(0, 42)
+		oledDrawText("Talk to preview")
+		oledSetCursor(0, 54)
+		oledDrawText("UP/DN +-5000 CONFIRM")
+
+	elseif _M.state == CALIB_STATE_ADJ_MAX then
+		local level = _M.getSpeechLevel(dt, nil, nil, 5)
+		drawLevelBoxes(level, 5, 20, 4)
+
+		oledSetCursor(0, 32)
+		oledDrawText("Max energy: " .. math.floor(_M.max_energy))
+		oledSetCursor(0, 42)
+		oledDrawText("Talk to preview")
+		oledSetCursor(0, 54)
+		oledDrawText("UP/DN +-5000 CONFIRM")
+
+	elseif _M.state == CALIB_STATE_ADJ_BANDEND then
+		local count = getBandCountFft()
+		for i = 1, count do
+			local v = getBandValueFft(i)
+			_M.maxBandInput = math.max(v, _M.maxBandInput)
+
+			local mapped = Map(v, 0, _M.maxBandInput * 1.1, 0, 28)
+			oledDrawFilledRect(i * 5, 0, 4, math.ceil(mapped), 1)
+		end
+		oledDrawFastVLine(_M.band_start * 5, 0, 28, 1)
+		oledDrawFastVLine(_M.band_end * 5, 0, 28, 1)
+
+		local level = _M.getSpeechLevel(dt, nil, nil, 5)
+		drawLevelBoxes(level, 5, 12, 30)
+
+		oledSetCursor(0, 44)
+		oledDrawText("Band end: " .. _M.band_end .. " (start=1)")
+		oledSetCursor(0, 54)
+		oledDrawText("UP/DN +-1 CONFIRM=save")
 	end
 
 	oledDisplay()
@@ -489,22 +635,27 @@ local function restoreCalibrationBackup()
 	if not b then return end
 
 	_M.noise_threshold       = b.noise_threshold
-	_M.band_start            = b.band_start
-	_M.band_end              = b.band_end
-	_M.min_energy            = b.min_energy
-	_M.max_energy            = b.max_energy
-	_M.frist_frame_threshold = b.frist_frame_threshold
+	_M.band_start             = b.band_start
+	_M.band_end               = b.band_end
+	_M.min_energy             = b.min_energy
+	_M.max_energy             = b.max_energy
+	_M.frist_frame_threshold  = b.frist_frame_threshold
 
 	setNoiseThreshold(_M.noise_threshold)
 end
 
 function _M.Calibrate(dt)
+	if _M.state == CALIB_STATE_MENU then
+		menu.handle(dt)
+		return
+	end
+
 	if _M.showingInstructions then
 		if input.readButtonStatus(BUTTON_CONFIRM) == BUTTON_JUST_PRESSED then
 			_M.showingInstructions = false
 		end
 		if _M.state ~= CALIB_STATE_NOISE and anyDirectionPressed() then
-			_M.onEnter()
+			startFullCalibration()
 		end
 		return
 	end
@@ -529,7 +680,7 @@ function _M.Calibrate(dt)
 			end
 		end
 		if anyDirectionPressed() then
-			_M.onEnter()
+			startFullCalibration()
 		end
 
 	elseif _M.state == CALIB_STATE_REVIEW then
@@ -539,7 +690,7 @@ function _M.Calibrate(dt)
 			_M.state = CALIB_STATE_TEST
 		end
 		if anyDirectionPressed() then
-			_M.onEnter()
+			startFullCalibration()
 		end
 
 	elseif _M.state == CALIB_STATE_TEST then
@@ -553,12 +704,88 @@ function _M.Calibrate(dt)
 			_M.result = nil
 			dictSave()
 			_M.loadCalibration()
-			_M.quit = true
-			_M.calibrating = false
+			goToMenu()
 		end
 		if anyDirectionPressed() then
 			restoreCalibrationBackup()
-			_M.onEnter()
+			startFullCalibration()
+		end
+
+	elseif _M.state == CALIB_STATE_ADJ_NOISE then
+		if input.readButtonStatus(BUTTON_UP) == BUTTON_JUST_PRESSED then
+			_M.noise_threshold = _M.noise_threshold + NOISE_STEP
+		end
+		if input.readButtonStatus(BUTTON_DOWN) == BUTTON_JUST_PRESSED then
+			_M.noise_threshold = math.max(0, _M.noise_threshold - NOISE_STEP)
+		end
+		setNoiseThreshold(_M.noise_threshold)
+
+		if input.readButtonStatus(BUTTON_CONFIRM) == BUTTON_JUST_PRESSED then
+			dictSet("fft_noise_threshold", tostring(_M.noise_threshold))
+			dictSave()
+			goToMenu()
+		end
+		if input.readButtonStatus(BUTTON_LEFT) == BUTTON_JUST_PRESSED then
+			_M.loadCalibration()
+			goToMenu()
+		end
+
+	elseif _M.state == CALIB_STATE_ADJ_MIN then
+		if input.readButtonStatus(BUTTON_UP) == BUTTON_JUST_PRESSED then
+			_M.min_energy = _M.min_energy + ENERGY_STEP
+		end
+		if input.readButtonStatus(BUTTON_DOWN) == BUTTON_JUST_PRESSED then
+			_M.min_energy = math.max(0, _M.min_energy - ENERGY_STEP)
+		end
+
+		if input.readButtonStatus(BUTTON_CONFIRM) == BUTTON_JUST_PRESSED then
+			dictSet("fft_speech_min_energy", tostring(_M.min_energy))
+			dictSave()
+			goToMenu()
+		end
+		if input.readButtonStatus(BUTTON_LEFT) == BUTTON_JUST_PRESSED then
+			_M.loadCalibration()
+			goToMenu()
+		end
+
+	elseif _M.state == CALIB_STATE_ADJ_MAX then
+		if input.readButtonStatus(BUTTON_UP) == BUTTON_JUST_PRESSED then
+			_M.max_energy = _M.max_energy + ENERGY_STEP
+		end
+		if input.readButtonStatus(BUTTON_DOWN) == BUTTON_JUST_PRESSED then
+			_M.max_energy = math.max(_M.min_energy + ENERGY_STEP, _M.max_energy - ENERGY_STEP)
+		end
+
+		if input.readButtonStatus(BUTTON_CONFIRM) == BUTTON_JUST_PRESSED then
+			dictSet("fft_speech_max_energy", tostring(_M.max_energy))
+			dictSave()
+			goToMenu()
+		end
+		if input.readButtonStatus(BUTTON_LEFT) == BUTTON_JUST_PRESSED then
+			_M.loadCalibration()
+			goToMenu()
+		end
+
+	elseif _M.state == CALIB_STATE_ADJ_BANDEND then
+		local maxBand = getBandCountFft()
+		_M.band_start = 1
+
+		if input.readButtonStatus(BUTTON_UP) == BUTTON_JUST_PRESSED then
+			_M.band_end = math.min(_M.band_end + 1, maxBand)
+		end
+		if input.readButtonStatus(BUTTON_DOWN) == BUTTON_JUST_PRESSED then
+			_M.band_end = math.max(_M.band_end - 1, _M.band_start + 1)
+		end
+
+		if input.readButtonStatus(BUTTON_CONFIRM) == BUTTON_JUST_PRESSED then
+			dictSet("fft_speech_band_start", tostring(_M.band_start))
+			dictSet("fft_speech_band_end", tostring(_M.band_end))
+			dictSave()
+			goToMenu()
+		end
+		if input.readButtonStatus(BUTTON_LEFT) == BUTTON_JUST_PRESSED then
+			_M.loadCalibration()
+			goToMenu()
 		end
 	end
 end
