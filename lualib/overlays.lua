@@ -171,7 +171,7 @@ end
 
 _M.modes["frame_by_fft_level"] = function(obj, dt)
     if fft.calibrating then 
-        return
+        dt = 0
     end
     local setting = obj.behavior
     local level = fft.getSpeechLevel(dt, setting.attack, setting.release, obj.frameCount)

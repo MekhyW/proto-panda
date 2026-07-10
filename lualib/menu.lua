@@ -64,6 +64,8 @@ local shaderNames = {
 }
 
 function _M.setup(expressions)
+    local cfg = configloader.Get()
+
     _M.original_left = BUTTON_LEFT
     _M.original_right = BUTTON_RIGHT
     _M.brigthness = tonumber(dictGet("panel_brightness")) or 64
@@ -83,6 +85,16 @@ function _M.setup(expressions)
 
     --settings ui
     _M.settings = ui.generateUi("Press < To back", nil, _M.enterMainMenu)
+
+
+    if cfg.fft and cfg.fft.enabled then
+        _M.settings.addElement(function() return "Calibrate mic volume" end,  function()
+            if fft.onEnter() then 
+                _M.mode = MODE_CALIBRATE_MIC
+            end
+        end)
+    end
+
 
     _M.settings.addElement(function() return "Shader [".._M.shader.."]" end, function()
         _M.shader = _M.shader +1
@@ -105,7 +117,7 @@ function _M.setup(expressions)
         dictSet("face_selection_style", _M.face_selection_style)
         dictSave()
     end)
-    local cfg = configloader.Get()
+    
     if cfg.boop and cfg.boop.enabled then
         _M.settings.addElement(function() return "Boop ["..(_M.has_boop and "ON" or "OFF").."]" end,  function()
             if _M.has_boop  then  
@@ -148,14 +160,6 @@ function _M.setup(expressions)
             if boop.onEnter() then 
                 _M.has_boop = false
                 _M.mode = MODE_CALIBRATE_BOOP
-            end
-        end)
-    end
-
-    if cfg.fft and cfg.fft.enabled then
-        _M.settings.addElement(function() return "Calibrate mic volume" end,  function()
-            if fft.onEnter() then 
-                _M.mode = MODE_CALIBRATE_MIC
             end
         end)
     end
@@ -459,7 +463,6 @@ function _M.draw(dt)
         boop.CalibrateDraw()
     elseif _M.mode == MODE_CALIBRATE_MIC then 
         fft.CalibrateDraw(dt)
-        return
     elseif _M.mode == MODE_SYSTEM_INFO then
         _M.drawSystemInfo()
     end
@@ -620,7 +623,7 @@ function _M.handleMenu(dt)
     elseif _M.mode == MODE_CALIBRATE_MIC then 
         fft.Calibrate(dt)
         if fft.quit then
-            _M.enterMainMenu()
+            _M.mode = MODE_SETTINGS_MENU
             toneDuration(440, 10)
             return
         end
