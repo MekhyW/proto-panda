@@ -2,7 +2,7 @@
 
 So, since you're here, there are a few things needed to mention before. 
 This guide will cover how to setup the environment, how to build, how to flash the firmware and what to put in the SD card.
-Currently this guide does not include a way to upgrade stuff from the SD card from an older version to a newer. If you're here for this, consider rewriting the animation.json or other file you modified with your changes. It's planned a tool to auto upgrade in the future, but for now it's completely manual.
+Currently this guide does not include a way to transfer stuff from the SD card from an older version to a newer. If you're here for this, consider rewriting the animation.json or other file you modified with your changes. An auto upgrade tool is planned for future release, but for now the process completely manual.
 
 ## Guides
 
@@ -12,13 +12,13 @@ Currently this guide does not include a way to upgrade stuff from the SD card fr
 
 # Setting up the environment
 
-Protopanda is written in C++ and designed to be in an Esp32S3 using the arduino framework. For that you'll only need one piece of software and a plugin for that. And MAYBE a driver.
+Protopanda is written in C++ and designed to be in an ESP32S3 using the Arduino framework. For that you'll only need one piece of software and a plugin for that. And MAYBE a driver.
 
 ## Step 1 - Software and drivers
 
-First piece of software you need is [Visual Studio Code](https://code.visualstudio.com/download). It's available for both linux and windows.
+First piece of software you need is [Visual Studio Code](https://code.visualstudio.com/download). It's available for both Linux and Windows.
 
-Once you have it, open and go in the right menu where it says Extensions (or press Ctrl-Shift-X). 
+Once you have it, open it and go in the right menu where it says Extensions (or press Ctrl-Shift-X). 
 Inside that, search for `pioarduino` and install it.
 ![](./flashing-guide-1.png)
 
@@ -32,36 +32,36 @@ Now you'll go in protopanda page at github, click to download it.
 
 ![](./flashing-guide-2.png)
 
-Unzip it somewhere, then go to vs code and select open folder.
+Unzip it somewhere, then go to VS Code and select open folder.
 
 ![](./flashing-guide-3.png)
 
-It might ask if you want to download the toolchain and resources for this project, mark yes and wait until it downloads everything.
+It might ask if you want to download the toolchain and resources for this project, select yes and wait until it downloads everything.
 
 ![](./flashing-guide-4.png)
 
 ## Step 3 - Plugging the device
 
-If you're using an ESP32S3 board (the DIY route), the board has two USB-C ports, check under the board which one is written "COM". That's the one!
+If you're using an ESP32S3 board (the DIY route), the board has two USB-C ports, check under the board which one is named "COM". That's the one!
 
 ![](./flashing-guide-8.png)
 
-But if you decided to buy an assembled protopanda or did yours using the provided PCB, use the USB-MINI port in front of the controller.
+But if you decided to buy an assembled protopanda or did yours using the provided PCB, use the micro USB port in front of the controller.
 
 ![](./flashing-guide-9.png)
 
 ## Step 4 - Drivers?!
 
-Now plug protopanda or the esp32 to your computer. If you get a notice saying "Device unknown" or something like that, it means you might need a driver. 
+Now plug protopanda or the ESP32 to your computer. If you get a notice saying "Device unknown" or something like that, it means you might need a driver. 
 
-First of all, depending on which board you're using you might need to download a driver. If you're using a protopanda you bought assembled, it's gonna be a [ch340 driver](https://learn.sparkfun.com/tutorials/how-to-install-ch340-drivers/all). Otherwise it's gonna be another one. **Only download it if it is actually needed!**
+First of all, depending on which board you're using, you might need to download a driver. If you're using a protopanda you bought assembled, it's gonna be a [ch340 driver](https://learn.sparkfun.com/tutorials/how-to-install-ch340-drivers/all). Otherwise it's gonna be a different one. **Only download it if it is actually needed!**
 Most operational systems already come with most of those drivers or install them automatically for you.
 
-If you don't get any message, you can click in the bottom left icon of a power plug in vs code. That icon is used to select the communication serial port with the device. 
+If you don't get any message, you can click in the bottom left icon of a power plug in VS Code. That icon is used to select the COM serial port with the device. 
 
 ![](./flashing-guide-5.png)
 
-Clicking there a menu will show at the top of the screen.
+Clicking there a menu will show up at the top of your screen.
 
 ![](./flashing-guide-6.png)
 
@@ -74,7 +74,7 @@ In the scenario of having more than two entries, first unplug the device, check 
 
 # Compiling and flashing the firmware
 
-Make sure you completed the setup step previous.
+Make sure you completed the previous setup steps.
 
 ## Compilation
 
@@ -119,13 +119,13 @@ Change them to:
 #define PANDA_SD_MODE 1
 #define SPI_MAX_CLOCK (40 * 1000 * 1000)
 ```
-Thats because long wires can cause noise, so the sd card need to run slower. And the SD mode to change from SD_MMC to SPI. Most of the SD card modules out there short two pins to ground, that can make impossible to use the SD_MMC mode, so changing PANDA_SD_MODE to 1, changes back to SPI.
+Thats because long wires can cause noise, so the sd card needs to run slower. And the SD mode needs to be changed from SD_MMC to SPI. Most of the SD card modules out there short two pins to ground, that can make itimpossible to use the SD_MMC mode, so changing PANDA_SD_MODE to 1, changes back to SPI.
 
 Every time you change something in this file its necessary to recompile and flash the firmware again.
 
 ## Flashing
 
-Now you have it built, make sure the device is plugged and you [configured correctly the com port](#step-3---plugging-the-device). If you did it correctly, at the side of the ✅ there is an arrow facing right. Click it!
+Now you have it built, make sure the device is plugged and you [configured the COM port correctly](#step-3---plugging-the-device). If you did it correctly, at the side of the ✅ there is an arrow facing right. Click it!
 If it's the first time, it also may request to download some other tool. That's the last one!
 
 You'll see something like this:
@@ -178,12 +178,12 @@ But if you keep seeing:
 ```
 Connecting..................
 ```
-That's probably likely due to the esp not entering correctly in the boot mode. You can force by holding the flash button and then pressing once the reset button at the board.
+That's probably due to the ESP not entering boot mode correctly. You can force it by holding the flash button and then pressing the reset button once on the board.
 In case of the assembled protopanda, there are two buttons on the top of the case, the left one is the flash and the right is the reset.
 
 ![](./flashing-guide-12.png)
 
-In the esp32 board they're written as "RST" and "BOOT"
+On the ESP32 board they're named "RST" and "BOOT"
 
 ![](./flashing-guide-13.png)
 
