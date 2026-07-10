@@ -26,19 +26,22 @@ Protopanda is an open source patform (firmware and hardware), for controling pro
 
 # Features
 
-- Run with a ESP32s3 dual core at 240Mhz
-- 16MB RAM
-- RGB 16bit color depth using two HUB75 panels
+- Built over ESP32-S3 N16R8. Esily avaliable and cheap
+- 60+ FPS animations
+- Support HUB75 Panels, MAX7219 led matrixes or WS2812 Matrixes
+- RGB 16bit color depth
 - Support WS2812 led stips
 - Customization using Lua
-- Large part of the code and data stored in a SD card
-- Expressions are .png sprites
-- Around 60~80FPS
-- BLE support for remote control with Lua custom drivers
-- USB-C PD trigger support
-- Up to 5V 5A output while on PD mode
-- Supports internal oled 128x64 screen for menu and UI
+- Facial expressions are just .PNG files
+- Uses a SD card with easy to config settings
+- BLE support for remote controlling, or IR
+- USB-C powered
+- Internal screen for menus
 - Wifi mode where you can change configurations
+- Support keyframe animation with vectorial models
+- FFT built in and mouth animations based on sound
+- Open source and open hardware
+- Has games!
 - gay 🏳️‍🌈
 
 # Guides
@@ -64,14 +67,15 @@ Since usually you wont be running them at full brightness or with all LEDs set t
 
 # Panels
 
-The panels used are also known as HUB75 panels. They are driven by [mrcodetastic's hub75 lib](https://github.com/mrcodetastic/ESP32-HUB75-MatrixPanel-DMA), and these are the [recommended panels](https://pt.aliexpress.com/item/4000002686894.html).
+The reccomended is to use HUB75 panels. They are driven by [mrcodetastic's hub75 lib](https://github.com/mrcodetastic/ESP32-HUB75-MatrixPanel-DMA), and these are the [recommended panels](https://pt.aliexpress.com/item/4000002686894.html).
 ![HUB75 panels](doc/panels.jpg "HUB75 panels")
 They're multiplexed, which means only a few LEDs are on at a given time. It is fast enough that it can't be seen by the eye. But during direct sunlight, it's hard to take a good photo without screen tearing.
 ![Screen tearing caught on camera](doc/tearing.jpg "Screen tearing caught on camera")
 
 The resolution is 64 pixels wide and 32 pixels tall. Being two panels side by side, the total area is 128x32px. The color depth is 16 pixels, being RGB565, which means red (0-32), green (0-64), and blue (0-32).
 
-## Double buffer
+You can also use MAX7219 matrixes or adderessable leds matrixes!
+
 
 To prevent another type of tearing when a frame is being drawn while it is being updated, we enable the use of double buffering. This means that we draw pixels to the frame, but they won't appear on the screen immediately. Instead, we're drawing in memory. When we call `flipPanelBuffer()`, the memory we drew is sent to the DMA to be constantly drawn on the panel. Then, the buffer we use to draw changes. This increased the memory usage, but it's a price needed to pay.
 
@@ -141,7 +145,8 @@ After loading frames, [Lua scripts](#programming-in-lua) manage expressions. The
       "name": "normal",
       "frames": "frames_normal",
       "animation": [1, 2, 1, 2, 1, 2, 3, 4, 3],
-      "duration": 250
+      "duration": 250,
+      "overlay": "mouth"
     },
     {
       "name": "sus",
@@ -214,11 +219,78 @@ After loading frames, [Lua scripts](#programming-in-lua) manage expressions. The
 - **`repeats`** (int, default 1)
   If the animation is the type of a `transition`, you can set this to force it to repeat N times
 
+- **`overlay`** (string)
+  Name of the overlay to be used in that animation
+
 - **`onEnter`** (string, Lua code)  
   Executes when the animation starts.  
 
 - **`onLeave`** (string, Lua code)  
   Executes when the animation ends (either due to `transition=true` or interruption).  
+
+## Overlays
+
+Sometimes you want something with a little more swag. Like a mouth that moves as you speak, or some stars, or even something that reacts by an accelerometer. For that you can create overlays:
+
+
+```json
+{
+"overlays"   : [
+    {
+      "name"    : "stars",
+      "elements": [
+        {
+          "sprites"           : [
+            "/expressions/overlays/star.png"
+          ],
+          "transparency": true,
+          "transparency_color": "#ff00ff",
+          "animation"         : {
+            "mode": "random_flashing",
+            "alive_duration": 50,
+            "interval_min": 100,
+            "interval_max": 500,
+            "min_x": 0,
+            "max_x": 64,
+            "min_y": 0,
+            "max_y": 64
+          }
+        }
+      ]
+    }
+    {
+      "name"    : "mouth",
+      "elements": [
+        {
+          "sprites"           : [
+            "/expressions/overlays/mouth0.png",
+            "/expressions/overlays/mouth1.png",
+            "/expressions/overlays/mouth2.png",
+            "/expressions/overlays/mouth3.png",
+            "/expressions/overlays/mouth4.png"
+          ],
+          "transparency": false,
+          "transparency_color": "#000000",
+          "animation"         : {
+            "mode": "fft",
+            "x": 11,
+            "y": 19,
+            "band_start": 2,
+            "band_end": 8,
+            "attack": 0.05,
+            "release": 0.2,
+            "min_energy": 50000,
+            "max_energy": 200000,
+            "frist_frame_threshold": 60000
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+
 
 ## Expression stack
 
@@ -247,6 +319,51 @@ Protopanda supports the WS2812B adderessable LED protocol and it provies a simpl
 ![alt text](doc/A7301542.JPG)
 
 ![alt text](doc/ewm.drawio.png)
+
+You can define them inside `hardware.json`:
+```json
+{
+  "leds": { 
+    "pin_mode": "double",
+    "_comment": "Modes allowed are: 'double' and 'single'. If using extra led strips, they'll all attach at the right led pin if double is set",
+    "groups":[
+      {
+        "_comment": "If pin_side is undefined, it defaults to 'left'",
+        "pin_side": "left",
+        "led_count": 64,
+        "mode": "pride"
+      },
+      {
+        "pin_side": "right",
+        "led_count": 64,
+        "mode": "pride"
+      }
+    ]
+  }
+}
+```
+
+### Available Modes and Parameters
+
+| Mode | Description | Parameters |
+|------|-------------|------------|
+| `none` | LEDs remain off | None |
+| `pride` | Rainbow pride flag animation | None |
+| `rotate` | Rotating color along the strip | `speed` (ms) - rotation speed |
+| `random_color` | Each LED flashes random colors | None |
+| `fade_cycle` | Gradual color cycling | `hue` (0-255), `speed` (ms), `min_brightness` (0-255) |
+| `rotate_fade_cycle` | Fade cycle with rotation | `hue`, `speed`, `min_brightness`, `rotate_speed` (ms) |
+| `color_rgb` | Static RGB color | `r` (0-255), `g` (0-255), `b` (0-255) |
+| `color_hsv` | Static HSV color | `h` (0-255), `s` (0-255), `v` (0-255) |
+| `random_blink` | LEDs blink randomly | `base_hue` (0-255), `hue_variance` (0-255), `brightness` (0-255), `blink_speed` (ms) |
+| `icon_x` | Display an "X" pattern | None |
+| `icon_y` | Display a "Y" pattern | None |
+| `icon_v` | Display a "V" pattern | None |
+| `rotate_sine_v` | Sine wave brightness variation | `hue` (0-255), `saturation` (0-255), `speed` (ms) |
+| `rotate_sine_s` | Sine wave saturation variation | `hue` (0-255), `brightness` (0-255), `speed` (ms) |
+| `rotate_sine_h` | Sine wave hue variation | `sat` (0-255), `brightness` (0-255), `speed` (ms) |
+| `fade_in` | Gradual fade-in effect | `hue` (0-255), `saturation` (0-255), `step` (0-255), `delay` (ms) |
+| `noise` | Random noise effect | `step` (0-255), `delay` (ms) |
 
 
 # Bluetooth  

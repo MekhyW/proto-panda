@@ -1,4 +1,5 @@
 #include "lua/luainterface.hpp"
+#ifdef ENABLE_LUA
 #include "lua/luaobject.hpp"
 #include "tools/logger.hpp"
 #include "tools/devices.hpp"
@@ -271,8 +272,13 @@ bool formatFFAT(bool full){
   return FFat.format(full);
 }
 
+int totalFFATBytes(){
+  return FFat.totalBytes();
+}
 
-
+int totalFFATUsedBytes(){
+  return FFat.usedBytes();
+}
 
 void powerOff()
 {
@@ -295,7 +301,7 @@ void LuaInterface::luaCallbackError(const char *errMsg, lua_State *L)
     }
   }
 }
-
+#ifdef ENABLE_BLE
 int getConnectedRemoteControls()
 {
   return g_remoteControls.getConnectedClientsCount();
@@ -325,6 +331,7 @@ bool beginRadio(int powerLevel)
   Devices::CalculateMemmoryUsage();
   return true;
 }
+#endif
 
 bool startIR(){
   return g_InfraRed.begin();
@@ -351,7 +358,7 @@ IrCommand getLastIRCommand(){
 }
 
 
-
+#ifdef ENABLE_BLE
 int getClientIdFromControllerId(uint32_t id)
 {
   return g_remoteControls.GetClientIdFromControllerId(id);
@@ -379,6 +386,7 @@ void setMaximumControls(int id)
 {
   g_remoteControls.setMaximumControls(id);
 }
+#endif
 
 
 SizedArray *decodePng(std::string filename)
@@ -542,6 +550,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("oledDrawCircle", DrawCircleScreen);
   m_lua->FuncRegister("oledDrawFilledCircle", DrawFilledCircleScreen);
   //BLE
+  #ifdef ENABLE_BLE
   m_lua->FuncRegister("startBLE", startBLE);
   m_lua->FuncRegister("hasBLEStarted", hasBLEStarted);
   m_lua->FuncRegister("startBLERadio", beginRadio);
@@ -552,6 +561,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("setLogDiscoveredBleDevices", setLogDiscoveredBle);
   m_lua->FuncRegister("getClientIdFromControllerId", getClientIdFromControllerId);
   m_lua->FuncRegister("getRRSI", getRRSI);
+  #endif
 
 
   m_lua->FuncRegister("startIR", startIR);
@@ -575,8 +585,10 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("setHaltOnError", setHaltOnError);
   m_lua->FuncRegister("getLuaFps", Devices::getFps); 
   m_lua->FuncRegister("getFreePsram", Devices::getFreePsram); 
+  m_lua->FuncRegister("getTotalPsram", Devices::getTotalPsram); 
   m_lua->FuncRegister("getFps", Devices::getAutoFps); 
   m_lua->FuncRegister("getFreeHeap", Devices::getFreeHeap); 
+  m_lua->FuncRegister("getTotalHeap", Devices::getTotalHeap); 
   #ifdef USE_SERVO
   m_lua->FuncRegister("servoPause", Devices::StartServos);
   m_lua->FuncRegister("servoPause", Devices::ServoPause);
@@ -609,6 +621,7 @@ void LuaInterface::RegisterMethods()
 
   m_lua->FuncRegisterFromObjectOpt("startFft", &g_fft, &FFT::start);
   m_lua->FuncRegisterFromObjectOpt("stopFft", &g_fft, &FFT::stop);
+  m_lua->FuncRegisterFromObjectOpt("setNoiseThreshold", &g_fft, &FFT::setNoiseThreshold);
   m_lua->FuncRegisterFromObjectOpt("setManaged", &g_fft, &FFT::setManaged);
   m_lua->FuncRegisterFromObjectOpt("deinitFft", &g_fft, &FFT::deinit);
   m_lua->FuncRegisterFromObjectOpt("updateFft", &g_fft, &FFT::update);
@@ -625,6 +638,12 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegisterFromObjectOpt("popPanelAnimation", &g_animation, &Animation::PopAnimation);
   m_lua->FuncRegisterFromObjectOpt("setInterruptFrames", &g_animation, &Animation::SetInterruptAnimation);
   m_lua->FuncRegisterFromObjectOpt("setInterruptAnimationPin", &g_animation, &Animation::SetInterruptPin);
+
+
+  m_lua->FuncRegisterFromObjectOpt("clearAllOverlaySprites", &g_animation, &Animation::clearAllOverlaySprites);
+  m_lua->FuncRegisterFromObjectOpt("setOverlaySprite", &g_animation, &Animation::setOverlaySprite);
+  m_lua->FuncRegisterFromObjectOpt("clearOverlaySprite", &g_animation, &Animation::clearOverlaySprite);
+  m_lua->FuncRegisterFromObjectOpt("forceRedrawEachFrame", &g_animation, &Animation::forceRedrawEachFrame);
 
     
   m_lua->FuncRegisterFromObjectOpt("setFFTOverlay", &g_animation, &Animation::SetFFTOverlay); 
@@ -726,6 +745,10 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("fileExists", fileExists);
   
   m_lua->FuncRegister("formatFFAT", formatFFAT);
+  m_lua->FuncRegister("totalFFATBytes", totalFFATBytes);
+  m_lua->FuncRegister("totalFFATUsedBytes", totalFFATUsedBytes);
+
+
 
   m_lua->FuncRegister("listFilesInFolder", Storage::listFolder);
 
@@ -837,7 +860,7 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("COLOR_MODE_BRG", (int)COLOR_MODE_BRG);
   m_lua->setConstant("COLOR_MODE_BGR", (int)COLOR_MODE_BGR);
 
-
+  #ifdef ENABLE_BLE
   m_lua->setConstant("ESP_PWR_LVL_N24", (int)ESP_PWR_LVL_N24);
   m_lua->setConstant("ESP_PWR_LVL_N21", (int)ESP_PWR_LVL_N21);
   m_lua->setConstant("ESP_PWR_LVL_N18", (int)ESP_PWR_LVL_N18);
@@ -854,6 +877,7 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("ESP_PWR_LVL_P15", (int)ESP_PWR_LVL_P15);
   m_lua->setConstant("ESP_PWR_LVL_P18", (int)ESP_PWR_LVL_P18);
   m_lua->setConstant("ESP_PWR_LVL_P21", (int)ESP_PWR_LVL_P21);
+  #endif
 
 
   m_lua->setConstant("RISING"   , (int)RISING   );
@@ -904,6 +928,8 @@ bool LuaInterface::Start()
   static LuaCFunctionLambda EmptyGC = [](lua_State* L) -> int{
     return 0;
   };
+
+  #ifdef ENABLE_BLE
   
   ClassRegister<BleServiceHandler>::RegisterClassType(_state,"BleServiceHandler",[](lua_State* L) -> BleServiceHandler*{
     if (lua_gettop(L) == 2){ 
@@ -918,9 +944,13 @@ bool LuaInterface::Start()
       if (uuid == NimBLEUUID()){
         luaL_error(L, "Malformed service UUID");
         return nullptr;
-    } 
-
-      BleServiceHandler *obj = new BleServiceHandler(uuid.to16());
+      }
+      BleServiceHandler *obj = (BleServiceHandler*)ps_malloc(sizeof(BleServiceHandler));
+      #ifndef __INTELLISENSE__
+      //This code will be compiled. But for some reason intellisense claims its invalid. So i'm using this to avoid visual warning in the IDE
+      new (obj) BleServiceHandler(uuid.to16());
+      #endif
+ 
       g_remoteControls.AddAcceptedService(uuid.to16().toString().c_str(), obj);
       Logger::Info("Accepting service: %s", uuid.to16().toString().c_str());
       return obj;
@@ -948,6 +978,46 @@ bool LuaInterface::Start()
   ClassRegister<BleCharacteristicsHandler>::RegisterClassMethod(_state,"BleCharacteristicsHandler","SetRequired",&BleCharacteristicsHandler::SetRequired);
 
   m_lua->FuncRegister("getCharacteristicsFromService", BleServiceHandler::GetCharacteristicsFromService);
+  #endif
+
+
+  ClassRegister<Sprite>::RegisterClassType(_state,"Sprite",[](lua_State* L) -> Sprite*{
+    if (lua_gettop(L) == 1){ 
+      Sprite* mem = (Sprite*)ps_malloc(sizeof(Sprite));
+      if (!mem) {
+          return nullptr;
+      }
+      #ifndef __INTELLISENSE__
+      new (mem) Sprite();
+      #endif
+      g_animation.IncludeSpriteInPool(mem);
+      return mem;
+    }else{
+      luaL_error(L, "Invalid parameters.");
+      return nullptr;
+    }
+  }, &EmptyGC);
+
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetTransparencyColor",&Sprite::SetTransparencyColor, -1);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","GetId",&Sprite::GetId);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetPixelColor",&Sprite::SetPixelColor);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetPosition",&Sprite::SetPosition);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","GetWidth",&Sprite::GetWidth);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","GetHeight",&Sprite::GetHeight);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetFrameId",&Sprite::SetFrameId);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","GetFrameId",&Sprite::GetFrameId);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","NextFrame",&Sprite::NextFrame);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","GetFrameCount",&Sprite::GetFrameCount);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","CreateEmptyTexture",&Sprite::CreateEmptyTexture);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","LoadFromPng",&Sprite::LoadFromPng);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","CropSprite",&Sprite::CropSprite);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","Draw",&Sprite::Draw, 1.0f, SHADER_NONE, FlipConfig());
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetRotation",&Sprite::SetRotation);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","Clone",&Sprite::Clone);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","UseCustomShader",&Sprite::UseCustomShader);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetShader",&Sprite::SetShader, 1.0f);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","setVisibility",&Sprite::setVisibility);
+
 
   //Created only using loadModel(modeldata, name)
   m_lua->FuncRegisterFromObjectOpt("loadModel", &g_models, &ModelDict::LoadModel, "");
@@ -1078,3 +1148,4 @@ bool LuaInterface::CallFunction(const char *functionName)
 {
   return m_lua->callLuaFunction(functionName);
 }
+#endif

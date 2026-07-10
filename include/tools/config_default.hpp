@@ -2,7 +2,7 @@
 /*
     Avoid changing this vile, change the config.hpp instead if you need custom configuration
 */
-#define PANDA_VERSION "3.1.0"
+#define PANDA_VERSION "3.2.0"
 /*
 Cache file version to invalidate cache in case of firmware update
 */
@@ -97,7 +97,7 @@ Cache file version to invalidate cache in case of firmware update
 #define OLED_SCREEN_CLOCK_FREQ 800000
 
 
-#define USE_LIDAR
+//#define USE_LIDAR
 #define LIDAR_ADDR 0x29
 
 
@@ -175,3 +175,6 @@ Servos
 #define PANDA_SD SD_MMC
 #define PANDA_SD_NAME "MMC"
 #endif
+
+#define ENABLE_LUA
+#define ENABLE_BLE

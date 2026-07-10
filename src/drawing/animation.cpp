@@ -107,13 +107,6 @@ int AnimationSequence::GetFrameId(){
 }
 
 void Animation::drawPixelAt(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, int &byteIdOled, FlipConfig &flipSettings){
-    if ((color & 0x8610) != 0) { 
-        OledScreen::DisplayFace[0][byteIdOled] = 1;
-    }else{
-        OledScreen::DisplayFace[0][byteIdOled] = 0;
-    }
-    
-
     Devices::Display->setPixelWithFlip(x,y, r, g, b, flipSettings);
     if (m_copyToFrameBuffer){
         m_frameBuffer[byteIdOled] = color;
@@ -145,8 +138,8 @@ void Animation::LoadFrameAsTexture(int i){
         return;
     }
 
-    uint32_t startPosition;
-    uint32_t flashFileLenght;
+    int32_t startPosition;
+    int32_t flashFileLenght;
     
     g_frameRepo.getBulkOffsetByFrameId(i, startPosition, flashFileLenght);
     if (startPosition < 0){
@@ -307,8 +300,8 @@ void Animation::DrawFrame(int i){
 
     i--;
     
-    uint32_t startPosition;
-    uint32_t flashFileLenght;
+    int32_t startPosition;
+    int32_t flashFileLenght;
     
     g_frameRepo.getBulkOffsetByFrameId(i, startPosition, flashFileLenght);
     if (startPosition < 0){
@@ -420,6 +413,14 @@ void Animation::DrawFrame(int i){
     }
     finished:
 
+    if (m_spritesInScene.size() > 0){
+        xSemaphoreTake(m_SpriteMutex, portMAX_DELAY);
+        for (auto &sp : m_spritesInScene){
+            m_overlaySprites[sp]->Draw(flipSettings, m_shader, m_shaderStrenght);
+        }
+        xSemaphoreGive(m_SpriteMutex);
+    }
+
     if (m_fftOverlay && g_fft.isRunning()){
         drawFFTOverlay(flipSettings, frameId);
     }
@@ -430,15 +431,70 @@ void Animation::DrawFrame(int i){
     m_cycleDuration =  micros()-begin;
 }
 
+
+void Animation::IncludeSpriteInPool(Sprite *s){
+    int id = m_overlaySprites.size();
+    s->id = id;
+    m_overlaySprites.emplace_back(s);
+}
+
+int Animation::clearAllOverlaySprites()
+{
+    xSemaphoreTake(m_SpriteMutex, portMAX_DELAY);
+    int count = (int)m_spritesInScene.size();
+    m_spritesInScene.clear();
+    xSemaphoreGive(m_SpriteMutex);
+    return count;
+}
+
+bool Animation::setOverlaySprite(Sprite *s)
+{
+    if (s == nullptr){
+        return false;
+    }
+    int id = s->GetId();
+    xSemaphoreTake(m_SpriteMutex, portMAX_DELAY);
+    if (id < 0 || id >= (int)m_overlaySprites.size())
+    {
+        xSemaphoreGive(m_SpriteMutex);
+        return false;
+    }
+    Serial.printf("Added ID: %d\n", id);
+    m_spritesInScene.push_back(id);
+    xSemaphoreGive(m_SpriteMutex);
+    return true;
+}
+
+bool Animation::clearOverlaySprite(Sprite *s){
+    if (s == nullptr){
+        return false;
+    }
+    int id = s->GetId();
+    xSemaphoreTake(m_SpriteMutex, portMAX_DELAY);
+
+    for (auto it = m_spritesInScene.begin(); it != m_spritesInScene.end(); ++it)
+    {
+        if (*it == id)
+        {
+            m_spritesInScene.erase(it);
+            xSemaphoreGive(m_SpriteMutex);
+            return true;
+        }
+    }
+
+    xSemaphoreGive(m_SpriteMutex);
+    return false;
+}
+
 bool Animation::PopAnimation(){
-    xSemaphoreTake(m_mutex, portMAX_DELAY);
+    xSemaphoreTake(m_SpriteMutex, portMAX_DELAY);
     if (m_animations.size() > 0){
-        xSemaphoreGive(m_mutex);
+        xSemaphoreGive(m_SpriteMutex);
         m_animations.top().ResetIfNeeded();
         m_animations.pop();
         return true;
     }else{
-        xSemaphoreGive(m_mutex);
+        xSemaphoreGive(m_SpriteMutex);
         return false;
     }
     
@@ -509,14 +565,14 @@ bool Animation::internalUpdate(uint32_t dt, AnimationSequence &running){
         }
         break;
     case ANIMATION_NO_CHANGE:
-        if (m_shader != SHADER_NONE || m_fftOverlay){
+        if (m_shader != SHADER_NONE || m_fftOverlay || m_forceRedraw){
             m_lastFace = running.GetFrameId();
             if (managed){
                 DrawFrame(m_lastFace);
             }
         }
         if (m_needRedraw){
-            //m_needRedraw = false;
+            m_needRedraw = false;
             if (managed){
                 DrawFrame(m_lastFace);
             }

@@ -7,6 +7,7 @@
 #include <list>
 #include <string>
 #include <vector>
+#include "tools/psrammap.hpp"
 
 class OledIcon{
     public:
@@ -15,6 +16,17 @@ class OledIcon{
         int width;
         int height;
         uint8_t *icon;
+};
+
+class Panda_SSD1306 : public Adafruit_SSD1306{
+    public:
+        Panda_SSD1306(uint8_t w, uint8_t h, TwoWire *twi = &Wire, int8_t rst_pin = -1, uint32_t clkDuring = 400000UL, uint32_t clkAfter = 100000UL):Adafruit_SSD1306(w, h, twi, rst_pin, clkDuring, clkAfter){};
+
+        bool begin(uint8_t switchvcc = SSD1306_SWITCHCAPVCC, uint8_t i2caddr = 0, bool reset = true, bool periphBegin = true){
+            if ((!buffer) && !(buffer = (uint8_t *)ps_malloc(WIDTH * ((HEIGHT + 7) / 8))))
+                return false;
+            return Adafruit_SSD1306::begin(switchvcc, i2caddr, reset, periphBegin);
+        }
 };
 
 
@@ -33,13 +45,15 @@ class OledScreen{
         static void DrawIcon(int x, int y, int iconId);
         static int CreateIcon(std::vector<uint8_t> iconData, int width, int height);
 
-        static Adafruit_SSD1306 display;
+        static void MarkPixel(uint16_t x, uint16_t y, uint8_t red, uint8_t green, uint8_t blue);
+    
+        static Panda_SSD1306 display;
         static bool consoleMode;
-        static std::list<std::string> lines;
+        static PSRAMList<PSRAMString> lines;
         static uint8_t* DisplayFace[2];
         static uint8_t screenFlipId;
 
-        static std::vector<OledIcon> icons;
+        static PSRAMVector<OledIcon> icons;
     private:
         static uint32_t swapTimer;
 };

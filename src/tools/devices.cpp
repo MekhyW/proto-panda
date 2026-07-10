@@ -311,9 +311,7 @@ float Devices::getAutoFps(){
 }
 
 
-float Devices::getFreePsram(){
-  return Devices::percentagePsramFree;
-}
+
   
 void Devices::CalculateMemmoryUsageDifference(const std::string msg){
   int32_t diffHeap = ESP.getFreeHeap()-(int32_t)Devices::freeHeapBytes;

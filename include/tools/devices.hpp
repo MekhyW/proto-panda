@@ -12,7 +12,7 @@
 
 #include "tools/s3servo.hpp"
 #include "tools/displays.hpp"
-
+#include "tools/psrammap.hpp"
 
 #include <vector>
 #include <map>
@@ -108,9 +108,18 @@ class Devices{
         static bool BuzzerTone(int tone);
         static bool BuzzerNoTone();
 
-        static float getFreePsram();
-        static float getFreeHeap(){
-            return percentageHeapFree;
+        static uint32_t getFreePsram(){
+            return Devices::freePsramBytes;
+        }
+        static uint32_t getTotalPsram(){
+            return Devices::totalPsramBytes;
+        }
+
+        static uint32_t getFreeHeap(){
+            return freeHeapBytes;
+        }
+        static uint32_t getTotalHeap(){
+            return totalHeapBytes;
         }
 
         static float getInternalAccelerometerX(){

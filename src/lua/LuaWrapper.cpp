@@ -1,6 +1,6 @@
 #include "lua/LuaWrapper.h"
 #include "esp32-hal.h"
-
+#ifdef ENABLE_LUA
 #if PANDA_SD_MODE == 1
 #include <SD.h>
 #elif PANDA_SD_MODE == 2
@@ -16,7 +16,9 @@ void CreateLuaClosure(lua_State *L, const std::function<int(lua_State*)>& f){
         luaL_error(L, "Failed to allocate PSRAM for Lua function");
         return;
     }
+    #ifndef __INTELLISENSE__
     (*baseF) = new (mem) LuaCFunctionLambda(f);
+    #endif
 }
 //Make sure that any lua scripts use the psram instead of the sram
 static void *psram_lua_alloc (void *ud, void *ptr, size_t osize, size_t nsize) {
@@ -185,7 +187,7 @@ LuaWrapper::LuaWrapper() {
   luaopen_math(_state);
   luaopen_table(_state);
 
-  const char* lua_require_code = R"(
+  const char* lua_require_code PROGMEM = R"(
 _G.require = nil
 function require(packageName)
     if not _G.package then 
@@ -252,3 +254,18 @@ bool LuaWrapper::Lua_dostring(const char *script, int returns) {
 
   return true;
 }
+
+const char* StringToPsram(const std::string &str){
+    size_t len = str.size() + 1;
+
+    char* buffer = (char*)heap_caps_malloc(len, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    if (buffer == nullptr)
+    {
+        return nullptr;
+    }
+
+    memcpy(buffer, str.c_str(), len);
+    return buffer;
+}
+
+#endif

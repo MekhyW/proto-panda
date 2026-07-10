@@ -1,7 +1,9 @@
 
 #include "tools/displays/hub75.hpp"
+#include "tools/oledscreen.hpp"
 
-void Hub75Display::setPixelWithFlip(uint16_t x, uint16_t y, uint8_t red, uint8_t green, uint8_t blue, FlipConfig& flipSettings) {
+void Hub75Display::setPixelWithFlip(int16_t x, int16_t y, uint8_t red, uint8_t green, uint8_t blue, FlipConfig& flipSettings) {
+    OledScreen::MarkPixel(x, y, red, green, blue);
     if (!mirrorHalf){
         int xIn;
         int yIn;
@@ -21,7 +23,6 @@ void Hub75Display::setPixelWithFlip(uint16_t x, uint16_t y, uint8_t red, uint8_t
     uint8_t bb = blue;
 
     BaseDisplay::reorder_rgb(flipSettings.modeLeft, &ra, &ga, &ba);
-    
 
     if (flipSettings.flipLeft){
         int xIn;

@@ -1,5 +1,6 @@
 #pragma once
-
+#include "config.hpp"
+#ifdef ENABLE_BLE
 #include <NimBLEDevice.h>
 #include "Arduino.h"
 #include "config.hpp"
@@ -12,7 +13,7 @@ class BleMessage{
     BleMessage(int cliId, int  id, uint8_t* pData, size_t length):m_CliId(cliId),m_id(id),message(pData, pData + length){}
     int m_CliId;
     int m_id;
-    std::vector<uint8_t> message;
+    PSRAMVector<uint8_t> message;
 };
 
 typedef std::function<void(NimBLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify)> notify_callback;
@@ -53,3 +54,4 @@ class BleCharacteristicsHandler{
 
     void processMessageAndPop();
 };
+#endif

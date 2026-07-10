@@ -19,7 +19,9 @@
 #include <ESPAsyncWebServer.h>
 
 AsyncWebServer *server;
+#ifdef ENABLE_LUA
 extern LuaInterface g_lua;
+#endif
 extern FrameRepository g_frameRepo;
 extern Animation g_animation;
 
@@ -815,13 +817,17 @@ void handleLuaExecution(AsyncWebServerRequest *request){
   }
 
   String luaCode = request->getParam("body", true)->value();
-
+  #ifdef ENABLE_LUA
   if (!g_lua.DoString(luaCode.c_str(), 1)){
     String error = g_lua.getLastError();
     request->send(500, "text/plain", "Lua Error: " + error);
     return;
   }
+  
   request->send(200, "text/plain", g_lua.getLastReturnAsString());
+  #else
+  request->send(500, "text/plain", "Lua Error not enabled");
+  #endif
 }
 
 TaskHandle_t composeTaskHandle = NULL;

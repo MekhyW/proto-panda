@@ -8,7 +8,7 @@
 #else
 #error "NO SD_MODE Mode defined (set PANDA_SD_MODE to 1 for SD or 2 for SD_MMC)"
 #endif
-std::string Logger::m_filename = "";
+PSRAMString Logger::m_filename = "";
 char *Logger::buffer = nullptr;
 SemaphoreHandle_t Logger::mutex;
 File Logger::logFile;
@@ -16,7 +16,7 @@ bool Logger::writingLog;
 bool Logger::started;
 
 void Logger::Allocate(){
-  Logger::buffer = (char*)ps_malloc(sizeof(char)*1024);
+  Logger::buffer = (char*)ps_malloc(sizeof(char)*2048);
 }
 
 void Logger::Begin(){

@@ -1,5 +1,6 @@
 #pragma once
-
+#include "config.hpp"
+#ifdef ENABLE_BLE
 #include <NimBLEDevice.h>
 #include "Arduino.h"
 #include "config.hpp"
@@ -9,6 +10,7 @@
 #include <map> 
 #include "bluetooth/characteristicshandler.hpp"
 #include "bluetooth/clientcallbacks.hpp"
+#include "tools/psrammap.hpp"
 
 
 class DisconnectTuple{
@@ -22,12 +24,11 @@ class DisconnectTuple{
 class BluetoothDeviceHandler{
   public: 
     static int idCounter;
-    BluetoothDeviceHandler():m_device(nullptr),m_callbacks(nullptr),m_client(nullptr),m_controllerId(0xffff),m_deviceAddress(""),m_deviceName(""),connected(false){m_id = ++idCounter;};
+    BluetoothDeviceHandler():m_callbacks(nullptr),m_client(nullptr),m_controllerId(0xffff),m_deviceAddress(""),m_deviceName(""),connected(false){m_id = ++idCounter;};
     ~BluetoothDeviceHandler();
     int getId(){
       return m_id;
     };
-    const NimBLEAdvertisedDevice* m_device;
     ClientCallbacks * m_callbacks;
     NimBLEClient* m_client;
     uint32_t m_controllerId;
@@ -78,11 +79,11 @@ class BleServiceHandler{
     SemaphoreHandle_t queueMutex;
     std::stack<BluetoothDeviceHandler*> devicesToNotify;
     std::stack<DisconnectTuple> devicesToDisconnectNotify;
-    std::map<std::string, BleCharacteristicsHandler*> m_characteristics;    
-    std::map<std::string,bool> warnedMap;
-    std::vector<BluetoothDeviceHandler*> m_connectedDevices;
-    std::map<std::string, bool> addrMap;
-    std::map<std::string, bool> nameMap;
+    PSRAMMap<std::string, BleCharacteristicsHandler*> m_characteristics;    
+    PSRAMMap<std::string,bool> warnedMap;
+    PSRAMVector<BluetoothDeviceHandler*> m_connectedDevices;
+    PSRAMMap<std::string, bool> addrMap;
+    PSRAMMap<std::string, bool> nameMap;
 
     LuaFunctionCallback *luaOnConnectCallback;
     LuaFunctionCallback *luaOnDisconnectCallback;
@@ -92,16 +93,21 @@ class BleServiceHandler{
 
 class ConnectionRequest{
     public:
-        ConnectionRequest():advertisedDevice(nullptr),handler(nullptr),deviceHandler(nullptr){};
-        ConnectionRequest(const NimBLEAdvertisedDevice* device, BleServiceHandler* handlerObj, BluetoothDeviceHandler *deviceH):ready(false),advertisedDevice(device),handler(handlerObj),deviceHandler(deviceH){if (handler != nullptr) ready = true;};
+        ConnectionRequest():addressType(0),address(""),name(""),handler(nullptr),deviceHandler(nullptr){};
+        ConnectionRequest(std::string addressa, uint8_t addrType, std::string namea, BleServiceHandler* handlerObj, BluetoothDeviceHandler *deviceH):address(addressa),addressType(addrType),name(namea),ready(false),handler(handlerObj),deviceHandler(deviceH){if (handler != nullptr) ready = true;};
         void erase(){
-            advertisedDevice = nullptr;
+            address = "";
+            name = "";
+            addressType = 0;
             handler = nullptr;
             ready = false;
             deviceHandler = nullptr;
         };
         bool ready;
-        const NimBLEAdvertisedDevice* advertisedDevice;
+        uint8_t addressType;
+        std::string address, name;
         BleServiceHandler* handler;
         BluetoothDeviceHandler *deviceHandler;
 };
+
+#endif

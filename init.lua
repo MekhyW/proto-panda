@@ -9,6 +9,8 @@ local drivers = require("drivers")
 local input = require("input")
 local leds = require("leds")
 local fft = require("fft")
+local overlays = require("overlays")
+
 
 function onSetup()
 
@@ -37,6 +39,9 @@ function onSetup()
     leds.begin()
     generic.displaySplashMessage("Starting:\nMenu") 
     menu.setup()
+    generic.displaySplashMessage("Starting:\nOverlays") 
+    overlays.setup()
+
 end
 
 function onPreflight()
@@ -56,6 +61,7 @@ function onPreflight()
 end
 
 function onLoop(dt)
+    overlays.update(dt)
     drivers.update()
     input.update()
     expressions.update()

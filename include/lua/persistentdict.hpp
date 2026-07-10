@@ -21,5 +21,5 @@ public:
     void del(std::string key);
 
 private:
-    PSRAMMap store;    
+    PSRAMMapString store;    
 };

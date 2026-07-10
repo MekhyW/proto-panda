@@ -1,4 +1,5 @@
 #include "bluetooth/ble_client.hpp"
+#ifdef ENABLE_BLE
 #include "tools/logger.hpp"
 #include "tools/devices.hpp"
 #include "tools/ir.hpp"
@@ -18,11 +19,14 @@ void AdvertisedDeviceCallbacks::onResult(const NimBLEAdvertisedDevice* advertise
       bool canConnect = true;
       bool matchedTrue = true;
       if (it.second->addrMap.size() > 0){
-        canConnect = it.second->addrMap[advertisedDevice->getAddress().toString()];
+        auto addrIt = it.second->addrMap.find(advertisedDevice->getAddress().toString());
+        canConnect = (addrIt != it.second->addrMap.end()) && addrIt->second;
         matchedTrue = canConnect;
       }
+
       if (it.second->nameMap.size() > 0){
-        canConnect = it.second->nameMap[advertisedDevice->getName()];
+        auto nameIt = it.second->nameMap.find(advertisedDevice->getName());
+        canConnect = (nameIt != it.second->nameMap.end()) && nameIt->second;
         if (!matchedTrue){
           Serial.printf("Expected match name and address. But address failed");
           canConnect = false;
@@ -31,9 +35,15 @@ void AdvertisedDeviceCallbacks::onResult(const NimBLEAdvertisedDevice* advertise
 
       Logger::Info("Found HID Device: %s\n", advertisedDevice->getName().c_str());
       Logger::Info("Address: %s\n", advertisedDevice->getAddress().toString().c_str());
-      if (canConnect){
+      if (canConnect && !bleObj->toConnect.ready){
         bleObj->setScanningMode(false);
-        bleObj->toConnect = ConnectionRequest(advertisedDevice, it.second, new BluetoothDeviceHandler());
+        bleObj->toConnect = ConnectionRequest(
+          advertisedDevice->getAddress().toString(), 
+          advertisedDevice->getAddress().getType(),
+          advertisedDevice->getName(),
+          it.second, 
+          new BluetoothDeviceHandler()
+        );
       }else{
         Logger::Info("Cannot connect because its not present in the addresses");
       }
@@ -53,20 +63,20 @@ bool BleManager::connectToServer(){
 
   static ClientCallbacks callbacks;
   NimBLEClient* pClient = nullptr;
-  const NimBLEAdvertisedDevice* advDevice = toConnect.advertisedDevice;
+  NimBLEAddress peerAddr(toConnect.address, toConnect.addressType);
   BleServiceHandler *handler = toConnect.handler;
   BluetoothDeviceHandler *device = toConnect.deviceHandler;
 
 
   device->m_callbacks = &callbacks;
-  device->m_device = advDevice;
+  device->m_deviceName = toConnect.name;    
   
   /** Check if we have a client we should reuse first **/
   
   if (NimBLEDevice::getCreatedClientCount()) {
-    pClient = NimBLEDevice::getClientByPeerAddress(advDevice->getAddress());
+    pClient = NimBLEDevice::getClientByPeerAddress(peerAddr);
     if (pClient) {
-      if (!pClient->connect(advDevice, false)) {
+      if (!pClient->connect(peerAddr)) {
         Logger::Info("Failed to reconnect, last error = %d\n", pClient->getLastError());
         NimBLEDevice::deleteClient(pClient);
         device->m_client = nullptr;
@@ -101,7 +111,7 @@ bool BleManager::connectToServer(){
     pClient->setConnectionParams(24, 24, 0, 150);
     pClient->setConnectTimeout(5 * 1000);
       
-    if (!pClient->connect(advDevice, false)) { 
+    if (!pClient->connect(peerAddr, false)) { 
       Logger::Info("Failed to connect, last error = %d\n", pClient->getLastError());
       NimBLEDevice::deleteClient(pClient);
       device->m_client = nullptr; 
@@ -178,7 +188,6 @@ bool BleManager::connectToServer(){
   device->connected = true;
 
   device->m_deviceAddress = pClient->getPeerAddress().toString();
-  device->m_deviceName = advDevice->getName();      
 
   clients[pClient->getPeerAddress().toString()] = device;
   clientCount++;
@@ -268,8 +277,8 @@ bool BleManager::beginRadio(int powerLevel){
   pScan->setScanCallbacks(cb, false);
 
     /** Set scan interval (how often) and window (how long) in milliseconds */
-  pScan->setInterval(100);
-  pScan->setWindow(100);
+  pScan->setInterval(200);
+  pScan->setWindow(80);
 
   pScan->setActiveScan(true);
   //pScan->start(0);
@@ -321,10 +330,14 @@ void BleManager::update(){
     m_pauseScan = false;
   }
   
-  
-  if (toConnect.ready) {
+  xSemaphoreTake(m_mutex, portMAX_DELAY);
+  bool hasConnection = toConnect.ready;
+  xSemaphoreGive(m_mutex);
+  if (hasConnection) {
     connectToServer();
+    xSemaphoreTake(m_mutex, portMAX_DELAY);
     toConnect.erase();
+    xSemaphoreGive(m_mutex);
     m_canScan = true;
     m_scanStartAt = millis()+1000;
     return;
@@ -332,7 +345,7 @@ void BleManager::update(){
 
   if (m_canScan){ 
     if (clientCount < maxClients){
-      if (!isScanning && !toConnect.ready && m_scanStartAt < millis()){
+      if (!isScanning && !hasConnection && m_scanStartAt < millis()){
         setScanningMode(true);
       }
     }
@@ -384,3 +397,4 @@ bool BleManager::isElementIdConnected(int id){
   xSemaphoreGive(m_mutex);
   return false;
 }
+#endif

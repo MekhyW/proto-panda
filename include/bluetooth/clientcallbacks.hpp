@@ -1,5 +1,6 @@
 #pragma once
-
+#include "config.hpp"
+#ifdef ENABLE_BLE
 #include <NimBLEDevice.h>
 #include "Arduino.h"
 #include "config.hpp"
@@ -23,4 +24,4 @@ class ClientCallbacks : public NimBLEClientCallbacks {
     void onAuthenticationComplete(NimBLEConnInfo& connInfo) override;
 };
 
-
+#endif
