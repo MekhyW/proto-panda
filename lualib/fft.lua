@@ -37,7 +37,8 @@ local CALIB_STATE_ADJ_FRIST     = 5
 local CALIB_STATE_ADJ_NOISE     = 6
 local CALIB_STATE_ADJ_MIN       = 7
 local CALIB_STATE_ADJ_MAX       = 8
-local CALIB_STATE_ADJ_BANDEND   = 9
+local CALIB_STATE_ADJ_BANDSTART = 9
+local CALIB_STATE_ADJ_BANDEND   = 10
 
 
 local ENVELOPE_ATTACK_ALPHA  = 0.5
@@ -338,7 +339,12 @@ end
 local function startAdjustBandEnd()
 	_M.state = CALIB_STATE_ADJ_BANDEND
 	_M.showingInstructions = false
-	_M.band_start = 1
+	_M.smoothed = 0
+end
+
+local function startAdjustBandStart()
+	_M.state = CALIB_STATE_ADJ_BANDSTART
+	_M.showingInstructions = false
 	_M.smoothed = 0
 end
 
@@ -361,6 +367,7 @@ menu.addElement(function() return "Adjust frame thresh" end, startAdjustFrist)
 menu.addElement(function() return "Adjust noise thresh" end, startAdjustNoise)
 menu.addElement(function() return "Adjust min energy" end, startAdjustMin)
 menu.addElement(function() return "Adjust max energy" end, startAdjustMax)
+menu.addElement(function() return "Adjust band start" end, startAdjustBandStart)
 menu.addElement(function() return "Adjust band end" end, startAdjustBandEnd)
 menu.addElement(function() return "Exit" end, exitCalibration)
 
@@ -550,6 +557,9 @@ function _M.CalibrateDraw(dt)
 		local level = _M.getSpeechLevel(dt, nil, nil, 5)
 		drawLevelBoxes(level, 5, 12, 30)
 
+		oledDrawFastVLine(_M.band_start * 5, 0, 28, 1)
+		oledDrawFastVLine(_M.band_end * 5, 0, 28, 1)
+
 		oledSetCursor(0, 44)
 		oledDrawText("Frame thresh: " .. math.floor(_M.frist_frame_threshold))
 		oledSetCursor(0, 54)
@@ -586,6 +596,9 @@ function _M.CalibrateDraw(dt)
 			local mapped = Map(v, 0, maxVal, 0, 28)
 			oledDrawFilledRect(i * 5, 0, 4, math.ceil(mapped), 1)
 		end
+
+		oledDrawFastVLine(_M.band_start * 5, 0, 28, 1)
+		oledDrawFastVLine(_M.band_end * 5, 0, 28, 1)
 		
 		-- Show min_energy as a horizontal line
 		local minY = Map(_M.min_energy, 0, maxVal, 0, 28)
@@ -624,6 +637,9 @@ function _M.CalibrateDraw(dt)
 		local level = _M.getSpeechLevel(dt, nil, nil, 5)
 		drawLevelBoxes(level, 5, 12, 30)
 
+		oledDrawFastVLine(_M.band_start * 5, 0, 28, 1)
+		oledDrawFastVLine(_M.band_end * 5, 0, 28, 1)
+
 		oledSetCursor(0, 44)
 		oledDrawText("Max energy: " .. math.floor(_M.max_energy))
 		oledSetCursor(0, 54)
@@ -640,6 +656,9 @@ function _M.CalibrateDraw(dt)
 			local mapped = Map(v, 0, maxVal, 0, 28)
 			oledDrawFilledRect(i * 5, 0, 4, math.ceil(mapped), 1)
 		end
+		local minEn = Map(_M.min_energy, 0, maxVal, 0, 28)
+		oledDrawFastHLine(0, minEn, 128, 1)
+
 		oledDrawFastVLine(_M.band_start * 5, 0, 28, 1)
 		oledDrawFastVLine(_M.band_end * 5, 0, 28, 1)
 		_M.calibrating = true
@@ -647,7 +666,32 @@ function _M.CalibrateDraw(dt)
 		drawLevelBoxes(level, 5, 12, 30)
 
 		oledSetCursor(0, 44)
-		oledDrawText("Band end: " .. _M.band_end .. " (start=1)")
+		oledDrawText("Band end: " .. _M.band_end)
+		oledSetCursor(0, 54)
+		oledDrawText("UP/DN +-1 CONFIRM=save")
+	elseif _M.state == CALIB_STATE_ADJ_BANDSTART then
+		local count = getBandCountFft()
+		
+		-- Use max_energy as the max for the Map function
+		local maxVal = _M.max_energy * 1.2
+		
+		for i = 1, count do
+			local v = getBandValueFft(i)
+			local mapped = Map(v, 0, maxVal, 0, 28)
+			oledDrawFilledRect(i * 5, 0, 4, math.ceil(mapped), 1)
+		end
+
+		local minEn = Map(_M.min_energy, 0, maxVal, 0, 28)
+		oledDrawFastHLine(0, minEn, 128, 1)
+
+		oledDrawFastVLine(_M.band_start * 5, 0, 28, 1)
+		oledDrawFastVLine(_M.band_end * 5, 0, 28, 1)
+		_M.calibrating = true
+		local level = _M.getSpeechLevel(dt, nil, nil, 5)
+		drawLevelBoxes(level, 5, 12, 30)
+
+		oledSetCursor(0, 44)
+		oledDrawText("Band start: " .. _M.band_start)
 		oledSetCursor(0, 54)
 		oledDrawText("UP/DN +-1 CONFIRM=save")
 	end
@@ -880,7 +924,6 @@ function _M.Calibrate(dt)
 
 	elseif _M.state == CALIB_STATE_ADJ_BANDEND then
 		local maxBand = getBandCountFft()
-		_M.band_start = 1
 
 		if input.readButtonStatus(BUTTON_UP) == BUTTON_JUST_PRESSED then
 			_M.band_end = math.min(_M.band_end + 1, maxBand)
@@ -890,8 +933,27 @@ function _M.Calibrate(dt)
 		end
 
 		if input.readButtonStatus(BUTTON_CONFIRM) == BUTTON_JUST_PRESSED then
-			dictSet("fft_speech_band_start", tostring(_M.band_start))
 			dictSet("fft_speech_band_end", tostring(_M.band_end))
+			dictSave()
+			goToMenu()
+		end
+		if input.readButtonStatus(BUTTON_LEFT) == BUTTON_JUST_PRESSED then
+			_M.loadCalibration()
+			goToMenu()
+		end
+	elseif _M.state == CALIB_STATE_ADJ_BANDSTART then
+		local maxBand = getBandCountFft()
+
+
+		if input.readButtonStatus(BUTTON_UP) == BUTTON_JUST_PRESSED then
+			_M.band_start = math.min(_M.band_start+1, _M.band_end-1)
+		end
+		if input.readButtonStatus(BUTTON_DOWN) == BUTTON_JUST_PRESSED then
+			_M.band_start = math.max(_M.band_start-1, 1)
+		end
+
+		if input.readButtonStatus(BUTTON_CONFIRM) == BUTTON_JUST_PRESSED then
+			dictSet("fft_speech_band_start", tostring(_M.band_start))
 			dictSave()
 			goToMenu()
 		end
