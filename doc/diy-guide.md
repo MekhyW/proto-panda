@@ -79,6 +79,8 @@ With all the tools and parts, let's go!
 
 Here's what we're going to build.
 
+> IMPORTANT: In the schematic, you see `IO9`, `IO10`, `IO33` (inner number)... As you can see `GPIO9/IO9` is on pin 15 at the schematic (outer number). In this guide, when we say: "connect something to IO15, that means to connect on GPIO15 that is in the 8. Not connect in to 15 that is IO9. **USE THE NUMBERS INSIDE THE SQUARE, NOT THE NUMBERS OUTSIDE**
+
 ![Diagram](./diy-schematic.png "Electronics schematic") 
 
 ## Power
@@ -254,7 +256,10 @@ And when completed:
 ![](./diy-assembly31.png)
 
 Now after you double check, put the SD card (make sure you put all the required files in the SD card as it says in the [flashing guide](./flashing-guide.md#what-goes-in-the-sd-card)). 
-Powering on it should detect the card. If it does not, check if you did the [configuration part of the SD card for the DIY mode](./flashing-guide.md#configuration).
+Powering on it should detect the card. If it does not, check if you did the [configuration part of the SD card for the DIY mode](./flashing-guide.md#configuration). 
+That means, changing the `PANDA_SD_MODE` to `1` and reduce clock speed to 40mhz
+
+> SD cards bigger than 32gb doesnt work! They also need to be formatted in to FAT32
 
 If everything goes well, the protopanda should boot correctly and all the procedures should show this:
 

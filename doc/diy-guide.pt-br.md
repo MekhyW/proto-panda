@@ -81,6 +81,8 @@ Aqui está o que vamos construir.
 
 ![Diagrama](./diy-schematic.png "Esquema eletrônico")
 
+> IMPORTANTE: No esquematico, tem `IO9`, `IO10`, `IO33` (inner number)... Note que o `GPIO9/IO9` está no pino 15 do esquematico (numero de fora). Neste guia, quando dizemos "conecte algo ao IO15", isso significa conectar ao GPIO15 (que está na posição 8 do numero de fora), e não ao pino 15 (que é o IO9). **USE OS NÚMEROS DENTRO DO QUADRADO, NÃO OS NÚMEROS FORA DELE.**
+
 ## Alimentação
 
 > IMPORTANTE: Qualquer fio usado na trilha de 5V ou 9V deve ser mais grosso. Use algo como AWG 20 ou maior.
@@ -254,6 +256,9 @@ E quando concluído:
 
 Agora, depois de verificar duas vezes, coloque o cartão SD (certifique-se de colocar todos os arquivos necessários no cartão SD como diz no [guia de gravação](./flashing-guide.md#o-que-vai-no-cartão-sd)).
 Ao ligar, ele deve detectar o cartão. Se não detectar, verifique se você fez a [parte de configuração do cartão SD para o modo DIY](./flashing-guide.md#configuração).
+Ou seja trocar o `PANDA_SD_MODE` para 1, e reduzir o clock para 40mhz
+
+> Cartões SD maiores que 32GB não funcionam! Eles também devem estar formatados como FAT32
 
 Se tudo correr bem, o protopanda deve inicializar corretamente e todos os procedimentos devem mostrar isto:
 
