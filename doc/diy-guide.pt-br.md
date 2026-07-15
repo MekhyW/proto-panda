@@ -22,7 +22,7 @@ Alguns conversores buck têm problemas com capacitores extras, então o capacito
 
 1) Um dos conversores buck 5v 3A: [opção 1](https://aliexpress.com/item/1005005505907937.html) / [opção 2](https://pt.aliexpress.com/item/1005011601387749.html) / [opção 3](https://pt.aliexpress.com/item/1005006009759175.html)
 2) Gatilho PD: [opção 1](https://aliexpress.com/item/1005007889747084.html) / [opção 2](https://pt.aliexpress.com/item/1005012106478427.html)
-3) Módulo SD Card: [opção 1](https://aliexpress.com/item/1005008723789216.html) / [opção 2](https://pt.aliexpress.com/item/1000001126728.html)
+3) [Módulo SD Card](https://pt.aliexpress.com/item/1005009221606482.html)
 4) [Tela OLED](https://aliexpress.com/item/1005006141235306.html)
 5) [Placa de desenvolvimento ESP32 N16R8](https://aliexpress.com/item/1005009906920237.html)
 6) [Buzzer 5 ou 3.3v](https://aliexpress.com/item/1005006201550296.html)

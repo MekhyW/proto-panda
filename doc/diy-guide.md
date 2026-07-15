@@ -22,7 +22,7 @@ Some buck converters have issues with extra capacitors, so the 1000~4700uF capac
 
 1) One of the 5v 3A buck converters: [option 1](https://aliexpress.com/item/1005005505907937.html) / [option 2](https://pt.aliexpress.com/item/1005011601387749.html) / [option 3](https://pt.aliexpress.com/item/1005006009759175.html)
 2) PD trigger: [Option 1](https://aliexpress.com/item/1005007889747084.html) / [option 2](https://pt.aliexpress.com/item/1005012106478427.html)
-3) SD Card module: [option 1](https://aliexpress.com/item/1005008723789216.html) / [option 2](https://pt.aliexpress.com/item/1000001126728.html)
+3) [SD Card module](https://pt.aliexpress.com/item/1005009221606482.html)
 4) [OLED screen](https://aliexpress.com/item/1005006141235306.html)
 5) [ESP32 N16R8 dev board](https://aliexpress.com/item/1005009906920237.html)
 6) [Buzzer 5 or 3.3v](https://aliexpress.com/item/1005006201550296.html)
