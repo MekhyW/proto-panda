@@ -167,8 +167,9 @@ function input.Load()
         confs.input.drivers = {"generic"}
     end
 
-    local maxN = conf.input and (conf.input.maxBleDevices or 2) or 2
+    local maxN = confs.input and (confs.input.maxBleDevices or 2) or 2
     _G.MAX_BLE_CLIENTS = maxN
+    print("Gonna use "..maxN.." controllers")
 
     drivers.Start(maxN)
 
@@ -220,18 +221,18 @@ function input.Load()
             input.infrared[code] = keymap
         end
         drivers.type_by_id[0] = {mode={"generic"}, type="hid"}
-
-        drivers.EnableDrivers(confs.input.drivers)
-        if confs.input.enableHidControllers then
-            drivers.EnableGenericAndroidMouse()
-        end
-
-        drivers.WrapUp()
     elseif mode == "NONE" then
         --We just accept
     else
         error("Invalid input mode: "..tostring(mode))
     end
+
+    drivers.EnableDrivers(confs.input.drivers)
+    if confs.input.enableHidControllers then
+        drivers.EnableGenericAndroidMouse()
+    end
+
+    drivers.WrapUp()
     
 
 

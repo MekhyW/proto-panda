@@ -210,7 +210,15 @@ LuaWrapper::LuaWrapper() {
       if not _G.package then
           _G.package = {}
       end
+      if not _G.in_load then
+          _G.in_load = {}
+      end
       if not _G.package[packageName] then
+          print("Loading: "..packageName)
+          if _G.in_load[packageName] then  
+            error("Reference loop in require!")
+          end
+          _G.in_load[packageName] = true
           local name = packageName:gsub("%.", "/")
           local notFound = {}
           for path in string.gmatch(package.path..';', "(.-);") do
@@ -222,16 +230,20 @@ LuaWrapper::LuaWrapper() {
                       notFound[#notFound+1] = dir
                   else
                       -- syntax error in the file itself
+                      _G.in_load[packageName] = false
                       error(chunkOrErr)
                   end
               else
                   -- file loaded and handle already closed; now run it
                   local success, data = pcall(chunkOrErr)
                   if not success then
+                      _G.in_load[packageName] = false
                       error(data)
                   end
                   _G.package[packageName] = data
                   _G[packageName] = data
+                  _G.in_load[packageName] = false
+                  print("Finished loading: "..packageName)
                   return data
               end
           end
@@ -239,6 +251,7 @@ LuaWrapper::LuaWrapper() {
           for i,b in pairs(notFound) do
               str = str ..'\tno file \''..b..'\'\n'
           end
+          _G.in_load[packageName] = false
           error(str)
       else
           return _G.package[packageName]

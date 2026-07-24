@@ -1,6 +1,5 @@
 local configloader = require("configloader")
-local models = require("models")
-local overlays = require("overlays")
+
 local _M = {
 	animations = {},
 	by_name = {},
@@ -14,6 +13,7 @@ function _M.loadSingleExpression(data, filename, i)
 	local id = #_M.animations+1
 
 	if data.tracks then  
+		local models = require("models")
 		local success, err = models.loadAnimation(data)
 	    if not success then  
 	    	error("Failed to load animation "..i.." at file "..filename..": "..err)
@@ -119,7 +119,8 @@ function _M.update()
 			if aux.onEnter then 
 				aux.onEnter()
 			end
-			if aux.overlay then  
+			if aux.overlay then 
+				local overlays = require("overlays") 
 				overlays.enableOverlay(aux.overlay)
 			end
 			_M.pendingEnter[id] = nil
@@ -137,7 +138,7 @@ function _M.Load()
 	for i ,b in pairs(conf.expressions) do 
 		_M.loadSingleExpression(b, "/animation.json", i)
 	end
-
+	local models = require("models")
 	local modelAnim = models.getModelAnimationList("/models.json")
 	if modelAnim then
 		for id , anim in pairs(modelAnim) do 
@@ -254,6 +255,7 @@ function _M.SetExpression(id)
 				_M.previousExpression.onLeave()
 			end
 			if _M.previousExpression.overlay then  
+				local overlays = require("overlays")
 				overlays.disableOverlay(_M.previousExpression.overlay)
 			end
 		end

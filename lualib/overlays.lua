@@ -187,13 +187,13 @@ _M.modes["frame_by_fft_level"] = function(obj, dt)
     obj.sprite:SetFrameId(level)
     if menu.push_to_talk then  
         if not obj.showing then  
-            if input.readButtonStatus(setting.push_to_talk_button) == BUTTON_JUST_PRESSED then  
+            if not obj.showing and input.readButtonStatus(setting.push_to_talk_button) == BUTTON_PRESSED then  
                 obj.showing = true
                 setOverlaySprite(obj.sprite)
             end
         else 
-            if input.readButtonStatus(setting.push_to_talk_button) == BUTTON_JUST_RELEASED then  
-                obj.showing = true
+            if obj.showing and input.readButtonStatus(setting.push_to_talk_button) == BUTTON_RELEASED then  
+                obj.showing = false
                 clearOverlaySprite(obj.sprite)  
             end
         end              

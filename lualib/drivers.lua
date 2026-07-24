@@ -12,6 +12,7 @@ local drivers = {
     mouseListener = nil,
 
     maxButtons = MAX_BLE_BUTTONS,
+    maxClients = 2,
 
     panda = {},
     joystick = {},
@@ -47,10 +48,9 @@ drivers.device_attribute_map = {
     ['hid'] = {'joystick', 'mouse', 'keyboard'},
 }
 
-
-
-function drivers.Start(maxN)
-    for i=0, maxN do   
+function drivers.Start(maxClients)
+    drivers.maxClients = maxClients
+    for i=0,maxClients-1 do   
         drivers.generic[i] = {
             timeout=0,
             buttons={0,0,0,0,0,0,0,0}
@@ -79,6 +79,7 @@ function drivers.Start(maxN)
         end
     end
 end
+
 function drivers.EnableDrivers(driversToLoad)
     for i,driverName in pairs(driversToLoad) do  
         local success, content = pcall(dofile,"/lualib/drivers/"..driverName..'.lua')
@@ -102,7 +103,7 @@ function drivers.EnableDrivers(driversToLoad)
                 print("Loaded hid driver "..driverName)
             elseif content.type == "core" then
                 drivers.validEntries[driverName] = true
-                drivers[driverName] = content.getDriverModules()
+                drivers[driverName] = content.getDriverModules(drivers.maxClients)
                 drivers.core[driverName] = content
                 print("Loaded core driver "..driverName)
             else 

@@ -16,7 +16,7 @@ local boop = require("boop")
 local input = require("input")
 local drivers = require("drivers")
 local configloader = require("configloader")
-local overlays = require("overlays")
+
 
 MAX_INTERFACE_ICONS = 4
 MENU_SPACING = 13
@@ -64,6 +64,8 @@ local shaderNames = {
 }
 
 function _M.setup(expressions)
+    local overlays = require("overlays")
+    
     local cfg = configloader.Get()
 
     _M.original_left = BUTTON_LEFT
@@ -565,7 +567,7 @@ function _M.DrawBottomBar()
             oledDrawText(string.format("FPS: %2.2f", f))
         end
     elseif (_M.infoShown == 2) then
-            oledDrawText(string.format("Ram: %2.2f%%", getFreePsram()/getTotalPsram()))
+            oledDrawText(string.format("Ram: %2.2f%%", getFreePsram()/getTotalPsram() * 100))
     elseif (_M.infoShown == 3) then
         if getLuaFps then
             local c = getLuaFps()
@@ -574,7 +576,7 @@ function _M.DrawBottomBar()
             oledDrawText(string.format("FPS: %2.2f", getFps()))
         end
     elseif (_M.infoShown == 4) then
-        oledDrawText(string.format("F.Heap: %2.2f%%", getFreeHeap()/getTotalHeap()))
+        oledDrawText(string.format("F.Heap: %2.2f%%", getFreeHeap()/getTotalHeap() * 100))
     elseif (_M.infoShown == 5) then
         if USE_PIN_BATTERY_IN == 1 then  
             oledDrawText(string.format("Volts: %2.2f", getAvgBatteryVoltage()))
