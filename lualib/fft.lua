@@ -63,66 +63,6 @@ local NOISE_STEP  = 500
 local ENERGY_STEP = 5000
 local FRIST_STEP = 500
 
-
-function _M.load()
-	local cfg = configloader.Get()
-	if not cfg.fft or not cfg.fft.enabled then
-		generic.displaySplashMessage("Starting:\nNo fft configued")
-		delay(200)
-		return
-	end
-	local ui = require("ui")
-	local menu = ui.generateUi("Mic Calibration", nil, exitCalibration)
-	menu.addElement(function() return "Full calibration" end, startFullCalibration)
-	menu.addElement(function() return "Adjust frame thresh" end, startAdjustFrist)
-	menu.addElement(function() return "Adjust noise thresh" end, startAdjustNoise)
-	menu.addElement(function() return "Adjust min energy" end, startAdjustMin)
-	menu.addElement(function() return "Adjust max energy" end, startAdjustMax)
-	menu.addElement(function() return "Adjust band start" end, startAdjustBandStart)
-	menu.addElement(function() return "Adjust band end" end, startAdjustBandEnd)
-	menu.addElement(function() return "Exit" end, exitCalibration)
-	_M.menu = menu
-
-	local cfg = cfg.fft
-
-	if not tonumber(cfg.gpio) then
-		error("GPIO for fft must be a number.")
-	end
-
-	cfg.gpio = tonumber(cfg.gpio)
-
-	if cfg.gpio <= 0 or cfg.gpio >= 11 then
-		error("GPIO for fft must be channel1, that means gpipo between 1 and 10")
-	end
-
-	cfg.samples = cfg.samples or 512
-	cfg.sampling_frequency = cfg.sampling_frequency or 44100
-
-
-	_M.noise_threshold = cfg.noise_threshold or _M.noise_threshold
-	_M.band_start 	= cfg.speech_band_start or _M.band_start
-	_M.band_end 	= cfg.speech_band_end or _M.band_end
-	_M.min_energy 	= cfg.speech_min_energy or _M.min_energy
-	_M.band_end 	= cfg.speech_max_energy or _M.max_energy
-	_M.frist_frame_threshold 	= cfg.speech_frist_frame_threshold or _M.frist_frame_threshold
-
-
-	_M.loadCalibration()
-	cfg.band_count = cfg.band_count or 16
-	_M.band_count = cfg.band_count
-
-	fft.enabled = beginFft(cfg.gpio, cfg.samples, cfg.sampling_frequency, _M.noise_threshold, cfg.band_count)
-
-	
-
-	if not fft.enabled then
-		generic.displaySplashMessage("FFT FAILED")
-		delay(2000)
-	end
-
-	startFft()
-end
-
 function _M.resetDefaults()
 
 
@@ -964,5 +904,67 @@ function _M.Calibrate(dt)
 		end
 	end
 end
+
+
+
+function _M.load()
+	local cfg = configloader.Get()
+	if not cfg.fft or not cfg.fft.enabled then
+		generic.displaySplashMessage("Starting:\nNo fft configued")
+		delay(200)
+		return
+	end
+	local ui = require("ui")
+	local menu = ui.generateUi("Mic Calibration", nil, exitCalibration)
+	menu.addElement(function() return "Full calibration" end, startFullCalibration)
+	menu.addElement(function() return "Adjust frame thresh" end, startAdjustFrist)
+	menu.addElement(function() return "Adjust noise thresh" end, startAdjustNoise)
+	menu.addElement(function() return "Adjust min energy" end, startAdjustMin)
+	menu.addElement(function() return "Adjust max energy" end, startAdjustMax)
+	menu.addElement(function() return "Adjust band start" end, startAdjustBandStart)
+	menu.addElement(function() return "Adjust band end" end, startAdjustBandEnd)
+	menu.addElement(function() return "Exit" end, exitCalibration)
+	_M.menu = menu
+
+	local cfg = cfg.fft
+
+	if not tonumber(cfg.gpio) then
+		error("GPIO for fft must be a number.")
+	end
+
+	cfg.gpio = tonumber(cfg.gpio)
+
+	if cfg.gpio <= 0 or cfg.gpio >= 11 then
+		error("GPIO for fft must be channel1, that means gpipo between 1 and 10")
+	end
+
+	cfg.samples = cfg.samples or 512
+	cfg.sampling_frequency = cfg.sampling_frequency or 44100
+
+
+	_M.noise_threshold = cfg.noise_threshold or _M.noise_threshold
+	_M.band_start 	= cfg.speech_band_start or _M.band_start
+	_M.band_end 	= cfg.speech_band_end or _M.band_end
+	_M.min_energy 	= cfg.speech_min_energy or _M.min_energy
+	_M.band_end 	= cfg.speech_max_energy or _M.max_energy
+	_M.frist_frame_threshold 	= cfg.speech_frist_frame_threshold or _M.frist_frame_threshold
+
+
+	_M.loadCalibration()
+	cfg.band_count = cfg.band_count or 16
+	_M.band_count = cfg.band_count
+
+	fft.enabled = beginFft(cfg.gpio, cfg.samples, cfg.sampling_frequency, _M.noise_threshold, cfg.band_count)
+
+	
+
+	if not fft.enabled then
+		generic.displaySplashMessage("FFT FAILED")
+		delay(2000)
+	end
+
+	startFft()
+end
+
 
 return _M

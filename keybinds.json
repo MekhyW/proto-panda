@@ -1,7 +1,10 @@
 {
   "input": {
-    "//comment": "The current avaliable input modes are 'infrared' and 'ble'",
+    "//comment0": "The current avaliable input modes are 'infrared', 'ble' and 'none'",
     "mode": "BLE",
+    "//comment1": "'enableHidControllers' allows for generic controllers like BLE HID devices to connect with protopanda. Support is limited",
+    "enableHidControllers": false,
+    "maxBleDevices": 1,
     "drivers": ["panda", "BLE-M3", "beauty-r1"]
   },
   "infrared": [

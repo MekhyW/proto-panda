@@ -47,8 +47,10 @@ drivers.device_attribute_map = {
     ['hid'] = {'joystick', 'mouse', 'keyboard'},
 }
 
-do
-    for i=0,MAX_BLE_CLIENTS-1 do   
+
+
+function drivers.Start(maxN)
+    for i=0, maxN do   
         drivers.generic[i] = {
             timeout=0,
             buttons={0,0,0,0,0,0,0,0}
@@ -77,8 +79,6 @@ do
         end
     end
 end
-
-
 function drivers.EnableDrivers(driversToLoad)
     for i,driverName in pairs(driversToLoad) do  
         local success, content = pcall(dofile,"/lualib/drivers/"..driverName..'.lua')
@@ -112,8 +112,9 @@ function drivers.EnableDrivers(driversToLoad)
             log("Failed to load driver '"..driverName.."' due "..tostring(content))
         end
     end
+end
 
-    drivers.EnableGenericAndroidMouse()
+function drivers.WrapUp()
     for i,b in pairs(drivers.core) do  
         if not b.onEnable() then  
             log("Failed to enable core driver "..tostring(i))
