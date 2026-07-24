@@ -148,7 +148,20 @@ _M.starttup["random_flashing"] = function(obj)
     obj.alive = false
 end
 
-_M.starttup["frame_by_fft_level"] = function(obj) end
+_M.starttup["frame_by_fft_level"] = function(obj)
+    local buttonName = obj.behavior.push_to_talk_button
+    if buttonName then  
+        local n = _G[buttonName]
+        if type(n) ~= 'number' then  
+            error("Button '"..buttonName.."' is not valid.")
+        end
+        obj.behavior.push_to_talk_button = n
+    end
+    if menu.push_to_talk then  
+        obj.showing = false
+        obj.sprite:setVisibility(false)
+    end
+end
 
 
 
@@ -184,20 +197,25 @@ _M.modes["frame_by_fft_level"] = function(obj, dt)
     end
     local setting = obj.behavior
     local level = fft.getSpeechLevel(dt, setting.attack, setting.release, obj.frameCount)
-    obj.sprite:SetFrameId(level)
     if menu.push_to_talk then  
         if not obj.showing then  
-            if not obj.showing and input.readButtonStatus(setting.push_to_talk_button) == BUTTON_PRESSED then  
+            if input.readButtonStatus(setting.push_to_talk_button) == BUTTON_PRESSED then  
                 obj.showing = true
-                setOverlaySprite(obj.sprite)
+                obj.sprite:setVisibility(true)
             end
         else 
-            if obj.showing and input.readButtonStatus(setting.push_to_talk_button) == BUTTON_RELEASED then  
+            if input.readButtonStatus(setting.push_to_talk_button) == BUTTON_RELEASED then  
                 obj.showing = false
-                clearOverlaySprite(obj.sprite)  
+                obj.sprite:setVisibility(false)
             end
-        end              
+        end    
+    else 
+        if obj.showing == false then  
+            obj.showing = true
+            obj.sprite:setVisibility(true)
+        end      
     end
+    obj.sprite:SetFrameId(level)
 end
 
 _M.onEnable["frame_by_fft_level"] = function(obj)

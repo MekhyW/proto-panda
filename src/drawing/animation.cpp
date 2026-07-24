@@ -459,7 +459,7 @@ bool Animation::setOverlaySprite(Sprite *s)
         xSemaphoreGive(m_SpriteMutex);
         return false;
     }
-    Serial.printf("Added ID: %d\n", id);
+    Serial.printf("Added overlay ID: %d\n", id);
     m_spritesInScene.push_back(id);
     xSemaphoreGive(m_SpriteMutex);
     return true;
@@ -476,6 +476,7 @@ bool Animation::clearOverlaySprite(Sprite *s){
     {
         if (*it == id)
         {
+            Serial.printf("Removed overlay ID: %d\n", id);
             m_spritesInScene.erase(it);
             xSemaphoreGive(m_SpriteMutex);
             return true;
