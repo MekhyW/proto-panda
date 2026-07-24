@@ -97,7 +97,7 @@ Cache file version to invalidate cache in case of firmware update
 #define OLED_SCREEN_CLOCK_FREQ 800000
 
 
-//#define USE_LIDAR
+#define USE_LIDAR
 #define LIDAR_ADDR 0x29
 
 

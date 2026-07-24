@@ -1,4 +1,6 @@
 local fft = require("fft")
+local input = require("input")
+local menu = require("menu")
 
 local _M = {
     by_name = {},
@@ -8,6 +10,9 @@ local _M = {
     enabled = true,
     modes = {},
     starttup = {},
+
+    onEnable = {},
+    onDisable = {},
 }
 
 
@@ -143,7 +148,7 @@ _M.starttup["random_flashing"] = function(obj)
     obj.alive = false
 end
 
-_M.starttup["frame_by_fft_level"] = function(element) end
+_M.starttup["frame_by_fft_level"] = function(obj) end
 
 
 
@@ -180,6 +185,29 @@ _M.modes["frame_by_fft_level"] = function(obj, dt)
     local setting = obj.behavior
     local level = fft.getSpeechLevel(dt, setting.attack, setting.release, obj.frameCount)
     obj.sprite:SetFrameId(level)
+    if menu.push_to_talk then  
+        if not obj.showing then  
+            if input.readButtonStatus(setting.push_to_talk_button) == BUTTON_JUST_PRESSED then  
+                obj.showing = true
+                setOverlaySprite(obj.sprite)
+            end
+        else 
+            if input.readButtonStatus(setting.push_to_talk_button) == BUTTON_JUST_RELEASED then  
+                obj.showing = true
+                clearOverlaySprite(obj.sprite)  
+            end
+        end              
+    end
+end
+
+_M.onEnable["frame_by_fft_level"] = function(obj)
+    local setting = obj.behavior
+    if menu.push_to_talk then  
+        obj.showing = false
+        clearOverlaySprite(obj.sprite) 
+        return false
+    end
+    return true
 end
 
 
@@ -202,8 +230,11 @@ function _M.enableOverlay(name)
 
     _M.active[ov.id] = ov
     if _M.enabled then
+        local onEnable = _M.onEnable[ov.mode]
         for i, ob in pairs(ov.objects) do  
-            setOverlaySprite(ob.sprite)
+            if not onEnable or onEnable(ob) then
+                setOverlaySprite(ob.sprite)
+            end
         end
     end
 end
@@ -216,8 +247,11 @@ function _M.disableOverlay(name)
     end
 
     _M.active[ov.id] = nil
+    local onDisable = _M.onDisable[ov.mode]
     for i, ob in pairs(ov.objects) do  
-        clearOverlaySprite(ob.sprite)
+        if not onDisable or onDisable(ob) then
+            clearOverlaySprite(ob.sprite)
+        end
     end
 
     local count = 0

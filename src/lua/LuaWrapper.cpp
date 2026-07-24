@@ -188,39 +188,63 @@ LuaWrapper::LuaWrapper() {
   luaopen_table(_state);
 
   const char* lua_require_code PROGMEM = R"(
-_G.require = nil
-function require(packageName)
-    if not _G.package then 
-        _G.package = {}
-    end
-    if not _G.package[packageName] then 
-        local name = packageName:gsub("%.", "/")
-        local notFound = {}
-        for path in string.gmatch(package.path..';', "(.-);") do 
-            local dir = path:gsub("%?", name)
-            local success, data = pcall(dofile, dir)
-            if not success then 
-                if data:match("^cannot open") then
-                    notFound[#notFound+1] = dir
-                else 
-                    error(data)
-                end
-            else 
-                _G.package[packageName] = data 
-                _G[packageName] = data
-                return data
-            end
-        end
-        local str = "module '"..packageName.."' not found:\nno field package.preload['"..packageName.."']\n"
-        for i,b in pairs(notFound) do  
-            str = str ..'\tno file \''..b..'\'\n'
-        end
-        error(str)
-    else 
-        return _G.package[packageName]
-    end
-end
-    )";
+  _G.require = nil
+
+
+  local function loadFileClosed(path)
+      local f = io.open(path, "r")
+      if not f then
+          return false, "cannot open " .. path
+      end
+      local content = f:read("*a")
+      f:close()
+
+      local chunk, err = load(content, "@" .. path)
+      if not chunk then
+          return false, err
+      end
+      return true, chunk
+  end
+
+  function require(packageName)
+      if not _G.package then
+          _G.package = {}
+      end
+      if not _G.package[packageName] then
+          local name = packageName:gsub("%.", "/")
+          local notFound = {}
+          for path in string.gmatch(package.path..';', "(.-);") do
+              local dir = path:gsub("%?", name)
+
+              local okLoad, chunkOrErr = loadFileClosed(dir)
+              if not okLoad then
+                  if chunkOrErr:match("^cannot open") then
+                      notFound[#notFound+1] = dir
+                  else
+                      -- syntax error in the file itself
+                      error(chunkOrErr)
+                  end
+              else
+                  -- file loaded and handle already closed; now run it
+                  local success, data = pcall(chunkOrErr)
+                  if not success then
+                      error(data)
+                  end
+                  _G.package[packageName] = data
+                  _G[packageName] = data
+                  return data
+              end
+          end
+          local str = "module '"..packageName.."' not found:\nno field package.preload['"..packageName.."']\n"
+          for i,b in pairs(notFound) do
+              str = str ..'\tno file \''..b..'\'\n'
+          end
+          error(str)
+      else
+          return _G.package[packageName]
+      end
+  end
+  )";
 
   if (luaL_dostring(_state, lua_require_code) != 0) {
     lua_pop(_state, 1); 

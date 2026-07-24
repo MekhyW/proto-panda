@@ -251,6 +251,7 @@
           "transparency": false,
           "behavior"         : {
             "mode": "frame_by_fft_level",
+            "push_to_talk_button": "BUTTON_BACK",
             "x": 11,
             "y": 19,
             "attack": 0.05,
