@@ -452,13 +452,6 @@ Gradually adjusts the panel brightness to the specified level.
   - `rate` (int, optional): Speed of the transition. Default is `4`.
 - **Returns**: `nil`
 
-#### `setSpeakingFrames(frames, frameDuration)`
-Sets the frames to display when the speak sensor is triggered.
-- **Parameters**:
-  - `frames` (int array): The IDs of the frames to display.
-  - `frameDuration` (int): The duration of each frame in milliseconds.
-- **Returns**: `nil`
-
 #### `setRainbowShader(enabled)`
 Enables or disables the rainbow shader, which converts pixels to a rainbow pattern.
 - **Parameters**:

@@ -450,13 +450,6 @@ Ajusta gradualmente o brilho do painel para o nível especificado.
   - `rate` (int, opcional): Velocidade da transição. Padrão é `4`.
 - **Retorna**: `nil`
 
-#### `setSpeakingFrames(frames, frameDuration)`
-Define os frames a serem exibidos quando o sensor de fala é acionado.
-- **Parâmetros**:
-  - `frames` (array de int): Os IDs dos frames a serem exibidos.
-  - `frameDuration` (int): A duração de cada frame em milissegundos.
-- **Retorna**: `nil`
-
 #### `setRainbowShader(enabled)`
 Habilita ou desabilita o shader de arco-íris, que converte pixels para um padrão de arco-íris.
 - **Parâmetros**:
