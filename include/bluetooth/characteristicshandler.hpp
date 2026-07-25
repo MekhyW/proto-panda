@@ -41,6 +41,7 @@ class BleCharacteristicsHandler{
           this->AddMessage(cliID, id, pData, length, isNotify);
         };
     }
+    bool GetMessageAndSend();
 
     NimBLEUUID uuid;
     bool m_stream;
@@ -52,6 +53,6 @@ class BleCharacteristicsHandler{
     std::queue<BleMessage> dataQueue;
     notify_callback notificationLambda;
 
-    void processMessageAndPop();
+    void processMessageAndPopAndUnlock();
 };
 #endif

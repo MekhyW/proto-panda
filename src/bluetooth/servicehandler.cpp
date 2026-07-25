@@ -49,12 +49,14 @@ MultiReturn<std::vector<uint8_t>> BleServiceHandler::ReadFromCharacteristics(int
     } 
 
     BluetoothDeviceHandler *dev = nullptr;
+    xSemaphoreTake(queueMutex, portMAX_DELAY);
     for (auto &it : m_connectedDevices){
         if (it->getId() == clientId){
             dev = it;
             break;
         }
     }
+    xSemaphoreGive(queueMutex);
 
     if (dev == nullptr){
         return MultiReturn<std::vector<uint8_t>>("device is not found");
@@ -80,22 +82,27 @@ MultiReturn<std::vector<uint8_t>> BleServiceHandler::ReadFromCharacteristics(int
 }
 
 int BleServiceHandler::GetClientIdFromControllerId(uint32_t id){
+    xSemaphoreTake(queueMutex, portMAX_DELAY);
     for (auto &it : m_connectedDevices){
         if (id == it->m_controllerId){
+            xSemaphoreGive(queueMutex);
             return it->getId();
         }
     }
+    xSemaphoreGive(queueMutex);
     return -1;
 }
 
 MultiReturn<int> BleServiceHandler::GetRSSI(int clientId){
     BluetoothDeviceHandler *dev = nullptr;
+    xSemaphoreTake(queueMutex, portMAX_DELAY);
     for (auto &it : m_connectedDevices){
         if (it->getId() == clientId){
             dev = it;
             break;
         }
     }
+    xSemaphoreGive(queueMutex);
 
     if (dev == nullptr){
         return MultiReturn<int>("device is not found");
@@ -119,12 +126,14 @@ std::vector<BleCharacteristicsHandler*> BleServiceHandler::getRegisteredCharacte
 
 MultiReturn<std::vector<std::string>> BleServiceHandler::GetCharacteristicsFromOurService(int clientId){
     BluetoothDeviceHandler *dev = nullptr;
+    xSemaphoreTake(queueMutex, portMAX_DELAY);
     for (auto &it : m_connectedDevices){
         if (it->getId() == clientId){
             dev = it;
             break;
         }
     }
+    xSemaphoreGive(queueMutex);
 
     if (dev == nullptr){
         return MultiReturn<std::vector<std::string>>("device is not found");
@@ -150,12 +159,14 @@ MultiReturn<std::vector<std::string>> BleServiceHandler::GetCharacteristicsFromO
 MultiReturn<std::vector<std::string>> BleServiceHandler::GetServices(int clientId, bool refresh){
     
     BluetoothDeviceHandler *dev = nullptr;
+    xSemaphoreTake(queueMutex, portMAX_DELAY);
     for (auto &it : m_connectedDevices){
         if (it->getId() == clientId){
             dev = it;
             break;
         }
     }
+    xSemaphoreGive(queueMutex);
 
     if (dev == nullptr){
         return MultiReturn<std::vector<std::string>>("device is not found");
@@ -216,12 +227,15 @@ bool BleServiceHandler::WriteToCharacteristics(std::vector<uint8_t> bytes, int c
     
 
     BluetoothDeviceHandler *dev = nullptr;
+    xSemaphoreTake(queueMutex, portMAX_DELAY);
     for (auto &it : m_connectedDevices){
         if (it->getId() == clientId){
             dev = it;
             break;
         }
     }
+    xSemaphoreGive(queueMutex);
+    
 
     if (dev == nullptr){
         Logger::Error("device is not found");
@@ -251,6 +265,10 @@ bool BleServiceHandler::WriteToCharacteristics(std::vector<uint8_t> bytes, int c
 void BleServiceHandler::SendMessages(){
     if (devicesToNotify.size() > 0){
         xSemaphoreTake(queueMutex, portMAX_DELAY);
+        if (devicesToNotify.size() == 0){
+            xSemaphoreGive(queueMutex);
+            return;
+        }
         BluetoothDeviceHandler *dev = devicesToNotify.top();
         m_connectedDevices.emplace_back(dev);
         devicesToNotify.pop();
