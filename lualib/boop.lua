@@ -7,8 +7,9 @@ local DrawText = generic.DrawText
 local DrawSprite = generic.DrawSprite
 local Map = generic.map
 local GetCurrentFrame = expressions.GetCurrentFrame
-local StackExpression = expressions.StackExpression
+local SetExpression = expressions.SetExpression
 local IsFrameFromAnimation = expressions.IsFrameFromAnimation
+local GetCurrentExpressionId = expressions.GetCurrentExpressionId
 
 local _M = {
     boopIsOn = false,
@@ -70,32 +71,6 @@ function _M.Load()
         end
     end
     print("Mode is ".._M.mode)
-
-    if _M.config["transitionIn"] then
-        if type(_M.config["transitionIn"]) ~= "string" then 
-            error("Field 'triggerStop' should be an string")
-        end
-        local exp = expressions.GetExpression(_M.config["transitionIn"])
-        if not exp then 
-            error("On boop 'transitionIn' is defined the ".._M.config["transitionIn"].." but thats not a valid expression")
-        end
-        if not exp.transition then 
-            error("On boop 'transitionIn' the animation should have transition=true")
-        end
-    end
-
-    if _M.config["transitionOut"] then
-        if type(_M.config["transitionOut"]) ~= "string" then 
-            error("Field 'triggerStop' should be an string")
-        end
-        local exp = expressions.GetExpression(_M.config["transitionOut"])
-        if not exp then 
-            error("On boop 'transitionOut' is defined the ".._M.config["transitionOut"].." but thats not a valid expression")
-        end
-        if not exp.transition then 
-            error("On boop 'transitionOut' the animation should have transition=true")
-        end
-    end
 
     if _M.config["boopAnimationName"] then
         if type(_M.config["boopAnimationName"]) ~= "string" then 
@@ -587,13 +562,8 @@ function _M.manageBoop(dt)
             end
             if isOnCorrectFrame then
                 _M.boopIsOn = true
-                if config.transitionOut then
-                    StackExpression(config.transitionOut)
-                end
-                StackExpression(config.boopAnimationName)
-                if config.transitionIn then
-                    StackExpression(config.transitionIn)
-                end
+                _M.prevExpression = GetCurrentExpressionId()
+                SetExpression(config.boopAnimationName)
             end
         end
     else
@@ -609,7 +579,7 @@ function _M.manageBoop(dt)
                 return
             end
             _M.boopIsOn = false   
-            popPanelAnimation()       
+            SetExpression(_M.prevExpression)       
         end
     end
     

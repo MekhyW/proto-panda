@@ -1,10 +1,13 @@
 #pragma once 
-
+#include "tools/config_default.hpp"
+#ifdef ENABLE_LUA
 #include "lua/LuaWrapper.h"
 #include "bluetooth/characteristicshandler.hpp"
 #include "bluetooth/servicehandler.hpp"
 #include "drawing/rendering/model.hpp"
+#include "drawing/sprite.hpp"
 #include <Arduino.h>
+
 
 
 class LuaCaller{
@@ -107,7 +110,7 @@ template<typename Ctype,typename Ret> struct expanderClass <0,Ctype,Ret> {
 
 template<typename T1,typename ClassObj,typename ... Types> struct internal_register{
 
-    template <typename ... Opt> static void LambdaRegisterStackOpt(lua_State *L,std::string str,int stackPos,T1 (ClassObj::*func)(Types ... args),Opt ... optionalArgs ){
+    template <typename ... Opt> static void LambdaRegisterStackOpt(lua_State *L,const char *str,int stackPos,T1 (ClassObj::*func)(Types ... args),Opt ... optionalArgs ){
         std::tuple<Opt...> tup(optionalArgs...);
         LuaCFunctionLambda f = [func,str,tup](lua_State *L2) -> int {
             int argNecessary = int(sizeof...(Types)) - int(sizeof...(Opt));
@@ -115,11 +118,11 @@ template<typename T1,typename ClassObj,typename ... Types> struct internal_regis
             int argCount = lua_gettop(L2)-1; //Ignore the first one that is the table!
 
             if (argCount > argMax){
-                luaL_error(L2, "Too much arguments on function %s. Expected %d-%d but got %d\n",str.c_str(),argNecessary, argMax, argCount);
+                luaL_error(L2, "Too much arguments on function %s. Expected %d-%d but got %d\n",str,argNecessary, argMax, argCount);
                 return 1;
             }
             if (argCount < argNecessary){
-                luaL_error(L2, "Too few arguments on function %s. Expected %d-%d but got %d",str.c_str(),argNecessary, argMax, argCount);
+                luaL_error(L2, "Too few arguments on function %s. Expected %d-%d but got %d",str,argNecessary, argMax, argCount);
                 return 1;
             }
             std::tuple<Types ...> ArgumentList;
@@ -136,7 +139,7 @@ template<typename T1,typename ClassObj,typename ... Types> struct internal_regis
         };
         CreateLuaClosure(L, f);
         lua_pushcclosure(L, LuaCaller::Base<1>,1);
-        lua_setfield(L, -2, str.c_str());
+        lua_setfield(L, -2, str);
         lua_pop(L, 1);
 
     };
@@ -144,18 +147,18 @@ template<typename T1,typename ClassObj,typename ... Types> struct internal_regis
 
 template<typename ClassObj,typename ... Types> struct internal_register<void,ClassObj,Types...>{
 
-    template <typename ... Opt> static void LambdaRegisterStackOpt(lua_State *L,std::string str,int stackPos,void (ClassObj::*func)(Types ... args),Opt ... optionalArgs ){
+    template <typename ... Opt> static void LambdaRegisterStackOpt(lua_State *L,const char *str,int stackPos,void (ClassObj::*func)(Types ... args),Opt ... optionalArgs ){
         std::tuple<Opt...> tup(optionalArgs...);
         LuaCFunctionLambda f = [func,str,tup](lua_State *L2) -> int {
             int argNecessary = int(sizeof...(Types)) - int(sizeof...(Opt));
             int argMax = int(sizeof...(Types));
             int argCount = lua_gettop(L2)-1; //-1 because of the table thats the root
             if (argCount > argMax){
-                luaL_error(L2, "Too much arguments on function %s. Expected %d-%d but got %d\n",str.c_str(),argNecessary, argMax, argCount);
+                luaL_error(L2, "Too much arguments on function %s. Expected %d-%d but got %d\n",str,argNecessary, argMax, argCount);
                 return 1;
             }
             if (argCount < argNecessary){
-                luaL_error(L2, "Too few arguments on function %s. Expected %d-%d but got %d",str.c_str(),argNecessary, argMax, argCount);
+                luaL_error(L2, "Too few arguments on function %s. Expected %d-%d but got %d",str,argNecessary, argMax, argCount);
                 return 1;
             }
             std::tuple<Types ...> ArgumentList;
@@ -173,7 +176,7 @@ template<typename ClassObj,typename ... Types> struct internal_register<void,Cla
         };
         CreateLuaClosure(L, f);
         lua_pushcclosure(L, LuaCaller::Base<1>,1);
-        lua_setfield(L, -2,  str.c_str());
+        lua_setfield(L, -2,  str);
 
     };
 };
@@ -431,14 +434,15 @@ template<typename T1> struct ClassRegister{
             return;
         }
         int top = lua_gettop (L);
-        internal_register<RetType,ClassObj,Types...>::LambdaRegisterStackOpt(L,methodName,top,func);
+
+        internal_register<RetType,ClassObj,Types...>::LambdaRegisterStackOpt(L,StringToPsram(methodName),top,func);
     };
 
 
     template<typename RetType,typename ClassObj,typename ... Types,typename ... Otps> static void RegisterClassMethod(lua_State *L,std::string name,std::string methodName,RetType (ClassObj::*func)(Types ... args),Otps ...optArgs){
         lua_getglobal(L, name.c_str());
         int top = lua_gettop (L);
-        internal_register<RetType,ClassObj,Types...>::LambdaRegisterStackOpt(L,methodName,top,func,optArgs...);
+        internal_register<RetType,ClassObj,Types...>::LambdaRegisterStackOpt(L,StringToPsram(methodName),top,func,optArgs...);
         lua_pop(L, 1);
     };
 
@@ -483,13 +487,14 @@ template<typename T1> struct MakeLuaObject{
     };
 };
 
-
+#ifdef ENABLE_BLE
 template<> struct GenericLuaReturner<BleCharacteristicsHandler*>{
     static int Ret(BleCharacteristicsHandler* vr,lua_State *L,bool forceTable = false){
         MakeLuaObject<BleCharacteristicsHandler>::Make(L, vr, "BleCharacteristicsHandler");
         return 1;
     };
 };
+#endif
 
 template<> struct GenericLuaReturner<Model*>{
     static int Ret(Model* vr,lua_State *L,bool forceTable = false){
@@ -511,8 +516,55 @@ template<> struct GenericLuaReturner<KeyframeTrack*>{
     };
 };
 
+template<> struct GenericLuaReturner<Sprite*>{
+    static int Ret(Sprite* vr,lua_State *L,bool forceTable = false){
+        MakeLuaObject<Sprite>::Make(L, vr, "Sprite");
+        return 1;
+    };
+};
 
 
+template<> struct GenericLuaGetter<Sprite*> {
+    static inline Sprite* Call(bool &hasArgError, lua_State *L, int stackPos = -1, bool pop = true, int offsetStack = 0) {
+
+        if (!lua_istable(L, stackPos)) {
+            hasArgError = true;
+            const char* function_name = lua_tostring(L, lua_upvalueindex(1));
+            luaL_error(L, "Expected a table value on parameter %d of function %s", lua_gettop(L), function_name);
+            return nullptr;
+        }
+
+        lua_getfield(L, stackPos, "__self");
+        Sprite** sp = (Sprite**)lua_touserdata(L,-1);
+        if (!sp){
+            luaL_error(L, "Expected a lua object");
+            return nullptr;
+        }
+        lua_pop(L, 1);
+        lua_getfield(L, stackPos, "type");
+          
+        std::string otherType = std::string(lua_tostring(L, -1));
+        lua_pop(L, 1);
+
+        if (otherType != "Sprite"){
+            luaL_error(L, "Type mismatched, expecting 'Sprite' instead got %s", otherType.c_str());
+            return nullptr;
+        }
+
+        if (*sp == nullptr){
+            luaL_error(L, "Null userdata in to the object");
+            return nullptr;
+        }
+
+        if (pop) {
+            lua_pop(L, 1);
+        }  
+        return  (*sp);
+    }
+};
+
+
+#ifdef ENABLE_BLE
 template<> struct GenericLuaGetter<BleCharacteristicsHandler*> {
     static inline BleCharacteristicsHandler* Call(bool &hasArgError, lua_State *L, int stackPos = -1, bool pop = true, int offsetStack = 0) {
 
@@ -552,6 +604,7 @@ template<> struct GenericLuaGetter<BleCharacteristicsHandler*> {
     }
 };
 
+#endif
 
 
 template<> struct GenericLuaGetter<KeyframeTrack> {
@@ -592,3 +645,4 @@ template<> struct GenericLuaGetter<KeyframeTrack> {
         return (*(*sp));
     }
 };
+#endif

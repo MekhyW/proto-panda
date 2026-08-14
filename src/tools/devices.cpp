@@ -311,9 +311,7 @@ float Devices::getAutoFps(){
 }
 
 
-float Devices::getFreePsram(){
-  return Devices::percentagePsramFree;
-}
+
   
 void Devices::CalculateMemmoryUsageDifference(const std::string msg){
   int32_t diffHeap = ESP.getFreeHeap()-(int32_t)Devices::freeHeapBytes;
@@ -332,11 +330,10 @@ void Devices::CalculateMemmoryUsage(){
 
   Devices::percentageHeapFree = Devices::freeHeapBytes * 100.0f / (float)Devices::totalHeapBytes;
   Devices::percentagePsramFree = freePsramBytes* 100.0f / (float)totalPsramBytes;
-  Logger::Info("[Memory] %.1f%% free - %d of %d bytes free (psram: %d / %d  -> %.1f%%)", Devices::percentageHeapFree, Devices::freeHeapBytes, Devices::totalHeapBytes, totalPsramBytes, freePsramBytes,  getFreePsram()) ;
+  Logger::Info("[Memory] %.1f%% free - %d of %d bytes free (psram: %d / %d  -> %.1f%%)", Devices::percentageHeapFree, Devices::freeHeapBytes, Devices::totalHeapBytes, totalPsramBytes, freePsramBytes,  (getFreePsram()/(float)getTotalPsram())*100.f ) ;
 }
 
-void Devices::DisplayResetInfo()
-{
+void Devices::DisplayResetInfo(){
   switch (rtc_get_reset_reason(0))
   {
     case POWERON_RESET  : Logger::Info ("Reset reason: Vbat power on reset");break;

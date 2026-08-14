@@ -30,9 +30,13 @@
 
 LedStrip g_leds;
 FrameRepository g_frameRepo;
+#ifdef ENABLE_BLE
 BleManager g_remoteControls;
+#endif
 Animation g_animation;
+#ifdef ENABLE_LUA
 LuaInterface g_lua;
+#endif
 TaskHandle_t g_secondCore;
 #ifdef ENABLE_EDIT_MODE
 EditMode g_editMode;
@@ -71,7 +75,6 @@ void setup() {
 
   Logger::Allocate();
 
-
   Devices::BuzzerTone(2220);
   delay(200);
   Devices::BuzzerNoTone();
@@ -82,6 +85,8 @@ void setup() {
  
   OledScreen::Start();
   Sensors::Start();
+
+  Devices::CalculateMemmoryUsage(); 
   
   #ifdef ENABLE_EDIT_MODE
   g_editMode.CheckBeginEditMode();
@@ -95,6 +100,8 @@ void setup() {
     return;
   }
   #endif
+
+  Devices::CalculateMemmoryUsage(); 
 
   while (!Storage::Begin()){
     OledScreen::display.clearDisplay();
@@ -132,6 +139,7 @@ void setup() {
     }
   }
   Devices::CalculateMemmoryUsageDifference("Frame repo");
+  #ifdef ENABLE_LUA
   if (!g_lua.Start()){
     OledScreen::CriticalFail("Failed to initialize Lua!");
     for(;;){
@@ -144,6 +152,7 @@ void setup() {
     }
   }
   Devices::CalculateMemmoryUsageDifference("Lua");
+  
 
   if (!g_lua.LoadFile("/init.lua")){
     OledScreen::CriticalFail("Failed to load init.lua");
@@ -152,6 +161,7 @@ void setup() {
     Devices::BuzzerNoTone();
     for(;;){}
   }
+  #endif
 
   Devices::CalculateMemmoryUsageDifference("init.lua");
 
@@ -161,8 +171,10 @@ void setup() {
   OledScreen::display.printf("Starting\nLua");
   OledScreen::display.display();
   OledScreen::display.setTextSize(1);
+  #ifdef ENABLE_LUA
   Logger::Info("Starting Lua");
   g_lua.CallFunction("onSetup");
+  #endif
   Devices::BuzzerTone(150);
   delay(100);
 
@@ -179,9 +191,10 @@ void setup() {
    
   Devices::BuzzerTone(880);
   delay(100);
-  
+  #ifdef ENABLE_LUA
   g_lua.CallFunction("onPreflight");
   Devices::BuzzerNoTone();
+  #endif
   
   
   Devices::CalculateMemmoryUsageDifference("completed setup");
@@ -229,12 +242,16 @@ void loop() {
   
   
   Devices::ReadSensors();
+  #ifdef ENABLE_BLE
   g_remoteControls.update();
+  #endif
   g_InfraRed.update();
+  #ifdef ENABLE_BLE
   g_remoteControls.sendUpdatesToLua();
-
+  #endif
+  #ifdef ENABLE_LUA
   g_lua.CallFunctionT("onLoop", Devices::getDeltaTime());
-
+  #endif
   #ifdef SINGLE_CORE_RUN
   if (g_fft.isManaged()){
     g_fft.update();

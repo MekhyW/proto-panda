@@ -21,6 +21,8 @@ local input = {
 
     mode = "NONE",
 
+    maxControls=2,
+
     infrared={},
     keybind = {},
     forced_buttons = {},
@@ -40,29 +42,6 @@ _G.BUTTON_CONFIRM = 5
 _G.BUTTON_AUX_A = 6
 _G.BUTTON_AUX_B = 7
 _G.BUTTON_BACK = 8
-
-do
-    local pdButtonIdOffset = 1
-    for i=0,MAX_BLE_CLIENTS-1 do 
-        for b=1,MAX_BLE_BUTTONS do 
-            input.panda_buttons[pdButtonIdOffset] = 0
-            input.panda_buttons_state[pdButtonIdOffset] = _G.BUTTON_RELEASED
-            input.forced_buttons[pdButtonIdOffset] = 0
-            pdButtonIdOffset = pdButtonIdOffset +1
-        end
-        _G['DEVICE_'..i..'_BUTTON_LEFT']    = _G.BUTTON_LEFT        + i * MAX_BLE_BUTTONS
-        _G['DEVICE_'..i..'_BUTTON_DOWN']    = _G.BUTTON_DOWN        + i * MAX_BLE_BUTTONS
-        _G['DEVICE_'..i..'_BUTTON_RIGHT']   = _G.BUTTON_RIGHT       + i * MAX_BLE_BUTTONS
-        _G['DEVICE_'..i..'_BUTTON_UP']      = _G.BUTTON_UP          + i * MAX_BLE_BUTTONS
-        _G['DEVICE_'..i..'_BUTTON_CONFIRM'] = _G.BUTTON_CONFIRM     + i * MAX_BLE_BUTTONS
-        _G['DEVICE_'..i..'_BUTTON_BACK']    = _G.BUTTON_BACK        + i * MAX_BLE_BUTTONS
-        _G['DEVICE_'..i..'_BUTTON_AUX_A']   = _G.BUTTON_AUX_A       + i * MAX_BLE_BUTTONS
-        _G['DEVICE_'..i..'_BUTTON_AUX_B']   = _G.BUTTON_AUX_B       + i * MAX_BLE_BUTTONS
-
-        _G['DEVICE_'..i..'_BUTTON_FIRST']   = _G.BUTTON_LEFT        + i * MAX_BLE_BUTTONS
-        _G['DEVICE_'..i..'_BUTTON_LAST']    = _G.BUTTON_BACK        + i * MAX_BLE_BUTTONS
-    end
-end
 
 function input.parseInputLocation(str)
     local idx = 1
@@ -142,6 +121,29 @@ function input.runBindCommand(binds, opcode)
     end
 end
 
+function input.setupControls(maxN)
+    local pdButtonIdOffset = 1
+    for i=0,maxN-1 do 
+        for b=1,MAX_BLE_BUTTONS do 
+            input.panda_buttons[pdButtonIdOffset] = 0
+            input.panda_buttons_state[pdButtonIdOffset] = _G.BUTTON_RELEASED
+            input.forced_buttons[pdButtonIdOffset] = 0
+            pdButtonIdOffset = pdButtonIdOffset +1
+        end
+        _G['DEVICE_'..i..'_BUTTON_LEFT']    = _G.BUTTON_LEFT        + i * MAX_BLE_BUTTONS
+        _G['DEVICE_'..i..'_BUTTON_DOWN']    = _G.BUTTON_DOWN        + i * MAX_BLE_BUTTONS
+        _G['DEVICE_'..i..'_BUTTON_RIGHT']   = _G.BUTTON_RIGHT       + i * MAX_BLE_BUTTONS
+        _G['DEVICE_'..i..'_BUTTON_UP']      = _G.BUTTON_UP          + i * MAX_BLE_BUTTONS
+        _G['DEVICE_'..i..'_BUTTON_CONFIRM'] = _G.BUTTON_CONFIRM     + i * MAX_BLE_BUTTONS
+        _G['DEVICE_'..i..'_BUTTON_BACK']    = _G.BUTTON_BACK        + i * MAX_BLE_BUTTONS
+        _G['DEVICE_'..i..'_BUTTON_AUX_A']   = _G.BUTTON_AUX_A       + i * MAX_BLE_BUTTONS
+        _G['DEVICE_'..i..'_BUTTON_AUX_B']   = _G.BUTTON_AUX_B       + i * MAX_BLE_BUTTONS
+
+        _G['DEVICE_'..i..'_BUTTON_FIRST']   = _G.BUTTON_LEFT        + i * MAX_BLE_BUTTONS
+        _G['DEVICE_'..i..'_BUTTON_LAST']    = _G.BUTTON_BACK        + i * MAX_BLE_BUTTONS
+    end
+end
+
 function input.Start()
     if input.mode == "BLE" then  
         beginBleScanning()
@@ -167,10 +169,19 @@ function input.Load()
         confs.input.drivers = {"generic"}
     end
 
+    local maxN = confs.input and (confs.input.maxBleDevices or 2) or 2
+    _G.MAX_BLE_CLIENTS = maxN
+    input.maxControls =  maxN
+    input.setupControls(maxN)
+    print("Gonna use "..maxN.." controllers")
+
+    drivers.Start(maxN)
+
     if mode == "BLE" then
         setLogDiscoveredBleDevices(false)
         generic.displaySplashMessage("Starting:\nBLE")
         startBLE()
+        setMaximumControls(maxN)
         startBLERadio(ESP_PWR_LVL_P9)
     elseif mode == "INFRARED" then
         generic.displaySplashMessage("Starting:\nIR")
@@ -219,8 +230,15 @@ function input.Load()
     else
         error("Invalid input mode: "..tostring(mode))
     end
-    
+
     drivers.EnableDrivers(confs.input.drivers)
+    if confs.input.enableHidControllers then
+        drivers.EnableGenericAndroidMouse()
+    end
+
+    drivers.WrapUp()
+    
+
 
     input.SetKeybinds(confs.keybinds) 
 end
@@ -348,14 +366,22 @@ function input.getBleDeviceLastUpdate(id)
     if input.legacygetBleDeviceLastUpdate then  
         return input.legacygetBleDeviceLastUpdate(id)
     end
-    return drivers.panda[id].last_update
+    local dv = drivers.panda[id]
+    if not dv then 
+        return 0
+    end
+    return dv.last_update
 end
 
 function input.readAccelerometerX(id)
     if input.legacyreadAccelerometerX then  
         return input.legacyreadAccelerometerX(id)
     end
-    local v = drivers.panda[id].ax
+    local dv = drivers.panda[id]
+    if not dv then 
+        return 0
+    end
+    local v = dv.ax
     return v * ACCELEROMETER_MULTIPLIER
 end
 
@@ -363,7 +389,11 @@ function input.readAccelerometerY(id)
     if input.legacyreadAccelerometery then  
         return input.legacyreadAccelerometery(id)
     end
-    local v = drivers.panda[id].ay
+    local dv = drivers.panda[id]
+    if not dv then 
+        return 0
+    end
+    local v = dv.ay
     return v * ACCELEROMETER_MULTIPLIER
 end
 
@@ -371,7 +401,11 @@ function input.readAccelerometerZ(id)
     if input.legacyreadAccelerometerz then  
         return input.legacyreadAccelerometerz(id)
     end
-    local v = drivers.panda[id].az
+    local dv = drivers.panda[id]
+    if not dv then 
+        return 0
+    end
+    local v = dv.az
     return v * ACCELEROMETER_MULTIPLIER
 end
 
@@ -379,21 +413,33 @@ function input.readGyroX(id)
     if input.legacyreadGyroX then  
         return input.legacyreadGyroX(id)
     end
-    return drivers.panda[id].gx
+    local dv = drivers.panda[id]
+    if not dv then 
+        return 0
+    end
+    return dv.gx
 end
 
 function input.readGyroY(id)
     if input.legacyreadGyroY then  
         return input.legacyreadGyroY(id)
     end
-    return drivers.panda[id].gy
+    local dv = drivers.panda[id]
+    if not dv then 
+        return 0
+    end
+    return dv.gy
 end
 
 function input.readGyroZ(id)
     if input.legacyreadGyroZ then  
         return input.legacyreadGyroZ(id)
     end
-    return drivers.panda[id].gz
+    local dv = drivers.panda[id]
+    if not dv then 
+        return 0
+    end
+    return dv.gz
 end
 
 function input.readButtonStatus(button)

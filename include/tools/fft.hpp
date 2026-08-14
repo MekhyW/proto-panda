@@ -18,6 +18,9 @@ class FFT {
     void setManaged(bool b){
         m_managed = b;
     }
+    void setNoiseThreshold(int n){
+      m_noiseThreshold = n;
+    }
 
     int  getBandCount();
     bool isRunning();

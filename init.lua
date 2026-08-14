@@ -1,14 +1,18 @@
-local expressions = require("expressions")
-local models = require("models")
-local scripts = require("scripts")
-local generic = require("generic")
-local menu = require("menu")
-local boop = require("boop")
+local versions = require("versions")
+local json = require("json")
 local configloader = require("configloader")
 local drivers = require("drivers")
 local input = require("input")
-local leds = require("leds")
+local ui = require("ui")
+local generic = require("generic")
+local models = require("models")
 local fft = require("fft")
+local leds = require("leds")
+local scripts = require("scripts")
+local boop = require("boop")
+local menu = require("menu")
+local expressions = require("expressions")
+local overlays = require("overlays")
 
 function onSetup()
 
@@ -37,6 +41,9 @@ function onSetup()
     leds.begin()
     generic.displaySplashMessage("Starting:\nMenu") 
     menu.setup()
+    generic.displaySplashMessage("Starting:\nOverlays") 
+    overlays.setup()
+
 end
 
 function onPreflight()
@@ -56,6 +63,7 @@ function onPreflight()
 end
 
 function onLoop(dt)
+    overlays.update(dt)
     drivers.update()
     input.update()
     expressions.update()

@@ -22,7 +22,7 @@ Some buck converters have issues with extra capacitors, so the 1000~4700uF capac
 
 1) One of the 5v 3A buck converters: [option 1](https://aliexpress.com/item/1005005505907937.html) / [option 2](https://pt.aliexpress.com/item/1005011601387749.html) / [option 3](https://pt.aliexpress.com/item/1005006009759175.html)
 2) PD trigger: [Option 1](https://aliexpress.com/item/1005007889747084.html) / [option 2](https://pt.aliexpress.com/item/1005012106478427.html)
-3) SD Card module: [option 1](https://aliexpress.com/item/1005008723789216.html) / [option 2](https://pt.aliexpress.com/item/1000001126728.html)
+3) [SD Card module](https://pt.aliexpress.com/item/1005009221606482.html)
 4) [OLED screen](https://aliexpress.com/item/1005006141235306.html)
 5) [ESP32 N16R8 dev board](https://aliexpress.com/item/1005009906920237.html)
 6) [Buzzer 5 or 3.3v](https://aliexpress.com/item/1005006201550296.html)
@@ -78,6 +78,8 @@ With all the tools and parts, let's go!
 ![](./diy-assembly1.png)
 
 Here's what we're going to build.
+
+> IMPORTANT: In the schematic, you see `IO9`, `IO10`, `IO33` (inner number)... As you can see `GPIO9/IO9` is on pin 15 at the schematic (outer number). In this guide, when we say: "connect something to IO15, that means to connect on GPIO15 that is in the 8. Not connect in to 15 that is IO9. **USE THE NUMBERS INSIDE THE SQUARE, NOT THE NUMBERS OUTSIDE**
 
 ![Diagram](./diy-schematic.png "Electronics schematic") 
 
@@ -254,7 +256,10 @@ And when completed:
 ![](./diy-assembly31.png)
 
 Now after you double check, put the SD card (make sure you put all the required files in the SD card as it says in the [flashing guide](./flashing-guide.md#what-goes-in-the-sd-card)). 
-Powering on it should detect the card. If it does not, check if you did the [configuration part of the SD card for the DIY mode](./flashing-guide.md#configuration).
+Powering on it should detect the card. If it does not, check if you did the [configuration part of the SD card for the DIY mode](./flashing-guide.md#configuration). 
+That means, changing the `PANDA_SD_MODE` to `1` and reduce clock speed to 40mhz
+
+> SD cards bigger than 32gb doesnt work! They also need to be formatted in to FAT32
 
 If everything goes well, the protopanda should boot correctly and all the procedures should show this:
 

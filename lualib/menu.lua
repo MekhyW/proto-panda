@@ -6,6 +6,8 @@ MODE_CHANGE_PANEL_BRIGHTNESS = 4
 MODE_CHANGE_LED_BRIGHTNESS = 5
 MODE_SCRIPTS = 6
 MODE_CALIBRATE_BOOP = 7
+MODE_CALIBRATE_MIC = 8
+MODE_SYSTEM_INFO = 9
 
 local scripts = require("scripts")
 local ui = require("ui")
@@ -15,8 +17,29 @@ local input = require("input")
 local drivers = require("drivers")
 local configloader = require("configloader")
 
+
 MAX_INTERFACE_ICONS = 4
 MENU_SPACING = 13
+
+-- Human readable labels for esp_reset_reason_t
+local RESET_REASONS = {
+    [0]  = "UNKNOWN",
+    [1]  = "POWERON",
+    [2]  = "EXT",
+    [3]  = "SW",
+    [4]  = "PANIC",
+    [5]  = "INT_WDT",
+    [6]  = "TASK_WDT",
+    [7]  = "WDT",
+    [8]  = "DEEPSLEEP",
+    [9]  = "BROWNOUT",
+    [10] = "SDIO",
+    [11] = "USB",
+    [12] = "JTAG",
+    [13] = "EFUSE",
+    [14] = "PWR_GLITCH",
+    [15] = "CPU_LOCKUP",
+}
 
 local _M = {
     selected = 0,
@@ -30,6 +53,7 @@ local _M = {
     infoShown=1,
     swapTimer = millis()+5*1000,
     rssi = {},
+    sysInfoScroll = 0,
 }
 
 local shaderNames = {
@@ -40,24 +64,49 @@ local shaderNames = {
 }
 
 function _M.setup(expressions)
+    local overlays = require("overlays")
+    
+    local cfg = configloader.Get()
+
     _M.original_left = BUTTON_LEFT
     _M.original_right = BUTTON_RIGHT
     _M.brigthness = tonumber(dictGet("panel_brightness")) or 64
     _M.led_brightness = tonumber(dictGet("led_brightness")) or 64
-    _M.has_boop = dictGet("has_boop") == "1" 
+    _M.has_boop = (tonumber(dictGet("has_boop")) or 1) == 1
     _M.has_fft_overlay = dictGet("has_fft_overlay") == "1" 
     setFFTOverlay(_M.has_fft_overlay)
     _M.inverted_left_right = dictGet("inverted_left_right") == "1" 
+    overlays.enabled = (tonumber(dictGet("enable_overlays")) or 1) == 1 
     _M.reapplyButtons()
     _M.settings_icon = oledCreateIcon({0x00, 0x00, 0x16, 0x80, 0x3f, 0xc0, 0x7f, 0xe0, 0x39, 0xc0, 0x70, 0xe0, 0x70, 0xe0, 0x39, 0xc0, 0x7f, 0xe0, 0x3f, 0xc0, 0x16, 0x80, 0x00, 0x00}, 12, 12)
     _M.face_icon = oledCreateIcon({0x00, 0x00, 0x00, 0x00, 0x01, 0xc0, 0x21, 0xc0, 0x60, 0x00, 0x00, 0x00, 0x00, 0x20, 0x15, 0x40, 0x2a, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, 12, 12)
     _M.logo_no_handy = oledCreateIcon({ 0xff, 0xf0, 0xc0, 0x30, 0xa0, 0x50, 0x90, 0x90, 0x89, 0x10, 0x86, 0x10, 0x86, 0x10, 0x89, 0x10, 0x90, 0x90, 0xa0, 0x50, 0xc0, 0x30, 0xff, 0xf0}, 12, 12)
-
+    _M.push_to_talk = (tonumber(dictGet("push_to_talk")) or 1) == 1  
     _M.enterMainMenu()
     _M.face_selection_style = dictGet("face_selection_style") == "GRID" and "GRID" or "QUICK"
 
     --settings ui
     _M.settings = ui.generateUi("Press < To back", nil, _M.enterMainMenu)
+
+
+    if cfg.fft and cfg.fft.enabled then
+        _M.settings.addElement(function() return "Calibrate mic volume" end,  function()
+            if fft.onEnter() then 
+                _M.mode = MODE_CALIBRATE_MIC
+            end
+        end)
+
+        _M.settings.addElement(function() return "Push to talk ["..(_M.push_to_talk and "ON" or "OFF").."]" end,  function()
+            if _M.push_to_talk  then  
+                _M.push_to_talk = nil
+            else 
+                _M.push_to_talk = true
+            end
+            dictSet("push_to_talk", _M.push_to_talk and "1" or "0")
+            dictSave()
+        end)
+    end
+
 
     _M.settings.addElement(function() return "Shader [".._M.shader.."]" end, function()
         _M.shader = _M.shader +1
@@ -80,7 +129,7 @@ function _M.setup(expressions)
         dictSet("face_selection_style", _M.face_selection_style)
         dictSave()
     end)
-    local cfg = configloader.Get()
+    
     if cfg.boop and cfg.boop.enabled then
         _M.settings.addElement(function() return "Boop ["..(_M.has_boop and "ON" or "OFF").."]" end,  function()
             if _M.has_boop  then  
@@ -93,8 +142,20 @@ function _M.setup(expressions)
         end)
     end
 
+   
+    _M.settings.addElement(function() return "Overlays ["..(overlays.enabled and "ON" or "OFF").."]" end,  function()
+        if overlays.enabled  then  
+            overlays.setEnabled(false)
+        else 
+            overlays.setEnabled(true)
+        end
+        dictSet("enable_overlays", overlays.enabled and "1" or "0")
+        dictSave()
+    end)
+    
+
     if cfg.fft and cfg.fft.enabled then
-        _M.settings.addElement(function() return "FFT Overlay ["..(_M.has_fft_overlay and "ON" or "OFF").."]" end,  function()
+        _M.settings.addElement(function() return "Show FFT ["..(_M.has_fft_overlay and "ON" or "OFF").."]" end,  function()
             if _M.has_fft_overlay  then  
                 _M.has_fft_overlay = false
             else 
@@ -106,19 +167,16 @@ function _M.setup(expressions)
         end)
     end
 
-    _M.settings.addElement(function() return "Calibrate boop" end,  function()
-        if boop.onEnter() then 
-            _M.has_boop = false
-            _M.mode = MODE_CALIBRATE_BOOP
-        end
-    end)
+    if _M.has_boop and boop.config.trigger_mode == "lidar" then
+        _M.settings.addElement(function() return "Calibrate boop" end,  function()
+            if boop.onEnter() then 
+                _M.has_boop = false
+                _M.mode = MODE_CALIBRATE_BOOP
+            end
+        end)
+    end
 
-    _M.settings.addElement(function() return "Check boop cnfg" end,  function()
-        if boop.EnterDisplayConfig() then 
-            _M.has_boop = false
-            _M.mode = MODE_CALIBRATE_BOOP
-        end
-    end)
+    _M.settings.addElement(function() return "System Info" end, _M.enterSystemInfoMenu)
 
     _M.settings.addElement(function() return "Rebuild bulk file" end,  function()
         setPanelManaged(false)
@@ -154,7 +212,10 @@ function _M.setup(expressions)
         ledsGentlySeBrightness(_M.led_brightness)
         gentlySetPanelBrightness(_M.brigthness)
         dictSet("inverted_left_right", "0") 
+        dictSet("has_fft_overlay", "0")
+        dictSet("enable_overlays", "1")
         dictSet("has_boop", "0")
+        fft.ResetDefaults()
         dictSave()
         _M.reapplyButtons()
         _M.enterMainMenu()
@@ -216,8 +277,61 @@ function _M.enterFaceMenu()
     _M.selected = 1
 end
 
+function _M.enterSystemInfoMenu()
+    _M.mode = MODE_SYSTEM_INFO
+    _M.sysInfoScroll = 0
+end
 
-function _M.draw()
+function _M.buildSystemInfoLines()
+    local lines = {}
+
+    table.insert(lines, "== SYSTEM ==")
+    table.insert(lines, "Panda ver: "..tostring(PANDA_VERSION))
+    table.insert(lines, tostring(_VERSION))
+    table.insert(lines, "Heap free: "..string.format("%.1fKB", (getFreeHeap() or 0)/1024))
+    table.insert(lines, "PSRAM free: "..string.format("%.1fKB", (getFreePsram() or 0)/1024))    
+    table.insert(lines, "Heap tot.: "..string.format("%.1fKB", (getTotalHeap() or 0)/1024))
+    table.insert(lines, "PSRAM tot.: "..string.format("%.1fKB", (getTotalPsram() or 0)/1024))
+    table.insert(lines, "FPS: "..string.format("%.1f", getFps() or 0))
+
+    local total = totalFFATBytes() or 0
+    local used = totalFFATUsedBytes() or 0
+    local pct = total > 0 and (used / total * 100) or 0
+    table.insert(lines, "FFat: "..string.format("%.0f/%.0fKB", used/1024, total/1024))
+    table.insert(lines, "FFat used: "..string.format("%.1f%%", pct))
+    table.insert(lines, "Canvas: "..tostring(CANVAS_WIDTH).."x"..tostring(CANVAS_HEIGHT))
+    table.insert(lines, "Reset: "..(RESET_REASONS[getResetReason()] or "UNKNOWN"))
+
+    table.insert(lines, "== DEVICES ==")
+    table.insert(lines, "Servo: "..(hasServo() and "YES" or "NO"))
+    table.insert(lines, "Lidar: "..(hasLidar() and "YES" or "NO"))
+    table.insert(lines, "Int.Button: "..(getInternalButtonStatus() == 1 and "PRESSED" or "RELEASED"))
+
+    table.insert(lines, "== INPUT ==")
+    table.insert(lines, "IR started: "..(hasIRStarted() and "YES" or "NO"))
+
+    local bleCount = 0
+    local bleLines = {}
+    for i=0, MAX_BLE_CLIENTS-1 do
+        if isElementIdConnected(i) then
+            bleCount = bleCount + 1
+            local rssiStr = "?"
+            local connId = getClientIdFromControllerId(i)
+            if connId and connId >= 0 then
+                rssiStr = tostring(getRRSI(connId))
+            end
+            table.insert(bleLines, "  #"..i..": RSSI "..rssiStr)
+        end
+    end
+    table.insert(lines, "BLE connected: "..bleCount)
+    for _, l in ipairs(bleLines) do
+        table.insert(lines, l)
+    end
+
+    return lines
+end
+
+function _M.draw(dt)
     oledClearScreen()
 
     if _M.mode == MODE_MAIN_MENU then
@@ -359,8 +473,48 @@ function _M.draw()
         _M.scripts.draw()
     elseif _M.mode == MODE_CALIBRATE_BOOP then 
         boop.CalibrateDraw()
-        return
+    elseif _M.mode == MODE_CALIBRATE_MIC then 
+        fft.CalibrateDraw(dt)
+    elseif _M.mode == MODE_SYSTEM_INFO then
+        _M.drawSystemInfo()
     end
+end
+
+-- Renders the System Info screen as a scrollable text list.
+function _M.drawSystemInfo()
+    local lines = _M.buildSystemInfoLines()
+
+    local lineHeight = 9
+    local footerHeight = 9
+    local visibleHeight = OLED_SCREEN_HEIGHT - footerHeight
+    local maxVisible = math.floor(visibleHeight / lineHeight)
+    local maxScroll = math.max(0, #lines - maxVisible)
+
+    if _M.sysInfoScroll > maxScroll then
+        _M.sysInfoScroll = maxScroll
+    end
+    if _M.sysInfoScroll < 0 then
+        _M.sysInfoScroll = 0
+    end
+
+    for i = 1, maxVisible do
+        local idx = i + _M.sysInfoScroll
+        if lines[idx] then
+            oledSetCursor(0, (i-1) * lineHeight)
+            oledDrawText(lines[idx])
+        end
+    end
+
+    -- simple scrollbar on the right edge when content overflows
+    if #lines > maxVisible and maxScroll > 0 then
+        local barHeight = math.max(4, (maxVisible / #lines) * visibleHeight)
+        local barY = (_M.sysInfoScroll / maxScroll) * (visibleHeight - barHeight)
+        oledDrawFastVLine(OLED_SCREEN_WIDTH-1, barY, barHeight, 1)
+    end
+
+    oledSetCursor(0, OLED_SCREEN_HEIGHT - 8)
+    oledDrawText("UP/DN scroll  < back")
+    oledDisplay()
 end
 
 function drawSignalStrength(x, y, rssi)
@@ -413,7 +567,7 @@ function _M.DrawBottomBar()
             oledDrawText(string.format("FPS: %2.2f", f))
         end
     elseif (_M.infoShown == 2) then
-            oledDrawText(string.format("Ram: %2.2f%%", getFreePsram()))
+            oledDrawText(string.format("Ram: %2.2f%%", getFreePsram()/getTotalPsram() * 100))
     elseif (_M.infoShown == 3) then
         if getLuaFps then
             local c = getLuaFps()
@@ -422,7 +576,7 @@ function _M.DrawBottomBar()
             oledDrawText(string.format("FPS: %2.2f", getFps()))
         end
     elseif (_M.infoShown == 4) then
-        oledDrawText(string.format("F.Heap: %2.2f%%", getFreeHeap()))
+        oledDrawText(string.format("F.Heap: %2.2f%%", getFreeHeap()/getTotalHeap() * 100))
     elseif (_M.infoShown == 5) then
         if USE_PIN_BATTERY_IN == 1 then  
             oledDrawText(string.format("Volts: %2.2f", getAvgBatteryVoltage()))
@@ -477,14 +631,23 @@ function _M.handleMenu(dt)
             _M.enterMainMenu()
             toneDuration(440, 10)
             return
+        end    
+    elseif _M.mode == MODE_CALIBRATE_MIC then 
+        fft.Calibrate(dt)
+        if fft.quit then
+            _M.mode = MODE_SETTINGS_MENU
+            toneDuration(440, 10)
+            return
         end
+    elseif _M.mode == MODE_SYSTEM_INFO then
+        _M.handleSystemInfoMenu(dt)
     end
 
     if _M.has_boop then  
         boop.manageBoop(dt)
     end
 
-    _M.draw()
+    _M.draw(dt)
 end
 
 
@@ -719,6 +882,27 @@ function _M.handleFaceMenu(dt)
 
     end
 
+end
+
+function _M.handleSystemInfoMenu(dt)
+    if input.readButtonStatus(BUTTON_DOWN) == BUTTON_JUST_PRESSED then
+        _M.sysInfoScroll = _M.sysInfoScroll + 1
+        toneDuration(340, 30)
+    end
+
+    if input.readButtonStatus(BUTTON_UP) == BUTTON_JUST_PRESSED then
+        _M.sysInfoScroll = _M.sysInfoScroll - 1
+        if _M.sysInfoScroll < 0 then
+            _M.sysInfoScroll = 0
+        end
+        toneDuration(540, 30)
+    end
+
+    if input.readButtonStatus(BUTTON_BACK) == BUTTON_JUST_PRESSED or input.readButtonStatus(BUTTON_RIGHT) == BUTTON_JUST_PRESSED or input.readButtonStatus(BUTTON_LEFT) == BUTTON_JUST_PRESSED  then
+        _M.enterSettingMenu()
+        toneDuration(440, 10)
+        return
+    end
 end
 
 function _M.setDictDefaultValues()

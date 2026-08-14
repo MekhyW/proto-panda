@@ -9,20 +9,22 @@
         "power_gpio": 13,
         "gpio_state": 1,
         "enabled": true,
-        "transitionIn": "boop_intro",
-        "transitionOut": "boop_outro",
         "boopAnimationName": "boop",
         "transictionOnlyOnAnimation": "normal",
         "transictionInOnlyOnSpecificFrame": 1
     },
-
     "fft": {
         "gpio": 1,
         "samples": 512,
         "sampling_frequency": 44100,
-        "noise_threshold": 2000,
+        "noise_threshold": 5500,
         "band_count": 16,
-        "enabled": false
+        "speech_band_start": 2,
+        "speech_band_end":  8,
+        "speech_min_energy": 50000,
+        "speech_max_energy": 200000,          
+        "speech_frist_frame_threshold": 40000,
+        "enabled": true
     },
     "scripts": [
         {

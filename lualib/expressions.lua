@@ -1,9 +1,10 @@
 local configloader = require("configloader")
-local models = require("models")
+
 local _M = {
 	animations = {},
 	by_name = {},
 	by_frame = {},
+	pendingEnter = {},
 	count = 0,
 	editbutton_state=0,
 }
@@ -12,6 +13,7 @@ function _M.loadSingleExpression(data, filename, i)
 	local id = #_M.animations+1
 
 	if data.tracks then  
+		local models = require("models")
 		local success, err = models.loadAnimation(data)
 	    if not success then  
 	    	error("Failed to load animation "..i.." at file "..filename..": "..err)
@@ -109,7 +111,21 @@ function _M.update()
 		end
 		_M.editbutton_state = mode
 	end
-	
+
+	local id = getCurrentAnimationStorage()
+	if id ~= 0 then
+		local aux = _M.pendingEnter[id]
+		if aux ~= nil then  
+			if aux.onEnter then 
+				aux.onEnter()
+			end
+			if aux.overlay then 
+				local overlays = require("overlays") 
+				overlays.enableOverlay(aux.overlay)
+			end
+			_M.pendingEnter[id] = nil
+		end
+	end
 end
 
 function _M.Load()
@@ -122,7 +138,7 @@ function _M.Load()
 	for i ,b in pairs(conf.expressions) do 
 		_M.loadSingleExpression(b, "/animation.json", i)
 	end
-
+	local models = require("models")
 	local modelAnim = models.getModelAnimationList("/models.json")
 	if modelAnim then
 		for id , anim in pairs(modelAnim) do 
@@ -234,8 +250,14 @@ function _M.SetExpression(id)
 			end
 			allDrop = false
 		end
-		if _M.previousExpression and _M.previousExpression.onLeave then 
-			_M.previousExpression.onLeave()
+		if _M.previousExpression then
+			if _M.previousExpression.onLeave then 
+				_M.previousExpression.onLeave()
+			end
+			if _M.previousExpression.overlay then  
+				local overlays = require("overlays")
+				overlays.disableOverlay(_M.previousExpression.overlay)
+			end
 		end
 		setPanelManaged(false) --To avoid frame flicker
 		local current_id = aux.id 
@@ -254,9 +276,7 @@ function _M.SetExpression(id)
 		end
 		setPanelManaged(true)
 
-		if aux.onEnter then 
-			aux.onEnter()
-		end
+		_M.pendingEnter[current_id] = aux
 
 		_M.previousExpression = aux
 		return aux

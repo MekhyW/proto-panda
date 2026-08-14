@@ -38,7 +38,9 @@ WiFiServer *luaServer;
 #endif
 
 extern FrameRepository g_frameRepo;
+#ifdef ENABLE_LUA
 extern LuaInterface g_lua;
+#endif
 
 void _callback(FtpOperation ftpOperation, unsigned int freeSpace, unsigned int totalSpace){
   switch (ftpOperation){
@@ -250,7 +252,7 @@ void EditMode::DoBegin(bool connectToWifi)
   Logger::Info("Password: %s",  ftpPassword);
   ftpSrv->begin(ftpUser, ftpPassword);
   m_running = true;
-
+  #ifdef ENABLE_LUA
   if (!g_lua.Start()){
     OledScreen::CriticalFail("Failed to initialize Lua!");
     return;
@@ -258,6 +260,7 @@ void EditMode::DoBegin(bool connectToWifi)
   Logger::Info("Lua on port %d", luaConsolePort);
   LuaInterface::HaltIfError = false;
   luaServer->begin();  
+  #endif
   startWifiServer(editModePort);
 }
 
@@ -276,12 +279,14 @@ void handleClient(WiFiClient &client){
       }
 
       client.printf("Running: %s\n", request.c_str());
+      #ifdef ENABLE_LUA
       if (!g_lua.DoString(request.c_str())){
         client.printf("> Error: \n");
         client.println(g_lua.getLastError());
       }else{
         client.printf("> Done\n");
       }
+      #endif
 
     }
     ftpSrv->handleFTP();

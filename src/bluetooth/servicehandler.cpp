@@ -1,6 +1,8 @@
 #include "bluetooth/servicehandler.hpp"
+#ifdef ENABLE_BLE
 #include "lua/luainterface.hpp"
 #include "bluetooth/ble_client.hpp"
+#include "tools/logger.hpp"
 
 
 BluetoothDeviceHandler::~BluetoothDeviceHandler(){
@@ -20,7 +22,12 @@ BleCharacteristicsHandler* BleServiceHandler::AddCharacteristics(std::string uui
 
     charId = charId.to128();
 
-    auto obj = new BleCharacteristicsHandler(charId);
+    BleCharacteristicsHandler *obj = (BleCharacteristicsHandler*)ps_malloc(sizeof(BleCharacteristicsHandler));
+    #ifndef __INTELLISENSE__
+    //This code will be compiled. But for some reason intellisense claims its invalid. So i'm using this to avoid visual warning in the IDE
+    new (obj) BleCharacteristicsHandler(charId);
+    #endif
+
     m_characteristics[charId.toString()] = obj;
     return obj;
 }
@@ -42,12 +49,14 @@ MultiReturn<std::vector<uint8_t>> BleServiceHandler::ReadFromCharacteristics(int
     } 
 
     BluetoothDeviceHandler *dev = nullptr;
+    xSemaphoreTake(queueMutex, portMAX_DELAY);
     for (auto &it : m_connectedDevices){
         if (it->getId() == clientId){
             dev = it;
             break;
         }
     }
+    xSemaphoreGive(queueMutex);
 
     if (dev == nullptr){
         return MultiReturn<std::vector<uint8_t>>("device is not found");
@@ -73,22 +82,27 @@ MultiReturn<std::vector<uint8_t>> BleServiceHandler::ReadFromCharacteristics(int
 }
 
 int BleServiceHandler::GetClientIdFromControllerId(uint32_t id){
+    xSemaphoreTake(queueMutex, portMAX_DELAY);
     for (auto &it : m_connectedDevices){
         if (id == it->m_controllerId){
+            xSemaphoreGive(queueMutex);
             return it->getId();
         }
     }
+    xSemaphoreGive(queueMutex);
     return -1;
 }
 
 MultiReturn<int> BleServiceHandler::GetRSSI(int clientId){
     BluetoothDeviceHandler *dev = nullptr;
+    xSemaphoreTake(queueMutex, portMAX_DELAY);
     for (auto &it : m_connectedDevices){
         if (it->getId() == clientId){
             dev = it;
             break;
         }
     }
+    xSemaphoreGive(queueMutex);
 
     if (dev == nullptr){
         return MultiReturn<int>("device is not found");
@@ -112,12 +126,14 @@ std::vector<BleCharacteristicsHandler*> BleServiceHandler::getRegisteredCharacte
 
 MultiReturn<std::vector<std::string>> BleServiceHandler::GetCharacteristicsFromOurService(int clientId){
     BluetoothDeviceHandler *dev = nullptr;
+    xSemaphoreTake(queueMutex, portMAX_DELAY);
     for (auto &it : m_connectedDevices){
         if (it->getId() == clientId){
             dev = it;
             break;
         }
     }
+    xSemaphoreGive(queueMutex);
 
     if (dev == nullptr){
         return MultiReturn<std::vector<std::string>>("device is not found");
@@ -143,12 +159,14 @@ MultiReturn<std::vector<std::string>> BleServiceHandler::GetCharacteristicsFromO
 MultiReturn<std::vector<std::string>> BleServiceHandler::GetServices(int clientId, bool refresh){
     
     BluetoothDeviceHandler *dev = nullptr;
+    xSemaphoreTake(queueMutex, portMAX_DELAY);
     for (auto &it : m_connectedDevices){
         if (it->getId() == clientId){
             dev = it;
             break;
         }
     }
+    xSemaphoreGive(queueMutex);
 
     if (dev == nullptr){
         return MultiReturn<std::vector<std::string>>("device is not found");
@@ -209,12 +227,15 @@ bool BleServiceHandler::WriteToCharacteristics(std::vector<uint8_t> bytes, int c
     
 
     BluetoothDeviceHandler *dev = nullptr;
+    xSemaphoreTake(queueMutex, portMAX_DELAY);
     for (auto &it : m_connectedDevices){
         if (it->getId() == clientId){
             dev = it;
             break;
         }
     }
+    xSemaphoreGive(queueMutex);
+    
 
     if (dev == nullptr){
         Logger::Error("device is not found");
@@ -244,22 +265,30 @@ bool BleServiceHandler::WriteToCharacteristics(std::vector<uint8_t> bytes, int c
 void BleServiceHandler::SendMessages(){
     if (devicesToNotify.size() > 0){
         xSemaphoreTake(queueMutex, portMAX_DELAY);
+        if (devicesToNotify.size() == 0){
+            xSemaphoreGive(queueMutex);
+            return;
+        }
         BluetoothDeviceHandler *dev = devicesToNotify.top();
         m_connectedDevices.emplace_back(dev);
         devicesToNotify.pop();
         xSemaphoreGive(queueMutex);
+        #ifdef ENABLE_LUA
         if (luaOnConnectCallback != nullptr){
             luaOnConnectCallback->callLuaFunction(dev->getId(), dev->m_controllerId, dev->m_deviceAddress, dev->m_deviceName);
         }
+        #endif
     }
     if (devicesToDisconnectNotify.size() > 0){
         xSemaphoreTake(queueMutex, portMAX_DELAY);
         auto msg = devicesToDisconnectNotify.top();
         devicesToDisconnectNotify.pop();
         xSemaphoreGive(queueMutex);
+        #ifdef ENABLE_LUA
         if (luaOnDisconnectCallback != nullptr){
             luaOnDisconnectCallback->callLuaFunction(msg.id, msg.controllerId, msg.reason);
         }
+        #endif
     }
     for (auto &it : m_characteristics){
         it.second->SendMessages();
@@ -278,3 +307,4 @@ void BleServiceHandler::NotifyDisconnect(int conId, int clientId, const char* re
     g_remoteControls.requestClearResults();
     xSemaphoreGive(queueMutex);
 }
+#endif

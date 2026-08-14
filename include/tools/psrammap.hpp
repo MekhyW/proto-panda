@@ -3,7 +3,9 @@
 #include <cstring>
 #include <string>
 #include <map>
+#include <list>
 #include <vector>
+#include <stack>
 #include <algorithm>
 #include <ArduinoJson.h>
 #include "esp_heap_caps.h"
@@ -52,14 +54,28 @@ struct PSRAMStringComparator {
     bool operator()(const PSRAMString& lhs, const PSRAMString& rhs) const {
         return lhs < rhs;
     }
+
+    bool operator()(const std::string& lhs, const std::string& rhs) const {
+        return lhs < rhs;
+    }
 };
 
 
-using PSRAMMap = std::map<PSRAMString, PSRAMString, PSRAMStringComparator, PSRAMAllocator<std::pair<const PSRAMString, PSRAMString>>>;
+
+using PSRAMMapString = std::map<PSRAMString, PSRAMString, PSRAMStringComparator, PSRAMAllocator<std::pair<const PSRAMString, PSRAMString>>>;
 using PSRAMIntMap = std::map<PSRAMString, int, PSRAMStringComparator, PSRAMAllocator<std::pair<const PSRAMString, int>>>;
+
+template<typename T1, typename T2>
+using PSRAMMap = std::map<T1, T2, PSRAMStringComparator, PSRAMAllocator<std::pair<T1, T2>>>;
 
 template <typename T>
 using PSRAMVector = std::vector<T, PSRAMAllocator<T>>;
+
+template <typename T>
+using PSRAMList = std::list<T, PSRAMAllocator<T>>;
+
+template <typename T>
+using PSRAMStack = std::stack<T, std::deque<T, PSRAMAllocator<T>>>;
 
 
 struct SpiRamAllocator : ArduinoJson::Allocator {

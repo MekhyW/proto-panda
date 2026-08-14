@@ -83,10 +83,10 @@ bool FFT::begin(int gpio, int samples, int samplingFreq, int noiseThreshold, int
     m_bandCount      = bandCount;
     m_adcBufSize     = samples * SOC_ADC_DIGI_RESULT_BYTES;
 
-    m_fftBuf    = (float*)heap_caps_aligned_alloc(16, sizeof(float) * m_samples * 2, MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
-    m_window    = (float*)heap_caps_malloc(sizeof(float) * m_samples,             MALLOC_CAP_SPIRAM);
-    m_binToBand = (int*)heap_caps_malloc(sizeof(int) * (m_samples / 2),           MALLOC_CAP_SPIRAM);
-    m_bandValues = (int*)heap_caps_malloc(sizeof(int) * m_bandCount,              MALLOC_CAP_SPIRAM);
+    m_fftBuf    = (float*)heap_caps_aligned_alloc(16, sizeof(float) * m_samples * 2, MALLOC_CAP_8BIT | MALLOC_CAP_SPIRAM);
+    m_window    = (float*)ps_malloc(sizeof(float) * m_samples);
+    m_binToBand = (int*)ps_malloc(sizeof(int) * (m_samples / 2));
+    m_bandValues = (int*)ps_malloc(sizeof(int) * m_bandCount);
     m_adcBuf    = (uint8_t*)heap_caps_malloc(m_adcBufSize, MALLOC_CAP_INTERNAL | MALLOC_CAP_DMA);
 
     if (!m_fftBuf || !m_window || !m_binToBand || !m_bandValues || !m_adcBuf) {

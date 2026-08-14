@@ -7,9 +7,9 @@ local panda = {
 }
 
 
-function panda.getDriverModules()
+function panda.getDriverModules(maxClients)
 	local pandaData = {}
-	for i=0,MAX_BLE_CLIENTS-1 do  
+	for i=0,maxClients-1 do  
 		local buttons = {}
         for b=1,MAX_BLE_BUTTONS do  
             buttons[b] = 0
@@ -93,6 +93,9 @@ function panda.onEnable()
         --Legacy controller
         setMaximumControls(2)
         acceptBLETypes("d4d31337-c4c1-c2c3-b4b3-b2b1a4a3a2a1", "afaf", "fafb")
+        return false
+    end
+    if not hasBLEStarted() then
         return false
     end
     panda.handlerPanda = BleServiceHandler("d4d31337-c4c1-c2c3-b4b3-b2b1a4a3a2a1")

@@ -1,4 +1,5 @@
 #include "tools/displays/max7219.hpp"
+#include "tools/oledscreen.hpp"
 #include <SPI.h>
 
 SPIClass spi3(FSPI);
@@ -55,8 +56,9 @@ void MAX7219Display::transfer(uint8_t address, uint8_t data) {
     spi3.transfer(data);
 }
 
-void MAX7219Display::setPixelWithFlip(uint16_t xIn, uint16_t yIn, uint8_t red, uint8_t green, uint8_t blue, FlipConfig& flipSettings) {
+void MAX7219Display::setPixelWithFlip(int16_t xIn, int16_t yIn, uint8_t red, uint8_t green, uint8_t blue, FlipConfig& flipSettings) {
     uint8_t color = 0;
+    OledScreen::MarkPixel(xIn, yIn, red, green, blue);
     if (red > 128 || green > 128 || blue > 128) {
         color = 1;
     }

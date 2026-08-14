@@ -16,9 +16,11 @@
 - [Image Decoding](#image-decoding)
 - [Internal Screen](#internal-screen)
 - [LED Strips](#led-strips-1)
+- [FFT / Audio Analysis](#fft--audio-analysis)
 - [Arduino Core](#arduino-core)
 - [IR Remote](#ir-remote)
 - [2D Models](#2d-models)
+- [Sprites](#sprites)
 - [Keyframe Animations](#keyframe-animations)
 
 ## Power
@@ -450,13 +452,6 @@ Gradually adjusts the panel brightness to the specified level.
   - `rate` (int, optional): Speed of the transition. Default is `4`.
 - **Returns**: `nil`
 
-#### `setSpeakingFrames(frames, frameDuration)`
-Sets the frames to display when the speak sensor is triggered.
-- **Parameters**:
-  - `frames` (int array): The IDs of the frames to display.
-  - `frameDuration` (int): The duration of each frame in milliseconds.
-- **Returns**: `nil`
-
 #### `setRainbowShader(enabled)`
 Enables or disables the rainbow shader, which converts pixels to a rainbow pattern.
 - **Parameters**:
@@ -474,6 +469,30 @@ Returns the number of frames in a given frame group.
 - **Parameters**:
   - `name` (string): The frame name.
 - **Returns**: `int`
+
+#### `clearAllOverlaySprites()`
+Removes all sprites currently registered as animation overlays.
+- **Returns**: `nil`
+
+#### `setOverlaySprite(sprite)`
+Registers a `Sprite` object to be drawn as an overlay on top of the current panel animation.
+- **Parameters**:
+  - `sprite` (Sprite): The sprite object (from `Sprite()`) to overlay.
+- **Returns**: `bool`
+
+#### `clearOverlaySprite(sprite)`
+Removes a specific sprite overlay.
+- **Returns**: `bool`
+
+#### `forceRedrawEachFrame(enabled)`
+Forces the panel to redraw every frame instead of only when content changes (useful when overlay sprites or shaders animate independently of the base animation).
+- **Parameters**:
+  - `enabled` (bool): `true` to force redraw every frame.
+- **Returns**: `nil`
+
+#### `setFFTOverlay(enable)`
+Links the FFT audio analysis output to an animation overlay (e.g. to drive a spectrum visualization on the panel).
+- **Returns**: `nil`
 
 ## Image Decoding
 
@@ -794,6 +813,58 @@ Sets the color of a LED segment. Best used outside managed mode.
   - `id` (int): Segment ID.
   - `r, g, b` (int): RGB color components (0-255).
 - **Returns**: `nil`
+
+## FFT / Audio Analysis
+
+[↑ Back to top](#topics)
+
+These functions expose a microphone/audio FFT (Fast Fourier Transform) analyzer, for audio-reactive stuff.
+
+#### `beginFft(gpio, num_samples, samplingFreq = 44100, noiseThreshold = 2000, bandCount = 16)`
+Initializes the FFT/audio analyzer.
+- **Returns**: unknown
+
+#### `stopFft()`
+Stops the FFT/audio analyzer.
+- **Returns**: unknown
+
+#### `deinitFft()`
+De-initializes the FFT/audio analyzer, releasing associated resources.
+- **Returns**: unknown
+
+#### `updateFft()`
+Updates/reads the FFT analysis for the current frame. Likely needs to be called once per loop when not managed.
+- **Returns**: unknown
+
+#### `setManaged(managed)`
+Enables or disables managed mode for the FFT analyzer (kinda like `ledsSetManaged`/`setPanelManaged`).
+- **Parameters**:
+  - `managed` (bool, presumed)
+- **Returns**: unknown
+
+#### `isManagedFft()`
+Returns whether the FFT analyzer is in managed mode.
+- **Returns**: `bool` (presumed)
+
+#### `isRunningFft()`
+Returns whether the FFT analyzer is currently running.
+- **Returns**: `bool` (presumed)
+
+#### `setNoiseThreshold(threshold)`
+Sets the noise floor threshold for the FFT analyzer.
+- **Parameters**:
+  - `threshold` (int)
+- **Returns**: unknown
+
+#### `getBandCountFft()`
+Returns the number of frequency bands available from the FFT analyzer.
+- **Returns**: `int` 
+
+#### `getBandValueFft(band)`
+Returns the current value of a specific frequency band.
+- **Parameters**:
+  - `band` (int): Band index.
+- **Returns**: int
 
 ## Arduino Core
 
@@ -1162,6 +1233,118 @@ Translates the model.
 Returns the center point of the model.
 - **Returns**: `float, float, float` (x, y, z)
 
+## Sprites
+
+[↑ Back to top](#topics)
+
+Sprites are 2D images that can be drawn over the screen. They work like objects, which have position, rotation and its own frames. 
+Frames can be created from a empty square, or loading a PNG. They should be used as overlays in managed mode.
+
+#### `Sprite()`
+Creates a new, empty `Sprite` object and registers it in the animation's sprite pool.
+- **Returns**: `Sprite` object
+
+### `Sprite` Class
+
+#### `sprite:GetId()`
+Returns the internal ID of the sprite.
+- **Returns**: `int`
+
+#### `sprite:CreateEmptyTexture(width, height)`
+Allocates a blank pixel buffer for the sprite of the given size.
+This will increase in 1 the number of frames
+- **Parameters**:
+  - `width` (int)
+  - `height` (int)
+- **Returns**: `nil`
+
+#### `sprite:LoadFromPng(filename)`
+Loads sprite pixel data from a PNG file on the SD card.
+- **Parameters**:
+  - `filename` (string)
+- **Returns**: `bool`
+
+#### `sprite:CropSprite(x, y, width, height)`
+Crops the sprite to a sub-region. This does not remove data from the texture, only limits the drawing space.
+- **Parameters**:
+  - `x, y` (int): Top-left of the crop region.
+  - `width, height` (int): Size of the crop region.
+- **Returns**: `nil`
+
+#### `sprite:SetPixelColor(id, x, y, color)`
+Sets the color of an individual pixel of a specific frame in the sprite
+- **Parameters**:
+  - `id` (int) Frame id
+  - `x, y` (int) position
+  - `color` (int) color RGB565
+- **Returns**: `nil`
+
+#### `sprite:GetWidth()`
+Returns the sprite's width in pixels.
+- **Returns**: `int`
+
+#### `sprite:GetHeight()`
+Returns the sprite's height in pixels.
+- **Returns**: `int`
+
+#### `sprite:SetPosition(x, y)`
+Sets the sprite's draw position.
+- **Parameters**:
+  - `x, y` (int)
+- **Returns**: `nil`
+
+#### `sprite:SetRotation(angle)`
+Sets the sprite's rotation.
+- **Parameters**:
+  - `angle` (float) rad
+- **Returns**: `nil`
+
+#### `sprite:SetFrameId(frameId)`
+Sets the current frame index that will be drawn
+- **Parameters**:
+  - `frameId` (int)
+- **Returns**: `nil`
+
+#### `sprite:GetFrameId()`
+Returns the current frame index.
+- **Returns**: `int`
+
+#### `sprite:GetFrameCount()`
+Returns the total number of frames in the sprite.
+- **Returns**: `int`
+
+#### `sprite:SetTransparencyColor([color])`
+Sets a color to be treated as transparent when drawing the sprite.
+- **Parameters**:
+  - `color` (int, optional): Default is `-1` (disabled/no transparency key).
+- **Returns**: `nil`
+
+#### `sprite:UseCustomShader(enabled)`
+Enables or disables the use of a custom shader on this sprite.
+- **Parameters**:
+  - `enabled` (bool)
+- **Returns**: `nil`
+
+#### `sprite:SetShader(shader, [intensity])`
+Sets a shader to apply to this sprite specifically (mirrors `setAnimationShader`).
+- **Parameters**:
+  - `shader` (int): Shader constant, e.g. `SHADER_RAINBOW`.
+  - `intensity` (float, optional): Default is `1.0`.
+- **Returns**: `nil`
+
+#### `sprite:Clone()`
+Creates and returns a duplicate of this sprite. This does not clone the textures itself. The new sprite will reuse the same textures. So if you edit the texture of the original sprite, it will reflect on the new one. But loading and adding frames does not affect the clone or the parent sprite.
+- **Returns**: `Sprite` object
+
+#### `sprite:Draw(x, y, [scale, [shader, [flipConfig]]])`
+Draws the sprite to the panel at the given position.
+- **Parameters**:
+  - `x, y` (int): Draw position.
+  - `shaderStrenght` (float): Default is `1.0`.
+  - `shader` (int): Default is `SHADER_NONE`.
+  - `flipConfig` (FlipConfig): Horizontal/vertical flip configuration. Default is a default-constructed `{flipLeft = false, flipRight=false, modeLeft=COLOR_MODE_RGB, modeRight=COLOR_MODE_RGB}`.
+- **Returns**: `nil`
+
 ## Keyframe Animations
 
 [↑ Back to top](#topics)
@@ -1247,6 +1430,10 @@ Creates a new keyframe. Parameters depend on the type of operation being animate
 - `OLED_SCREEN_HEIGHT`: Height of the internal OLED screen in pixels.
 - `CANVAS_WIDTH`: Width of the HUB75 panel in pixels.
 - `CANVAS_HEIGHT`: Height of the HUB75 panel in pixels.
+- `PANEL_WIDTH`: Alias for `CANVAS_WIDTH`.
+- `PANEL_HEIGHT`: Alias for `CANVAS_HEIGHT`.
+- `DEFAULT_CANVAS_WIDTH`: Default/fallback canvas width used when no custom canvas size is configured.
+- `DEFAULT_CANVAS_HEIGHT`: Default/fallback canvas height used when no custom canvas size is configured.
 - `POWER_MODE_NONE`: Ignore any powering behavior.
 - `POWER_MODE_USB_5V`: Power mode for USB 5V input.
 - `POWER_MODE_USB_9V`: Power mode for USB 9V PD input.

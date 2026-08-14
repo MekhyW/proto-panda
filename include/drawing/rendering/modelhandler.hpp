@@ -14,7 +14,7 @@ class ModelHandler {
         }
     
         void RenderScene(std::vector<Model*> mdls);
-        void RenderModels(std::vector<Model*> mdls, uint8_t *bitmap);
+        void RenderModels(std::vector<Model*> mdls);
 
         int addModel(Model *m){
             models.emplace_back(m);

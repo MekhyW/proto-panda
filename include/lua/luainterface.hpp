@@ -1,4 +1,6 @@
 #pragma once
+#include "tools/config_default.hpp"
+#ifdef ENABLE_LUA
 #include "lua/LuaWrapper.h"
 #include "lua/persistentdict.hpp"
 
@@ -27,3 +29,4 @@ class LuaInterface{
 };
 
 extern LuaInterface g_lua;
+#endif

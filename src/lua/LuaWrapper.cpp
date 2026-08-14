@@ -1,6 +1,6 @@
 #include "lua/LuaWrapper.h"
 #include "esp32-hal.h"
-
+#ifdef ENABLE_LUA
 #if PANDA_SD_MODE == 1
 #include <SD.h>
 #elif PANDA_SD_MODE == 2
@@ -16,7 +16,9 @@ void CreateLuaClosure(lua_State *L, const std::function<int(lua_State*)>& f){
         luaL_error(L, "Failed to allocate PSRAM for Lua function");
         return;
     }
+    #ifndef __INTELLISENSE__
     (*baseF) = new (mem) LuaCFunctionLambda(f);
+    #endif
 }
 //Make sure that any lua scripts use the psram instead of the sram
 static void *psram_lua_alloc (void *ud, void *ptr, size_t osize, size_t nsize) {
@@ -185,40 +187,77 @@ LuaWrapper::LuaWrapper() {
   luaopen_math(_state);
   luaopen_table(_state);
 
-  const char* lua_require_code = R"(
-_G.require = nil
-function require(packageName)
-    if not _G.package then 
-        _G.package = {}
-    end
-    if not _G.package[packageName] then 
-        local name = packageName:gsub("%.", "/")
-        local notFound = {}
-        for path in string.gmatch(package.path..';', "(.-);") do 
-            local dir = path:gsub("%?", name)
-            local success, data = pcall(dofile, dir)
-            if not success then 
-                if data:match("^cannot open") then
-                    notFound[#notFound+1] = dir
-                else 
-                    error(data)
-                end
-            else 
-                _G.package[packageName] = data 
-                _G[packageName] = data
-                return data
-            end
-        end
-        local str = "module '"..packageName.."' not found:\nno field package.preload['"..packageName.."']\n"
-        for i,b in pairs(notFound) do  
-            str = str ..'\tno file \''..b..'\'\n'
-        end
-        error(str)
-    else 
-        return _G.package[packageName]
-    end
-end
-    )";
+  const char* lua_require_code PROGMEM = R"(
+  _G.require = nil
+
+
+  local function loadFileClosed(path)
+      local f = io.open(path, "r")
+      if not f then
+          return false, "cannot open " .. path
+      end
+      local content = f:read("*a")
+      f:close()
+
+      local chunk, err = load(content, "@" .. path)
+      if not chunk then
+          return false, err
+      end
+      return true, chunk
+  end
+
+  function require(packageName)
+      if not _G.package then
+          _G.package = {}
+      end
+      if not _G.in_load then
+          _G.in_load = {}
+      end
+      if not _G.package[packageName] then
+          print("Loading: "..packageName)
+          if _G.in_load[packageName] then  
+            error("Reference loop in require!")
+          end
+          _G.in_load[packageName] = true
+          local name = packageName:gsub("%.", "/")
+          local notFound = {}
+          for path in string.gmatch(package.path..';', "(.-);") do
+              local dir = path:gsub("%?", name)
+
+              local okLoad, chunkOrErr = loadFileClosed(dir)
+              if not okLoad then
+                  if chunkOrErr:match("^cannot open") then
+                      notFound[#notFound+1] = dir
+                  else
+                      -- syntax error in the file itself
+                      _G.in_load[packageName] = false
+                      error(chunkOrErr)
+                  end
+              else
+                  -- file loaded and handle already closed; now run it
+                  local success, data = pcall(chunkOrErr)
+                  if not success then
+                      _G.in_load[packageName] = false
+                      error(data)
+                  end
+                  _G.package[packageName] = data
+                  _G[packageName] = data
+                  _G.in_load[packageName] = false
+                  print("Finished loading: "..packageName)
+                  return data
+              end
+          end
+          local str = "module '"..packageName.."' not found:\nno field package.preload['"..packageName.."']\n"
+          for i,b in pairs(notFound) do
+              str = str ..'\tno file \''..b..'\'\n'
+          end
+          _G.in_load[packageName] = false
+          error(str)
+      else
+          return _G.package[packageName]
+      end
+  end
+  )";
 
   if (luaL_dostring(_state, lua_require_code) != 0) {
     lua_pop(_state, 1); 
@@ -252,3 +291,18 @@ bool LuaWrapper::Lua_dostring(const char *script, int returns) {
 
   return true;
 }
+
+const char* StringToPsram(const std::string &str){
+    size_t len = str.size() + 1;
+
+    char* buffer = (char*)heap_caps_malloc(len, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    if (buffer == nullptr)
+    {
+        return nullptr;
+    }
+
+    memcpy(buffer, str.c_str(), len);
+    return buffer;
+}
+
+#endif

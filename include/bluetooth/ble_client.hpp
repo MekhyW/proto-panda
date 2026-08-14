@@ -1,4 +1,6 @@
 #pragma once
+#include "config.hpp"
+#ifdef ENABLE_BLE
 #include <NimBLEDevice.h>
 #include "Arduino.h"
 #include "config.hpp"
@@ -53,7 +55,7 @@ class BleManager{
 
     void AddAcceptedService(std::string name, BleServiceHandler* obj);
 
-    std::map<std::string, BleServiceHandler*> &GetAcceptedServices(){
+    PSRAMMap<std::string, BleServiceHandler*> &GetAcceptedServices(){
       return handlers;
     }
 
@@ -69,12 +71,11 @@ class BleManager{
 
     static BleManager* Get();
   private:
-    std::vector<std::tuple<std::string,BleServiceHandler*>> handlersAsync; //Handlers are stored by their UUID
-    std::map<std::string, BleServiceHandler*> handlers; //Handlers are stored by their UUID
-    std::map<std::string, BluetoothDeviceHandler*> clients; //Clients are stored by their address
+    PSRAMVector<std::tuple<std::string,BleServiceHandler*>> handlersAsync; //Handlers are stored by their UUID
+    PSRAMMap<std::string, BleServiceHandler*> handlers; //Handlers are stored by their UUID
+    PSRAMMap<std::string, BluetoothDeviceHandler*> clients; //Clients are stored by their address
 
     bool connectToServer();
-    bool connectToServerOLD();
     uint16_t clientCount;
   
     uint32_t  maxClients, lastScanClearTime, m_scanStartAt;
@@ -93,3 +94,5 @@ class BleManager{
 };
 
 extern BleManager g_remoteControls;
+
+#endif

@@ -7,7 +7,6 @@ class BaseDisplay;
 class HardwareConfig{
     public:
         static bool LoadConfigs();
-        static bool StartDmaDisplay();
 
         static inline int CanvasWidth(){
             return HardwareCanvasWidth;
@@ -18,13 +17,12 @@ class HardwareConfig{
         }
         
     private:
-        static HUB75_I2S_CFG panelConfig;
+        static bool StartDmaDisplay(HUB75_I2S_CFG &panelConfig);
         static void loadAndParseDisplay(JsonObject doc);
         static void loadHub75AndStart(JsonObject doc, bool compatibilityMode);
         static void loadWS2812BAndStart(JsonObject doc);
         static void loadMax7219AndStart(JsonObject doc);
         static void loadServosAndStart(JsonObject doc);
-        static void loadDefaults();
         static int checkInvalidPin(int pin);
         static void loadViews(JsonObject ws2812b, BaseDisplay* display, uint16_t defaultWidth, uint16_t defaultHeight);
 

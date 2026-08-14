@@ -23,18 +23,22 @@ Protopanda é uma plataforma open source (firmware e hardware) para controlar pr
 
 # Features
 
-- Roda em um esp32s3 dual core 240Mhz
-- 16MB Ram
-- RGB 16bit com 2 paineis HUB75
-- Supporta fita de led endereçavel WS2812
+- Construído sobre o ESP32-S3 N16R8. Facinho de achar
+- Animações em 60+ FPS
+- Suporte para painel HUB75, matrizes de LED MAX7219 ou matrizes WS2812
+- RGB de 16bit
+- Suporte para led endereçavel WS2812
 - Customização usando Lua
-- Maior parte do código fica no cartoa SD dispensando atualização de firmware na maioria dos casos
-- Expressões são apenas sprites em PNG
-- 60~80FPS
-- Comunicação usando BLE e drivers escritos em Lua
-- USB-C pd trigger support
-- Telinha interna com menu e interface bonitinha
-- Modo WIFI onde você pode mudar configurações
+- Expressões faciais são arquivos .PNG
+- Utiliza um cartão SD com configurações fáceis de ajustar
+- Suporte BLE para controle remoto, ou infra vermelho
+- Alimentado via USB-C
+- Tela interna com menuzinho
+- Modo WiFi, com editorzinho
+- Suporte a animação por keyframes com modelos vetoriais
+- FFT integrado e animações de boca baseadas em som
+- Código aberto e hardware aberto
+- Tem jogos!
 - gay 🏳️‍🌈
 
 # Guias
@@ -59,18 +63,16 @@ Cada painel HUB75 pode consumir até 2A no brilho máximo, então alimentar dire
 
 Na maioria dos casos, você não estará operando os painéis no brilho máximo nem com todos os LEDs em branco, então a versão em 5V é a recomendada.da suporta [tiras de LED](#tiras-de-led), e há uma porta dedicada a elas. A saída também é de 5V, a mesma dos painéis. Como os LEDs são do tipo WS2812B, eles podem consumir até 20 mA por LED a 100% de brilho.  
 
-# Painéis  
+# Painéis
 
-Os painéis utilizados também são conhecidos como painéis HUB75. Eles são controlados pela [biblioteca hub75 do mrcodetastic](https://github.com/mrcodetastic/ESP32-HUB75-MatrixPanel-DMA), e estes são os [painéis recomendados](https://pt.aliexpress.com/item/4000002686894.html).  
-![Painéis HUB75](doc/panels.jpg "Painéis HUB75")  
-Eles são multiplexados, o que significa que apenas alguns LEDs estão ligados por vez. É rápido o suficiente para não ser percebido pelo olho humano, mas sob luz solar direta, é difícil tirar uma boa foto sem efeito de tearing.  
-![Tearing capturado na câmera](doc/tearing.jpg "Tearing capturado na câmera")  
+O recomendado é usar painéis HUB75. Eles são controlados pela [biblioteca hub75 do mrcodetastic](https://github.com/mrcodetastic/ESP32-HUB75-MatrixPanel-DMA), e estes são os [painéis recomendados](https://pt.aliexpress.com/item/4000002686894.html).
+![Painéis HUB75](doc/panels.jpg "Painéis HUB75")
+Eles são multiplexados, o que significa que apenas alguns LEDs estão ligados por vez. É rápido o suficiente para não ser percebido pelo olho humano. Mas sob luz solar direta, é difícil tirar uma boa foto sem efeito de tearing.
+![Tearing capturado na câmera](doc/tearing.jpg "Tearing capturado na câmera")
 
-A resolução é de 64 pixels de largura e 32 pixels de altura. Com dois painéis lado a lado, a área total é de 128x32 pixels. A profundidade de cor é de 16 bits, no formato RGB565, o que significa vermelho (0-32), verde (0-64) e azul (0-32).  
+A resolução é de 64 pixels de largura e 32 pixels de altura. Com dois painéis lado a lado, a área total é de 128x32 pixels. A profundidade de cor é de 16 bits, no formato RGB565, o que significa vermelho (0-32), verde (0-64) e azul (0-32).
 
-## Buffer Duplo  
-
-Para evitar outro tipo de tearing, quando um quadro está sendo desenhado enquanto o quadro está sendo alterado, habilitamos o uso de buffer duplo. Isso significa que desenhamos os pixels na memória, mas eles não aparecem imediatamente na tela. Quando chamamos `flipPanelBuffer()`, a memória em que desenhamos é enviada para o DMA para ser constantemente exibida no painel. Então, o buffer que usamos para desenhar muda. Isso aumenta o uso de memória, mas é um preço necessário a pagar.  
+Você também pode usar matrizes MAX7219 ou matrizes de LEDs endereçáveis!
 
 # Tela e Expressões  
 
@@ -129,22 +131,58 @@ Cada elemento no array `frames` pode ser tanto o caminho do arquivo quanto um ob
 
 Uma vez que os frames são carregados e a execução começa, é trabalho dos [scripts Lua](#programming-in-lua) gerenciar as expressões.  
 As expressões são armazenadas em `expressions.json` na raiz do cartão SD.
+
 ```json
-// Início do JSON //
 {
   "frames": [],
   "expressions": [
-    {"name": "normal", "frames": "frames_normal", "animation": [1,2,1,2,1,2,3,4,3], "duration": 250},
-    {"name": "sus", "frames": "frames_amogus", "animation": "auto", "duration": 200},
-    {"name": "noise", "frames": "frames_noise", "animation": "auto", "duration": 5, "onEnter": "ledsStackCurrentBehavior()  ledsSegmentBehavior(0, BEHAVIOR_NOISE) ledsSegmentBehavior(1, BEHAVIOR_NOISE)", "onLeave": "ledsPopBehavior()"},
-    {"name": "boop", "frames": "frames_boop", "animation": [1,2,3,2], "duration": 250},
-    {"name": "boop_begin", "frames": "frames_boop_transition", "animation": [1,2,3], "duration": 250, "transition": true},
-    {"name": "boop_end", "frames": "frames_boop_transition", "animation": [3,2,1], "duration": 250, "transition": true}
+    {
+      "name": "normal",
+      "frames": "frames_normal",
+      "animation": [1, 2, 1, 2, 1, 2, 3, 4, 3],
+      "duration": 250,
+      "overlay": "mouth"
+    },
+    {
+      "name": "sus",
+      "frames": "frames_amogus",
+      "animation": "auto",
+      "duration": 200
+    },
+    {
+      "name": "noise",
+      "frames": "frames_noise",
+      "animation": "loop",
+      "duration": 5,
+      "onEnter": "ledsStackCurrentBehavior(); ledsSegmentBehavior(0, BEHAVIOR_NOISE); ledsSegmentBehavior(1, BEHAVIOR_NOISE)",
+      "onLeave": "ledsPopBehavior()"
+    },
+    {
+      "name": "boop",
+      "frames": "frames_boop",
+      "animation": [1, 2, 3, 2],
+      "duration": 250
+    },
+    {
+      "name": "boop_begin",
+      "frames": "frames_boop_transition",
+      "animation": [1, 2, 3],
+      "duration": 250,
+      "transition": true
+    },
+    {
+      "name": "boop_end",
+      "frames": "frames_boop_transition",
+      "animation": [3, 2, 1],
+      "duration": 250,
+      "transition": true
+    }
   ],
   "scripts": [],
   "boop": {}
 }
 ```
+
 #### Expression Properties  
 
 - **`name`** (string, *optional*)  
@@ -177,11 +215,75 @@ As expressões são armazenadas em `expressions.json` na raiz do cartão SD.
 - **`repeats`** (int, default 1)
   Se a expressão é do tipo `transition`, você pdoe fazer com que ela se repita N vezes
 
+- **`overlay`** (string)
+  Nome da sobreposição (overlay) a ser usada nessa animação
+
 - **`onEnter`** (string, Lua code)  
   Quando a animação assume o controle da tela, executa um código Lua.
 
 - **`onLeave`** (string, Lua code)  
   Quando a animação para de executar (por estar marcada como `transition=true` ou porque outra animação assumiu o controle), executa um código Lua.
+
+## Sobreposições (Overlays)
+
+Às vezes você quer algo com um pouco mais de estilo. Como uma boca que se move enquanto você fala, ou algumas estrelas, ou até mesmo algo que reaja a um acelerômetro. Para isso, você pode criar sobreposições:
+
+```json
+{
+"overlays"   : [
+    {
+      "name"    : "stars",
+      "elements": [
+        {
+          "sprites"           : [
+            "/expressions/overlays/star.png"
+          ],
+          "transparency": true,
+          "transparency_color": "#ff00ff",
+          "animation"         : {
+            "mode": "random_flashing",
+            "alive_duration": 50,
+            "interval_min": 100,
+            "interval_max": 500,
+            "min_x": 0,
+            "max_x": 64,
+            "min_y": 0,
+            "max_y": 64
+          }
+        }
+      ]
+    }
+    {
+      "name"    : "mouth",
+      "elements": [
+        {
+          "sprites"           : [
+            "/expressions/overlays/mouth0.png",
+            "/expressions/overlays/mouth1.png",
+            "/expressions/overlays/mouth2.png",
+            "/expressions/overlays/mouth3.png",
+            "/expressions/overlays/mouth4.png"
+          ],
+          "transparency": false,
+          "transparency_color": "#000000",
+          "animation"         : {
+            "mode": "fft",
+            "x": 11,
+            "y": 19,
+            "band_start": 2,
+            "band_end": 8,
+            "attack": 0.05,
+            "release": 0.2,
+            "min_energy": 50000,
+            "max_energy": 200000,
+            "frist_frame_threshold": 60000
+          }
+        }
+      ]
+    }
+  ]
+}
+```
 
 ## Pilha de Expressões  
 
@@ -209,6 +311,51 @@ O guia completo está aqui: [Compilando o firmware](./doc/flashing-guide.pt-br.m
 O Protopanda suporta o protocolo de LED endereçável WS2812B e fornece um sistema simples para definir alguns comportamentos para a fita/matriz.  
 ![alt text](doc/A7301542.JPG)  
 ![alt text](doc/ewm.drawio.png)  
+
+Você pode defini-los dentro do `hardware.json`:
+```json
+{
+  "leds": { 
+    "pin_mode": "double",
+    "_comment": "Modos permitidos: 'double' e 'single'. Se usar fitas de LED extras, todas serão conectadas ao pino de LED direito se 'double' estiver definido",
+    "groups":[
+      {
+        "_comment": "Se pin_side não estiver definido, o padrão é 'left'",
+        "pin_side": "left",
+        "led_count": 64,
+        "mode": "pride"
+      },
+      {
+        "pin_side": "right",
+        "led_count": 64,
+        "mode": "pride"
+      }
+    ]
+  }
+}
+```
+
+### Modos Disponíveis e Parâmetros
+
+| Modo | Descrição | Parâmetros |
+|------|-------------|------------|
+| `none` | LEDs permanecem apagados | Nenhum |
+| `pride` | Animação do arco-íris pride | Nenhum |
+| `rotate` | Cor rotativa ao longo da fita | `speed` (ms) - velocidade de rotação |
+| `random_color` | Cada LED pisca em cores aleatórias | Nenhum |
+| `fade_cycle` | Ciclo gradual de cores | `hue` (0-255), `speed` (ms), `min_brightness` (0-255) |
+| `rotate_fade_cycle` | Ciclo fade com rotação | `hue`, `speed`, `min_brightness`, `rotate_speed` (ms) |
+| `color_rgb` | Cor RGB estática | `r` (0-255), `g` (0-255), `b` (0-255) |
+| `color_hsv` | Cor HSV estática | `h` (0-255), `s` (0-255), `v` (0-255) |
+| `random_blink` | LEDs piscam aleatoriamente | `base_hue` (0-255), `hue_variance` (0-255), `brightness` (0-255), `blink_speed` (ms) |
+| `icon_x` | Exibe um padrão "X" | Nenhum |
+| `icon_y` | Exibe um padrão "Y" | Nenhum |
+| `icon_v` | Exibe um padrão "V" | Nenhum |
+| `rotate_sine_v` | Variação de brilho em onda senoidal | `hue` (0-255), `saturation` (0-255), `speed` (ms) |
+| `rotate_sine_s` | Variação de saturação em onda senoidal | `hue` (0-255), `brightness` (0-255), `speed` (ms) |
+| `rotate_sine_h` | Variação de matiz em onda senoidal | `sat` (0-255), `brightness` (0-255), `speed` (ms) |
+| `fade_in` | Efeito de fade-in gradual | `hue` (0-255), `saturation` (0-255), `step` (0-255), `delay` (ms) |
+| `noise` | Efeito de ruído aleatório | `step` (0-255), `delay` (ms) |
 
 # Bluetooth  
 
