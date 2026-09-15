@@ -302,10 +302,6 @@ void LuaInterface::luaCallbackError(const char *errMsg, lua_State *L)
   }
 }
 #ifdef ENABLE_BLE
-int getConnectedRemoteControls()
-{
-  return g_remoteControls.getConnectedClientsCount();
-}
 
 bool hasBLEStarted(){
   return g_remoteControls.IsStarted();
@@ -364,10 +360,6 @@ int getClientIdFromControllerId(uint32_t id)
   return g_remoteControls.GetClientIdFromControllerId(id);
 }
 
-int getRRSI(uint32_t clientid)
-{
-  return g_remoteControls.GetRSSI(clientid);
-}
 
 void setLogDiscoveredBle(bool log)
 {
@@ -378,10 +370,7 @@ bool isElementIdConnected(int id)
 {
   return g_remoteControls.isElementIdConnected(id);
 }
-void beginScanning()
-{
-  g_remoteControls.beginScanning();
-}
+
 void setMaximumControls(int id)
 {
   g_remoteControls.setMaximumControls(id);
@@ -532,7 +521,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("dictLoad", dictLoad);
   m_lua->FuncRegister("dictFormat", dictFormat);
   //Oleed display internal
-  m_lua->FuncRegister("oledFaceToScreen", DrawPanelFaceToScreen);
+  m_lua->FuncRegisterOptional("oledFaceToScreen", DrawPanelFaceToScreen, 1);
   m_lua->FuncRegister("oledCreateIcon", OledScreen::CreateIcon);
   m_lua->FuncRegister("oledDrawIcon", OledScreen::DrawIcon);
   m_lua->FuncRegister("oledClearScreen", OledScreen::Clear);
@@ -554,13 +543,23 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("startBLE", startBLE);
   m_lua->FuncRegister("hasBLEStarted", hasBLEStarted);
   m_lua->FuncRegister("startBLERadio", beginRadio);
-  m_lua->FuncRegister("getConnectedRemoteControls", getConnectedRemoteControls);
+
   m_lua->FuncRegister("isElementIdConnected", isElementIdConnected);
-  m_lua->FuncRegister("beginBleScanning", beginScanning);
+
   m_lua->FuncRegister("setMaximumControls", setMaximumControls);
   m_lua->FuncRegister("setLogDiscoveredBleDevices", setLogDiscoveredBle);
   m_lua->FuncRegister("getClientIdFromControllerId", getClientIdFromControllerId);
-  m_lua->FuncRegister("getRRSI", getRRSI);
+
+  m_lua->FuncRegisterFromObjectOpt("requestClearBleResults", &g_remoteControls, &BleManager::requestClearResults);
+  m_lua->FuncRegisterFromObjectOpt("getConnectedClientsCount", &g_remoteControls, &BleManager::getConnectedClientsCount);
+  m_lua->FuncRegisterFromObjectOpt("beginBleScanning", &g_remoteControls, &BleManager::beginScanning);
+  m_lua->FuncRegisterFromObjectOpt("stopBleScanning", &g_remoteControls, &BleManager::stopScanning);
+
+
+  m_lua->FuncRegisterFromObjectOpt("getRRSI", &g_remoteControls, &BleManager::GetRSSI);
+  m_lua->FuncRegisterFromObjectOpt("setScanModeByAddress", &g_remoteControls, &BleManager::SetScanModeByAddress);
+  m_lua->FuncRegisterFromObjectOpt("isScanningByAddress", &g_remoteControls, &BleManager::IsScanningByAddress);
+
   #endif
 
 
@@ -590,10 +589,11 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("getFreeHeap", Devices::getFreeHeap); 
   m_lua->FuncRegister("getTotalHeap", Devices::getTotalHeap); 
   #ifdef USE_SERVO
-  m_lua->FuncRegister("servoPause", Devices::StartServos);
+  m_lua->FuncRegisterOptional("startServos", Devices::StartServos, 180, 0.125f, 0.025f, 50);
   m_lua->FuncRegister("servoPause", Devices::ServoPause);
   m_lua->FuncRegister("servoResume", Devices::ServoResume); 
   m_lua->FuncRegister("servoMove", Devices::ServoMove);
+  m_lua->FuncRegister("servoCount", Devices::ServoCount);
   #endif
   m_lua->FuncRegister("hasServo", Devices::HasServo);
 
@@ -845,6 +845,11 @@ void LuaInterface::RegisterConstants()
 
   m_lua->setConstant("MAX_LED_GROUPS", MAX_LED_GROUPS);
   m_lua->setConstant("EDIT_MODE_PIN", EDIT_MODE_PIN);
+  #ifdef USE_BOOT_PIN_FOR_EDIT_MODE
+  m_lua->setConstant("USE_BOOT_PIN_FOR_EDIT_MODE", 1);
+  #else
+  m_lua->setConstant("USE_BOOT_PIN_FOR_EDIT_MODE", 0);
+  #endif
   #ifdef ENABLE_EDIT_MODE
   m_lua->setConstant("ENABLE_EDIT_MODE", 1);
   #else 
@@ -903,7 +908,8 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("SHADER_TEXTURE",      (int)SHADER_TEXTURE);
   m_lua->setConstant("SHADER_TRANS",        (int)SHADER_TRANS);
   
-  m_lua->setConstant("SHADER_LAST",         (int)SHADER_TRANS);
+  m_lua->setConstant("SHADER_LAST",         (int)SHADER_LAST);
+  m_lua->setConstant("SHADER_FIRST",         (int)SHADER_FIRST);
 
 
   m_lua->setConstant("MODEL_FRAME_ID_OFFSET",      (int)MODEL_FRAME_ID_OFFSET);
@@ -959,12 +965,12 @@ bool LuaInterface::Start()
       return nullptr;
     }
   }, &EmptyGC);
+  ClassRegister<BleServiceHandler>::RegisterClassMethod(_state,"BleServiceHandler","AddPairedDeviceAddress",&BleServiceHandler::AddPairedDeviceAddress);
   ClassRegister<BleServiceHandler>::RegisterClassMethod(_state,"BleServiceHandler","AddCharacteristics",&BleServiceHandler::AddCharacteristics);
   ClassRegister<BleServiceHandler>::RegisterClassMethod(_state,"BleServiceHandler","SetOnConnectCallback",&BleServiceHandler::SetOnConnectCallback);
   ClassRegister<BleServiceHandler>::RegisterClassMethod(_state,"BleServiceHandler","SetOnDisconnectCallback",&BleServiceHandler::SetOnDisconnectCallback);
   ClassRegister<BleServiceHandler>::RegisterClassMethod(_state,"BleServiceHandler","WriteToCharacteristics",&BleServiceHandler::WriteToCharacteristics, true);
   ClassRegister<BleServiceHandler>::RegisterClassMethod(_state,"BleServiceHandler","GetCharacteristics",&BleServiceHandler::GetCharacteristicsFromOurService);
-  ClassRegister<BleServiceHandler>::RegisterClassMethod(_state,"BleServiceHandler","AddAddressRequired",&BleServiceHandler::AddAddressRequired);
   ClassRegister<BleServiceHandler>::RegisterClassMethod(_state,"BleServiceHandler","AddNameRequired",&BleServiceHandler::AddNameRequired);
   ClassRegister<BleServiceHandler>::RegisterClassMethod(_state,"BleServiceHandler","GetServices",&BleServiceHandler::GetServices);
   ClassRegister<BleServiceHandler>::RegisterClassMethod(_state,"BleServiceHandler","ReadFromCharacteristics",&BleServiceHandler::ReadFromCharacteristics);
@@ -1010,13 +1016,14 @@ bool LuaInterface::Start()
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","GetFrameCount",&Sprite::GetFrameCount);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","CreateEmptyTexture",&Sprite::CreateEmptyTexture);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","LoadFromPng",&Sprite::LoadFromPng);
-  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","CropSprite",&Sprite::CropSprite);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","CropSprite",&Sprite::CropSprite, false, false);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","Draw",&Sprite::Draw, 1.0f, SHADER_NONE, FlipConfig());
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetRotation",&Sprite::SetRotation);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","Clone",&Sprite::Clone);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","UseCustomShader",&Sprite::UseCustomShader);
   ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","SetShader",&Sprite::SetShader, 1.0f);
-  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","setVisibility",&Sprite::setVisibility);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","setVisibility",&Sprite::SetVisibility);
+  ClassRegister<Model>::RegisterClassMethod(_state,"Sprite","ClearCrop",&Sprite::ClearCrop);
 
 
   //Created only using loadModel(modeldata, name)

@@ -2,7 +2,7 @@
 /*
     Avoid changing this vile, change the config.hpp instead if you need custom configuration
 */
-#define PANDA_VERSION "3.2.2"
+#define PANDA_VERSION "3.3.5a"
 /*
 Cache file version to invalidate cache in case of firmware update
 */
@@ -123,12 +123,18 @@ Cache file version to invalidate cache in case of firmware update
 */
 #define ENABLE_EDIT_MODE
 #define EDIT_MODE_PIN 39
+#define USE_BOOT_PIN_FOR_EDIT_MODE 
 #define EDIT_ENABLE_LOGIC_LEVEL LOW
 /* 
 Servos
 */
 
 #define USE_SERVO
+#define SERVO_RESOLUTION_BITS 14
+
+
+//#define USE_INTERNAL_ACCELEROMETER
+#define INTERNAL_ACCELEROMETER_ADDR 107
 
 /*
     DMA display, or actual display

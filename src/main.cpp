@@ -17,6 +17,7 @@
 
 #include "drawing/framerepository.hpp"
 #include "drawing/animation.hpp"
+#include "drawing/framebuffer.hpp"
 #include "drawing/ledstrip.hpp"
 #include "drawing/icons/icons.hpp"
 
@@ -47,6 +48,8 @@ ModelHandler g_modelHandler;
 FFT g_fft;
 KeyframePlayer g_kf;
 
+FrameBuffer g_frameBuffer;
+
 void second_loop(void*);
 
 void setup() {
@@ -63,6 +66,9 @@ void setup() {
       pinMode(EDIT_MODE_PIN, INPUT_PULLDOWN);
     #else
       pinMode(EDIT_MODE_PIN, INPUT_PULLUP);
+    #endif
+    #ifdef USE_BOOT_PIN_FOR_EDIT_MODE
+        pinMode(0, INPUT_PULLUP); //Boot pin is always plugged in to a high impedance to reach here
     #endif
   #endif
   #ifdef USE_PIN_BATTERY_IN
@@ -129,27 +135,21 @@ void setup() {
   Devices::CalculateMemmoryUsageDifference("Devices");
   if (!g_frameRepo.Begin()){
     OledScreen::CriticalFail("Frame repository has failed! If restarting does not solve, its a hardware problem.");
-    for (;;){
-      Devices::BuzzerTone(420);
-      delay(200);
-      Devices::BuzzerTone(420);
-      delay(200);
-      Devices::BuzzerNoTone();
-      delay(1000);
-    }
+    for(;;){}
   }
   Devices::CalculateMemmoryUsageDifference("Frame repo");
+
+  if (!g_frameBuffer.Allocate()){
+    OledScreen::CriticalFail("Frame buffer has failed! Probally not enough ram!");
+    for(;;){}
+  }
+
+  Devices::CalculateMemmoryUsageDifference("Frame buffer");
+
   #ifdef ENABLE_LUA
   if (!g_lua.Start()){
     OledScreen::CriticalFail("Failed to initialize Lua!");
-    for(;;){
-      Devices::BuzzerTone(420);
-      delay(200);
-      Devices::BuzzerTone(420);
-      delay(200);
-      Devices::BuzzerNoTone();
-      delay(1000);
-    }
+    for(;;){}
   }
   Devices::CalculateMemmoryUsageDifference("Lua");
   

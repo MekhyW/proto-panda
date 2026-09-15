@@ -41,7 +41,7 @@ class OledScreen{
         static void SetConsoleMode(bool enable);
         static void PrintConsole(const char *str);
         static void PrintError(const char *str);
-        static void DrawPanelFaceToScreen(int x, int y);
+        static void DrawPanelFaceToScreen(int x, int y, int scale=1);
         static void DrawIcon(int x, int y, int iconId);
         static int CreateIcon(std::vector<uint8_t> iconData, int width, int height);
 
@@ -50,8 +50,7 @@ class OledScreen{
         static Panda_SSD1306 display;
         static bool consoleMode;
         static PSRAMList<PSRAMString> lines;
-        static uint8_t* DisplayFace[2];
-        static uint8_t screenFlipId;
+        static uint8_t* DisplayFace;
 
         static PSRAMVector<OledIcon> icons;
     private:

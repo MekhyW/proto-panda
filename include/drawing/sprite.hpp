@@ -4,6 +4,7 @@
 #include "tools/displays.hpp"
 #include "tools/sectionview.hpp"
 #include "drawing/rendering/shader.hpp"
+#include "drawing/framebuffer.hpp"
 
 class BasicTexture{
     public:
@@ -93,7 +94,7 @@ class Sprite{
             y = ya;
         };
 
-        void setVisibility(bool v){
+        void SetVisibility(bool v){
             visibility = v;
         };
 
@@ -115,10 +116,14 @@ class Sprite{
             w = pw;
             h = ph;
             if (view.count() == 0){
-                view.addView(srcX,  srcY, 0,0, pw, ph, fliph, flipv);
+                view.addView(srcX,  srcY, 0, 0, pw, ph, fliph, flipv);
                 return;
             }
-            view.setView(0, srcX,  srcY, 0,  0, pw, ph, fliph, flipv);
+            view.setView(0, srcX,  srcY, 0, 0, pw, ph, fliph, flipv);
+        }
+
+        void ClearCrop(){
+            view.clear();
         }
 
         int CreateEmptyTexture(uint16_t sizeX, uint16_t sizeY);
@@ -126,5 +131,7 @@ class Sprite{
         int LoadFromPng(std::string name);
 
         void Draw(FlipConfig flipSettings, ShaderType shader, float shaderStrenght);
+        void DrawToFrameBuffer(FrameBuffer &fb);
+    
 };
 
